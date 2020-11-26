@@ -677,6 +677,12 @@ public final class BaseUtils {
         return newList;
     }
 
+    public static String getServeModelDesc(Class cls) {
+        ServerModel serverModel = (ServerModel) cls.getAnnotation(ServerModel.class);
+        return serverModel != null ? serverModel.desc() : cls.getName();
+    }
+
+    
     public static String getServeModelValue(Class cls) {
         ServerModel serverModel = (ServerModel) cls.getAnnotation(ServerModel.class);
         return serverModel != null ? serverModel.value() : cls.getName();
