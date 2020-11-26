@@ -10,16 +10,13 @@ import com.jtframework.utils.BaseUtils;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.lang.reflect.Field;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -81,6 +78,11 @@ public class MysqlService {
         }
     }
 
+    public <T> PageVO<T> pageQuery(Class<T> resultClass) throws SQLException {
+        MysqlQueryParams mysqlQueryParams = new MysqlQueryParams(resultClass);
+        mysqlQueryParams.limit(1, 10);
+        return pageQuery(resultClass, mysqlQueryParams);
+    }
 
     public <T> PageVO<T> pageQuery(Class<T> resultClass, MysqlQueryParams mysqlQueryParams) throws SQLException {
         mysqlQueryParams.generateSql();
@@ -102,6 +104,11 @@ public class MysqlService {
         }
     }
 
+
+    public <T> List<T> selectListAll(Class<T> resultClass) throws SQLException {
+        String sql = "SELECT * FROM ? ";
+        return selectList(resultClass, sql, new String[]{BaseUtils.getServeModelValue(resultClass)});
+    }
 
     public <T> List<T> selectList(Class<T> resultClass, String sql) throws SQLException {
         return selectList(resultClass, sql, (Object[]) null);

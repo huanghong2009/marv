@@ -11,4 +11,5 @@ import java.lang.annotation.*;
 @Documented
 public @interface ServerModel {
     String value() default "";
+    String desc() default "";
 }

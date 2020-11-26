@@ -18,7 +18,7 @@ public class MysqlQueryParams {
      */
     public StringBuffer sql = new StringBuffer("");
 
-    public String countSql ;
+    public String countSql;
 
     /**
      * sql map
@@ -51,8 +51,20 @@ public class MysqlQueryParams {
         this.table = BaseUtils.getServeModelValue(cls);
     }
 
-    public MysqlQueryParams(String sql) {
-        this.table = "( " + sql + " )";
+    public MysqlQueryParams(String sql, String as) {
+        this.table = " ( " + sql + " ) AS " + as + " ";
+    }
+
+    public static MysqlQueryParams addParam(Class cls, String key, String value) {
+        MysqlQueryParams mysqlQueryParams = new MysqlQueryParams(cls);
+        mysqlQueryParams.addParam(key, value);
+        return mysqlQueryParams;
+    }
+
+    public static MysqlQueryParams addParam(String sql, String as, String key, String value) {
+        MysqlQueryParams mysqlQueryParams = new MysqlQueryParams(sql, as);
+        mysqlQueryParams.addParam(key, value);
+        return mysqlQueryParams;
     }
 
     /**
@@ -63,6 +75,18 @@ public class MysqlQueryParams {
      */
     public MysqlQueryParam addParam(String column) {
         MysqlQueryParam mysqlQueryParam = new MysqlQueryParam(column);
+        params.add(mysqlQueryParam);
+        return mysqlQueryParam;
+    }
+
+    /**
+     * 添加一个查询参数
+     *
+     * @param column
+     * @return
+     */
+    public MysqlQueryParam addParam(String column, String value) {
+        MysqlQueryParam mysqlQueryParam = new MysqlQueryParam(column, value);
         params.add(mysqlQueryParam);
         return mysqlQueryParam;
     }
@@ -95,7 +119,7 @@ public class MysqlQueryParams {
      */
     public void generateSql() {
         paramsMap.clear();
-        sql.append("SELECT * FROM "+this.table.toUpperCase()+" WHERE 1=1 ");
+        sql.append("SELECT * FROM " + this.table.toUpperCase() + " WHERE 1=1 ");
 
         for (MysqlQueryParam param : params) {
             String filed = param.column.toUpperCase();
@@ -135,8 +159,12 @@ public class MysqlQueryParams {
             sql.append(" LIMIT " + startIndex + "," + pageSize);
         }
 
-        log.info(" 生成sql:{}, 参数是:{}",this.sql, this.paramsMap);
+        log.info(" 生成sql:{}, 参数是:{}", this.sql, this.paramsMap);
 
+    }
+
+    public String getSql() {
+        return this.sql.toString();
     }
 
     public enum MysqlSort {
@@ -163,6 +191,13 @@ public class MysqlQueryParams {
 
         MysqlQueryParam(String column) {
             this.column = column;
+            this.symbol = MysqlSymbol.IS;
+        }
+
+        MysqlQueryParam(String column, String value) {
+            this.column = column;
+            this.symbol = MysqlSymbol.IS;
+            this.value = value;
         }
 
         public void is(String value) {
@@ -209,9 +244,5 @@ public class MysqlQueryParams {
             this.symbol = MysqlSymbol.DECR;
             this.value = value;
         }
-    }
-
-    public String getSql(){
-        return this.sql.toString();
     }
 }
