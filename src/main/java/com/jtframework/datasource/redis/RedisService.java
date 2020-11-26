@@ -8,9 +8,11 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.jtframework.utils.BaseUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+
+import org.springframework.data.redis.connection.lettuce.DefaultLettucePool;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
+
+import org.springframework.data.redis.connection.lettuce.LettucePool;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
@@ -41,21 +43,7 @@ public class RedisService {
         poolConfig.setMaxTotal(redisConfig.getMaxTotal() == null ? 8 : redisConfig.getMaxTotal());
         poolConfig.setMaxWaitMillis(redisConfig.getMaxWaitMillis() == null ? 5000L : redisConfig.getMaxWaitMillis());
 
-        LettucePoolingClientConfiguration lettucePoolingClientConfiguration = LettucePoolingClientConfiguration.builder()
-                .poolConfig(poolConfig)
-                .build();
-        // 单机redis
-        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
-
-        redisStandaloneConfiguration.setHostName(redisConfig.getHost());
-
-        redisStandaloneConfiguration.setPort(redisConfig.getPort());
-
-        if (BaseUtils.isNotBlank(redisConfig.getPassword())) {
-            redisStandaloneConfiguration.setPassword(redisConfig.getPassword());
-        }
-
-        redisStandaloneConfiguration.setDatabase(redisConfig.getDatabase());
+        LettucePool lettucePool = new DefaultLettucePool(redisConfig.getHost(),redisConfig.getPort(),poolConfig);
 
         // 哨兵redis
         // RedisSentinelConfiguration redisConfig = new RedisSentinelConfiguration();
@@ -76,7 +64,13 @@ public class RedisService {
 //        // 跨集群执行命令时要遵循的最大重定向数量
 //        redisConfig.setMaxRedirects(3);
 //        redisConfig.setPassword(password);
-        LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(redisStandaloneConfiguration, lettucePoolingClientConfiguration);
+        LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory(lettucePool);
+
+        if (BaseUtils.isNotBlank(redisConfig.getPassword())) {
+            lettuceConnectionFactory.setPassword(redisConfig.getPassword());
+        }
+        lettuceConnectionFactory.setDatabase(redisConfig.getDatabase());
+
         lettuceConnectionFactory.afterPropertiesSet();
         return lettuceConnectionFactory;
     }

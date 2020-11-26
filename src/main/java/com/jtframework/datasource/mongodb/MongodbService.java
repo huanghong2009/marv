@@ -8,7 +8,7 @@ import com.jtframework.utils.BaseUtils;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoException;
-import com.mongodb.internal.connection.ServerAddressHelper;
+import com.mongodb.ServerAddress;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -43,14 +43,14 @@ public class MongodbService {
 
     public void initMongodbService(String host, Integer port, String database) throws Exception{
         List<MongoCredential> credentialsList = new ArrayList<>();
-        mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(ServerAddressHelper.createServerAddress(host, port)), database));
+        mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(new ServerAddress(host, port)), database));
         log.info("{}:{}:{} 初始化中 ......", host, port, database);
     }
 
     public void initMongodbService(String host, Integer port, String database, MongoAuthClient mongoAuthClient) throws Exception{
         List<MongoCredential> credentialsList = new ArrayList<>();
         credentialsList.add(MongoCredential.createCredential(mongoAuthClient.getUserName(), database, mongoAuthClient.getPassWord().toCharArray()));
-        mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(ServerAddressHelper.createServerAddress(host, port), credentialsList), database));
+        mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(new ServerAddress(host, port), credentialsList), database));
         log.info("{}:{}:{}--{} 初始化中 ......", host, port, database, mongoAuthClient.getUserName());
     }
 
@@ -134,7 +134,7 @@ public class MongodbService {
     }
 
     public long updateFirst(Query query, Update update, Class<?> resultClass) {
-        return this.mongoTemplate.updateFirst(query, update, getCollectionName(resultClass)).getModifiedCount();
+        return this.mongoTemplate.updateFirst(query, update, getCollectionName(resultClass)).getN();
     }
 
     public long updateById(String id, Update update, Class<?> resultClass) {
@@ -144,15 +144,15 @@ public class MongodbService {
     }
 
     public long updateMulti(Query query, Update update, Class resultClass) {
-        return this.mongoTemplate.updateMulti(query, update, getCollectionName(resultClass)).getModifiedCount();
+        return this.mongoTemplate.updateMulti(query, update, getCollectionName(resultClass)).getN();
     }
 
     public long remove(Object model) {
-        return this.mongoTemplate.remove(model, getCollectionName(model.getClass())).getDeletedCount();
+        return this.mongoTemplate.remove(model, getCollectionName(model.getClass())).getN();
     }
 
     public long remove(Query query, Class<?> resultClass) {
-        return this.mongoTemplate.remove(query, getCollectionName(resultClass)).getDeletedCount();
+        return this.mongoTemplate.remove(query, getCollectionName(resultClass)).getN();
     }
 
     public long removeById(Class<?> resultClass, String id) {

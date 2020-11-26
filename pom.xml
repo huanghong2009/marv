@@ -22,7 +22,9 @@
         <lombok.version>1.18.12</lombok.version>
         <fastjson.version>1.2.62</fastjson.version>
         <cglib.version>3.3.0</cglib.version>
-        <myspingboot.version>2.2.5.RELEASE</myspingboot.version>
+        <myspingboot.version>1.5.6.RELEASE</myspingboot.version>
+        <jedis.version>3.1.0</jedis.version>
+        <hikaricp.version>3.4.1</hikaricp.version>
     </properties>
 
 
@@ -36,6 +38,11 @@
             <systemPath>${java.home}/../lib/tools.jar</systemPath>
         </dependency>
 
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${hikaricp.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.springfox</groupId>
@@ -61,6 +68,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jetty</artifactId>
