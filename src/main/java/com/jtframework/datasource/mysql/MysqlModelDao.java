@@ -14,7 +14,7 @@ import java.util.List;
 
 @Data
 @Slf4j
-public abstract class MysqlModelDao<T> extends BaseServiceImpl implements Serializable {
+public abstract class MysqlModelDao<T> extends BaseServiceImpl implements Serializable,MysqlModelDaoService {
 
     private String name;
 
@@ -36,7 +36,7 @@ public abstract class MysqlModelDao<T> extends BaseServiceImpl implements Serial
     public void init(String... args) throws BusinessException {
     }
 
-    public void insert(T model) throws BusinessException {
+    public void insert(Object model) throws BusinessException {
         try {
             getMysqlService().insert(model);
         } catch (Exception e) {
@@ -66,7 +66,7 @@ public abstract class MysqlModelDao<T> extends BaseServiceImpl implements Serial
         }
     }
 
-    public int update(T model) throws BusinessException {
+    public int update(Object model) throws BusinessException {
         try {
             return getMysqlService().update(model);
         } catch (Exception e) {
