@@ -1,9 +1,9 @@
-package com.jtframework.utils.words;
+package edu.jsxf.matrix.server.systemmanagement.common.sensitive.words;
 
 import java.util.*;
 
 /**
- * Created by huanghong on 2017/5/24.
+ * Created by lidewen on 2017/5/24.
  */
 public class DFATools {
     public static Map sensitiveWordMap = null;

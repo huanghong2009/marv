@@ -1,4 +1,4 @@
-package com.jtframework.utils.words;
+package edu.jsxf.matrix.server.systemmanagement.common.sensitive.words;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by huanghong on 2017/5/24.
+ * Created by lidewen on 2017/5/24.
  */
 public class DFAInit {
     // 字符编码

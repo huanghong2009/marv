@@ -1,23 +1,20 @@
 package com.jtframework.datasource.mysql;
 
-import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
+import com.jtframework.base.service.BaseServiceImpl;
 import com.jtframework.utils.BaseUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.RowMapper;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Data
 @Slf4j
-public abstract class MysqlModelDao<T> implements Serializable {
+public abstract class MysqlModelDao<T> extends BaseServiceImpl implements Serializable {
 
     private String name;
 
@@ -34,6 +31,9 @@ public abstract class MysqlModelDao<T> implements Serializable {
     public Class<T> getTClass() {
         Class<T> tClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         return tClass;
+    }
+
+    public void init(String... args) throws BusinessException {
     }
 
 
