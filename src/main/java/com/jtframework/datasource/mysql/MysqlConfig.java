@@ -4,6 +4,8 @@ import lombok.Data;
 
 @Data
 public class MysqlConfig {
+    private String url;
+
     private String ip;
 
     private int prot;
