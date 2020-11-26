@@ -1,0 +1,40 @@
+package com.jtframework.utils;
+
+/**
+ * @author huanghong E-mail:767980702@qq.com
+ * @version 创建时间：2017/12/19
+ */
+public class PrimaryUtil {
+    private final static String str = "1234567890abcdefghijklmnopqrstuvwxyz";
+    private final static int pixLen = str.length();
+    private static volatile int pixOne = 0;
+    private static volatile int pixTwo = 0;
+    private static volatile int pixThree = 0;
+    private static volatile int pixFour = 0;
+    /**
+     * 生成主键(16位数字)
+     * 主键生成方式,年月日时分秒毫秒的时间戳+四位随机数保证不重复
+     */
+
+    final public synchronized static String getId() {
+        StringBuilder sb = new StringBuilder();// 创建一个StringBuilder
+        sb.append(Long.toHexString(System.currentTimeMillis()));// 先添加当前时间的毫秒值的16进制
+        pixFour++;
+        if (pixFour == pixLen) {
+            pixFour = 0;
+            pixThree++;
+            if (pixThree == pixLen) {
+                pixThree = 0;
+                pixTwo++;
+                if (pixTwo == pixLen) {
+                    pixTwo = 0;
+                    pixOne++;
+                    if (pixOne == pixLen) {
+                        pixOne = 0;
+                    }
+                }
+            }
+        }
+        return sb.append(str.charAt(pixOne)).append(str.charAt(pixTwo)).append(str.charAt(pixThree)).append(str.charAt(pixFour)).toString();
+    }
+}
