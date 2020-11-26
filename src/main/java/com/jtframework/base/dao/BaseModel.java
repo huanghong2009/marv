@@ -33,7 +33,7 @@ public abstract class BaseModel implements Serializable, Cloneable {
 
         ServerModel serverModel = (ServerModel) cls.getAnnotation(ServerModel.class);
         String sql = "CREATE TABLE `" + serverModel.value() + "` (  \r\n";
-        sql += " `ID` INT PRIMARY KEY AUTO_INCREMENT \r\n";
+        sql += " `ID` INT PRIMARY KEY AUTO_INCREMENT, \r\n";
 
         Field[] fields = cls.getDeclaredFields();
 
@@ -60,7 +60,7 @@ public abstract class BaseModel implements Serializable, Cloneable {
             }
             sql += "DEFAULT NULL COMMENT '" +  (fildDoc.containsKey(field.getName()) ? fildDoc.getString(field.getName()):"") + "',\r\n";
         }
-        sql += " PRIMARY KEY (`ID`) \r\n";
+        sql = sql.substring(0,sql.length()-1);
         sql += " )ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='" + classDoc + "表';";
         System.out.println(sql);
     }
