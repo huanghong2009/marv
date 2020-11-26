@@ -29,7 +29,7 @@ public abstract class MysqlModelDao<T> implements Serializable {
         this.name = BaseUtils.getServeModelDesc(cls);
     }
 
-    abstract MysqlService getMysqlService();
+    public abstract MysqlService getMysqlService();
 
     public Class<T> getTClass() {
         Class<T> tClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
