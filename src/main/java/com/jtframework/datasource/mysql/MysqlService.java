@@ -498,15 +498,26 @@ public class MysqlService {
      * 初始化
      */
     public void initMysqlService(MysqlConfig mysqlConfig) throws Exception {
-
-        if (BaseUtils.isBlank(mysqlConfig.getIp()) || mysqlConfig.getProt() <= 0
-                || BaseUtils.isBlank(mysqlConfig.getDataBase()) || BaseUtils.isBlank(mysqlConfig.getUsername())
+        if (BaseUtils.isBlank(mysqlConfig.getUsername())
                 || BaseUtils.isBlank(mysqlConfig.getPassword())) {
             log.error(" 数据库 缺少 必要 连接参数 ：{}", mysqlConfig);
             throw new Exception("数据库 缺少 必要 连接参数");
         }
+
+        if (BaseUtils.isBlank(mysqlConfig.getUrl()) && (BaseUtils.isBlank(mysqlConfig.getIp()) || mysqlConfig.getProt() <= 0
+                || BaseUtils.isBlank(mysqlConfig.getDataBase()))) {
+            log.error(" 数据库 缺少 必要 连接参数 ：{}", mysqlConfig);
+            throw new Exception("数据库 缺少 必要 连接参数");
+        }
+
         HikariConfig configuration = new HikariConfig();
-        configuration.setJdbcUrl("jdbc:mysql://" + mysqlConfig.getIp() + ":" + mysqlConfig.getProt() + "/" + mysqlConfig.getDataBase() + "?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull");
+        if (BaseUtils.isNotBlank(mysqlConfig.getUrl())) {
+            configuration.setJdbcUrl(mysqlConfig.getUrl());
+        } else {
+            configuration.setJdbcUrl("jdbc:mysql://" + mysqlConfig.getIp() + ":" + mysqlConfig.getProt() + "/" + mysqlConfig.getDataBase() + "?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull");
+        }
+
+
         configuration.setUsername(mysqlConfig.getUsername());
         configuration.setPassword(mysqlConfig.getPassword());
         if (mysqlConfig.getMaximumPoolSize() > 0) {
