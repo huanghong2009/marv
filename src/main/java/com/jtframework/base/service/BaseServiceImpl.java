@@ -6,7 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 
 import javax.annotation.Resource;
 
-public class BaseServiceImpl implements CommandLineRunner {
+public class BaseServiceImpl implements CommandLineRunner,BaseService {
     @Resource
     ApplicationContextProvider applicationContextProvider;
 
