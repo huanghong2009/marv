@@ -115,6 +115,66 @@ public class MysqlService {
         return selectList(resultClass, sql, (Object[]) null);
     }
 
+    /**
+     * 根据kv简单查询
+     * @param resultClass
+     * @param params
+     * @return
+     * @throws SQLException
+     */
+    public <T> List<T> selectListFromMap(Class<T> resultClass,Map<String,Object> params) throws SQLException {
+        String sql = "SELECT * FROM :tableName WHERE  1 =1 ";
+        params.put("tableName",BaseUtils.getServeModelValue(resultClass));
+        for (String key : params.keySet()) {
+            sql += " AND "+key +" = :"+key+" ";
+        }
+        return selectList(resultClass, sql,params);
+    }
+
+    /**
+     * 根据kv简单查询单条数据
+     * @param resultClass
+     * @param params
+     * @param <T>
+     * @return
+     * @throws SQLException
+     */
+    public <T> T selectOneFromMap(Class<T> resultClass,Map<String,Object> params) throws SQLException {
+        String sql = "SELECT * FROM :tableName WHERE  1 =1 ";
+        params.put("tableName",BaseUtils.getServeModelValue(resultClass));
+        for (String key : params.keySet()) {
+            sql += " AND "+key +" = :"+key+" ";
+        }
+        return selectOne(resultClass, sql, params);
+    }
+
+    /**
+     * 根据kv简单查询
+     * @param resultClass
+     * @param key
+     * @param value
+     * @param <T>
+     * @return
+     * @throws SQLException
+     */
+    public <T> List<T> selectListFromKV(Class<T> resultClass,String key,String value) throws SQLException {
+        String sql = "SELECT * FROM ? WHERE  ? = ? ";
+        return selectList(resultClass, sql, new String[]{BaseUtils.getServeModelValue(resultClass),key,value});
+    }
+
+    /**
+     * 根据kv简单查询单条数据
+     * @param resultClass
+     * @param key
+     * @param <T>
+     * @return
+     * @throws SQLException
+     */
+    public <T> T selectOneFromKV(Class<T> resultClass, String key,String value) throws SQLException {
+        String sql = "SELECT * FROM ? WHERE  ? = ? ";
+        return selectOne(resultClass, sql, new String[]{BaseUtils.getServeModelValue(resultClass),key,value});
+    }
+
 
     public <T> List<T> selectList(Class<T> resultClass, String sql, Object[] param) throws SQLException {
         log.debug("SQL:" + sql);
