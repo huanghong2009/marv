@@ -19,6 +19,7 @@ public abstract  class MysqlModelDao<T> extends BaseServiceImpl implements Mysql
 
     private String name;
 
+    
     private Class cls;
 
     public MysqlModelDao() {
