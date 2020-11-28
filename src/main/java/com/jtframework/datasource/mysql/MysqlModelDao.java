@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Data
 @Slf4j
-public  class MysqlModelDao<T> extends BaseServiceImpl implements MysqlModelDaoService,Serializable {
+public abstract  class MysqlModelDao<T> extends BaseServiceImpl implements MysqlModelDaoService,Serializable {
 
     private String name;
 
@@ -27,9 +27,7 @@ public  class MysqlModelDao<T> extends BaseServiceImpl implements MysqlModelDaoS
         this.name = BaseUtils.getServeModelDesc(cls);
     }
 
-    public  MysqlService getMysqlService(){
-        return new MysqlService();
-    }
+    public abstract MysqlService getMysqlService();
 
     public Class<T> getTClass() {
         Class<T> tClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
