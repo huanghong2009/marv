@@ -11,10 +11,11 @@ import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Slf4j
-public abstract class MysqlModelDao<T> extends BaseServiceImpl implements Serializable,MysqlModelDaoService {
+public abstract  class MysqlModelDao<T> extends BaseServiceImpl implements MysqlModelDaoService,Serializable {
 
     private String name;
 
@@ -26,7 +27,9 @@ public abstract class MysqlModelDao<T> extends BaseServiceImpl implements Serial
         this.name = BaseUtils.getServeModelDesc(cls);
     }
 
+
     abstract MysqlService getMysqlService();
+
 
     public Class<T> getTClass() {
         Class<T> tClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
@@ -78,6 +81,7 @@ public abstract class MysqlModelDao<T> extends BaseServiceImpl implements Serial
 
     /**
      * 查询全部数据
+     *
      * @return
      * @throws BusinessException
      */
@@ -92,12 +96,86 @@ public abstract class MysqlModelDao<T> extends BaseServiceImpl implements Serial
     }
 
     /**
+     * 根据kv查询多条数据
+     *
+     * @param key
+     * @param value
+     * @return
+     * @throws BusinessException
+     */
+    public List<T> selectListByKV(String key, String value) throws BusinessException {
+        try {
+            return getMysqlService().selectListFromKV(this.cls, key, value);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("查询全部" + this.name + "失败");
+        }
+    }
+
+    /**
+     * 根据 map kv查询多条数据
+     *
+     * @param params
+     * @return
+     * @throws BusinessException
+     */
+    @Override
+    public List selectListForMap(Map params) throws BusinessException {
+        try {
+            return getMysqlService().selectListFromMap(this.cls, params);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("查询全部" + this.name + "失败");
+        }
+    }
+
+    /**
+     * 根据kv查询单条数据
+     *
+     * @param key
+     * @param value
+     * @return
+     * @throws BusinessException
+     */
+    public T selectOneByKV(String key, String value) throws BusinessException {
+        try {
+            return (T) getMysqlService().selectOneFromKV(this.cls, key, value);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("查询全部" + this.name + "失败");
+        }
+    }
+
+    /**
+     * 根据kv查询单条数据
+     *
+     * @param params
+     * @return
+     * @throws BusinessException
+     */
+    @Override
+    public Object selectOneByMap(Map params) throws BusinessException {
+        try {
+            return (T) getMysqlService().selectOneFromMap(this.cls, params);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("查询全部" + this.name + "失败");
+        }
+    }
+
+
+
+    /**
      * 分页查询，默认查询前10条
-     * @param <T>
+     *
      * @return
      * @throws SQLException
      */
-    public <T> PageVO<T> defalutPageQuery() throws SQLException {
+    public PageVO<T> defalutPageQuery() throws SQLException {
         try {
             return getMysqlService().pageQuery(this.cls);
         } catch (Exception e) {
@@ -106,5 +184,6 @@ public abstract class MysqlModelDao<T> extends BaseServiceImpl implements Serial
             throw new BusinessException("分页查询" + this.name + "失败");
         }
     }
+
 
 }
