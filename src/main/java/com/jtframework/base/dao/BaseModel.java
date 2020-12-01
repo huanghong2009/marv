@@ -16,7 +16,7 @@ import static com.jtframework.utils.BaseUtils.isNotBlank;
  * @version 创建时间：2017/12/19
  */
 @Data
-public abstract class BaseModel implements Serializable, Cloneable {
+public  class BaseModel implements Serializable, Cloneable {
 
     private String id;
 

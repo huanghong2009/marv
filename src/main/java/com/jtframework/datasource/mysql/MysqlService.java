@@ -85,8 +85,8 @@ public class MysqlService {
     }
 
     public <T> List<T> selectListAll(Class<T> resultClass) throws SQLException {
-        String sql = "SELECT * FROM ? ";
-        return selectList(resultClass, sql, new String[]{BaseUtils.getServeModelValue(resultClass)});
+        String sql = "SELECT * FROM "+ BaseUtils.getServeModelValue(resultClass);
+        return selectList(resultClass, sql, new String[]{});
     }
 
 
@@ -123,10 +123,10 @@ public class MysqlService {
      * @throws SQLException
      */
     public <T> List<T> selectListFromMap(Class<T> resultClass,Map<String,Object> params) throws SQLException {
-        String sql = "SELECT * FROM :tableName WHERE  1 =1 ";
-        params.put("tableName",BaseUtils.getServeModelValue(resultClass));
+        String sql = "SELECT * FROM "+BaseUtils.getServeModelValue(resultClass)+" WHERE  1 =1 ";
+
         for (String key : params.keySet()) {
-            sql += " AND "+key +" = :"+key+" ";
+            sql += " AND `"+key +"` = :"+key+" ";
         }
         return selectList(resultClass, sql,params);
     }
@@ -140,10 +140,10 @@ public class MysqlService {
      * @throws SQLException
      */
     public <T> T selectOneFromMap(Class<T> resultClass,Map<String,Object> params) throws SQLException {
-        String sql = "SELECT * FROM :tableName WHERE  1 =1 ";
-        params.put("tableName",BaseUtils.getServeModelValue(resultClass));
+        String sql = "SELECT * FROM "+BaseUtils.getServeModelValue(resultClass)+" WHERE  1 =1 ";
+
         for (String key : params.keySet()) {
-            sql += " AND "+key +" = :"+key+" ";
+            sql += " AND `"+key +"` = :"+key+" ";
         }
         return selectOne(resultClass, sql, params);
     }
@@ -158,8 +158,8 @@ public class MysqlService {
      * @throws SQLException
      */
     public <T> List<T> selectListFromKV(Class<T> resultClass,String key,String value) throws SQLException {
-        String sql = "SELECT * FROM ? WHERE  ? = ? ";
-        return selectList(resultClass, sql, new String[]{BaseUtils.getServeModelValue(resultClass),key,value});
+        String sql = "SELECT * FROM "+BaseUtils.getServeModelValue(resultClass)+" WHERE  `"+ key +"` = ? ";
+        return selectList(resultClass, sql, new String[]{value});
     }
 
     /**
@@ -171,8 +171,8 @@ public class MysqlService {
      * @throws SQLException
      */
     public <T> T selectOneFromKV(Class<T> resultClass, String key,String value) throws SQLException {
-        String sql = "SELECT * FROM ? WHERE  ? = ? ";
-        return selectOne(resultClass, sql, new String[]{BaseUtils.getServeModelValue(resultClass),key,value});
+        String sql = "SELECT * FROM "+BaseUtils.getServeModelValue(resultClass)+" WHERE  `"+key+"` = ? ";
+        return selectOne(resultClass, sql, new String[]{value});
     }
 
 

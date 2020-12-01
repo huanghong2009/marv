@@ -34,7 +34,7 @@ public class RedisService {
 
     public RedisTemplate<String, Object> redisTemplate;
 
-    private static LettuceConnectionFactory getLettuceConnectionFactory(RedisConfig redisConfig) throws Exception{
+    private static LettuceConnectionFactory getLettuceConnectionFactory(RedisConfig redisConfig) throws Exception {
         // 连接池配置
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
 
@@ -43,7 +43,7 @@ public class RedisService {
         poolConfig.setMaxTotal(redisConfig.getMaxTotal() == null ? 8 : redisConfig.getMaxTotal());
         poolConfig.setMaxWaitMillis(redisConfig.getMaxWaitMillis() == null ? 5000L : redisConfig.getMaxWaitMillis());
 
-        LettucePool lettucePool = new DefaultLettucePool(redisConfig.getHost(),redisConfig.getPort(),poolConfig);
+        LettucePool lettucePool = new DefaultLettucePool(redisConfig.getHost(), redisConfig.getPort(), poolConfig);
 
         // 哨兵redis
         // RedisSentinelConfiguration redisConfig = new RedisSentinelConfiguration();
@@ -115,6 +115,11 @@ public class RedisService {
         log.info("redis :{}:{}:{} 正在初始化", redisConfig.getHost(), redisConfig.getPort(), redisConfig.getDatabase());
         this.redisTemplate = (RedisTemplate<String, Object>) getRedisTemplate(getLettuceConnectionFactory(redisConfig));
         log.info("redis :{}:{}:{} 初始化成功 ---- ", redisConfig.getHost(), redisConfig.getPort(), redisConfig.getDatabase());
+    }
+
+    public void initRedisService(RedisTemplate redisTemplate) throws Exception {
+        log.info("redis : 正在执行系统template 初始化");
+        this.redisTemplate = redisTemplate;
     }
 
     public void setRedisTemplate(RedisTemplate<String, Object> redisTemplate) {
