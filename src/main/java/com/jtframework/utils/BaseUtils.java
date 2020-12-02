@@ -721,18 +721,17 @@ public final class BaseUtils {
                 result.put(ReflectUtil.getFieldName(field), value);
             } else {
                 /**
-                 * 判断是不是基本类型
+                 * 判断是不是常用类型
                  */
-                if (type.isPrimitive()) {
-                    if (BaseUtils.isBlank(objName) || type.isArray() || type.isEnum() ||
-                            type.isAssignableFrom(Date.class) || type.isAssignableFrom(BigDecimal.class) ||
-                            type.isAssignableFrom(String.class)) {
+                if (type.isPrimitive() || type.isArray() || type.isEnum() ||
+                        type.isAssignableFrom(Date.class) || type.isAssignableFrom(BigDecimal.class) ||
+                        type.isAssignableFrom(String.class)) {
+                    if (BaseUtils.isBlank(objName)) {
                         result.put(ReflectUtil.getFieldName(field), value);
                     } else {
                         result.put(objName + "." + ReflectUtil.getFieldName(field), value);
                     }
-                } else if (type.isAssignableFrom(List.class) || type.isAssignableFrom(Map.class)
-                        || type.isAssignableFrom(Set.class)) {
+                } else if (type.isAssignableFrom(List.class) || type.isAssignableFrom(Map.class) || type.isAssignableFrom(Set.class)) {
                     continue;
                 } else {
                     getObjectFiledValue(ReflectUtil.getFieldName(field), value, result, num + 1);
