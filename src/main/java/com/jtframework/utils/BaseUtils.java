@@ -746,12 +746,13 @@ public final class BaseUtils {
 
     /**
      * 实体类转Map
+     *
      * @param object
      * @return
      */
     public static Map<String, Object> entityToMap(Object object) {
         Map<String, Object> map = new HashMap();
-        for (Field field : ReflectUtil.getFields(object.getClass())){
+        for (Field field : ReflectUtil.getFields(object.getClass())) {
             try {
                 boolean flag = field.isAccessible();
                 field.setAccessible(true);
@@ -767,7 +768,8 @@ public final class BaseUtils {
 
     /**
      * Map转实体类
-     * @param map 需要初始化的数据，key字段必须与实体类的成员名字一样，否则赋值为空
+     *
+     * @param map    需要初始化的数据，key字段必须与实体类的成员名字一样，否则赋值为空
      * @param entity 需要转化成的实体类
      * @return
      */
@@ -775,12 +777,12 @@ public final class BaseUtils {
         T t = null;
         try {
             t = entity.newInstance();
-            for(Field field : ReflectUtil.getFields(entity.getClass())) {
+            for (Field field : ReflectUtil.getFields(entity.getClass())) {
                 if (map.containsKey(field.getName())) {
                     boolean flag = field.isAccessible();
                     field.setAccessible(true);
                     Object object = map.get(field.getName());
-                    if (object!= null && field.getType().isAssignableFrom(object.getClass())) {
+                    if (object != null && field.getType().isAssignableFrom(object.getClass())) {
                         field.set(t, object);
                     }
                     field.setAccessible(flag);
@@ -795,5 +797,28 @@ public final class BaseUtils {
             e.printStackTrace();
         }
         return t;
+    }
+
+    /**
+     * 获得今天剩余秒数
+     *
+     * @return
+     */
+    public static int getToDayLastSeconds() throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar calendar = Calendar.getInstance();
+        // 得到今天 晚上的最后一刻 最后时间
+        String last = sdf2.format(new Date()) + " 23:59:59";
+
+        try {
+            // 转换为今天
+            Date latDate = sdf.parse(last);
+            // 得到的毫秒 除以1000转换 为秒
+            return (int) (latDate.getTime() - System.currentTimeMillis()) / 1000;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            throw new Exception("获取剩余秒数异常");
+        }
     }
 }
