@@ -28,6 +28,8 @@ public class MysqlQueryParams {
      * 表名 或者 传入一段sql
      */
     private String table;
+
+    private String as = "marv";
     /**
      * 查询参数
      */
@@ -51,7 +53,12 @@ public class MysqlQueryParams {
         this.table = BaseUtils.getServeModelValue(cls);
     }
 
+    public MysqlQueryParams(String sql) {
+        this.table = " ( " + sql + " ) AS " + this.as + " ";
+    }
+
     public MysqlQueryParams(String sql, String as) {
+        this.as = as;
         this.table = " ( " + sql + " ) AS " + as + " ";
     }
 
@@ -124,23 +131,23 @@ public class MysqlQueryParams {
         for (MysqlQueryParam param : params) {
             String filed = param.column.toUpperCase();
             if (param.symbol.equals(MysqlSymbol.IS)) {
-                sql.append(" AND " + filed + "= :" + filed + " ");
+                sql.append(" AND " + filed + " = :" + filed + " ");
             } else if (param.symbol.equals(MysqlSymbol.NIS)) {
-                sql.append(" AND " + filed + "!= :" + filed + " ");
+                sql.append(" AND " + filed + " != :" + filed + " ");
             } else if (param.symbol.equals(MysqlSymbol.IN)) {
-                sql.append(" AND " + filed + "IN( :" + filed + ") ");
+                sql.append(" AND " + filed + " IN( :" + filed + ") ");
             } else if (param.symbol.equals(MysqlSymbol.NIN)) {
-                sql.append(" AND " + filed + "NOT IN( :" + filed + ") ");
+                sql.append(" AND " + filed + " NOT IN( :" + filed + ") ");
             } else if (param.symbol.equals(MysqlSymbol.LIKE)) {
-                sql.append(" AND " + filed + "LIKE '%' :" + filed + " '%' ");
+                sql.append(" AND " + filed + " LIKE '%' :" + filed + " '%' ");
             } else if (param.symbol.equals(MysqlSymbol.LEFT_LIKE)) {
-                sql.append(" AND " + filed + "LIKE  :" + filed + " '%' ");
+                sql.append(" AND " + filed + " LIKE  :" + filed + " '%' ");
             } else if (param.symbol.equals(MysqlSymbol.RIGHT_LIKE)) {
-                sql.append(" AND " + filed + "LIKE '%' :" + filed + " ");
+                sql.append(" AND " + filed + " LIKE '%' :" + filed + " ");
             } else if (param.symbol.equals(MysqlSymbol.INCR)) {
-                sql.append(" AND " + filed + "=" + filed + " + :" + filed + " ");
+                sql.append(" AND " + filed + " =" + filed + " + :" + filed + " ");
             } else if (param.symbol.equals(MysqlSymbol.DECR)) {
-                sql.append(" AND " + filed + "=" + filed + " - :" + filed + " ");
+                sql.append(" AND " + filed + " =" + filed + " - :" + filed + " ");
             } else {
                 continue;
             }

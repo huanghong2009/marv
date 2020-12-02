@@ -85,7 +85,7 @@ public class MysqlService {
     }
 
     public <T> List<T> selectListAll(Class<T> resultClass) throws SQLException {
-        String sql = "SELECT * FROM "+ BaseUtils.getServeModelValue(resultClass);
+        String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass)+"`";
         return selectList(resultClass, sql, new String[]{});
     }
 
@@ -117,39 +117,42 @@ public class MysqlService {
 
     /**
      * 根据kv简单查询
+     *
      * @param resultClass
      * @param params
      * @return
      * @throws SQLException
      */
-    public <T> List<T> selectListFromMap(Class<T> resultClass,Map<String,Object> params) throws SQLException {
-        String sql = "SELECT * FROM "+BaseUtils.getServeModelValue(resultClass)+" WHERE  1 =1 ";
+    public <T> List<T> selectListFromMap(Class<T> resultClass, Map<String, Object> params) throws SQLException {
+        String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass) + "` WHERE  1 =1 ";
 
         for (String key : params.keySet()) {
-            sql += " AND `"+key +"` = :"+key+" ";
+            sql += " AND `" + key + "` = :" + key + " ";
         }
-        return selectList(resultClass, sql,params);
+        return selectList(resultClass, sql, params);
     }
 
     /**
      * 根据kv简单查询单条数据
+     *
      * @param resultClass
      * @param params
      * @param <T>
      * @return
      * @throws SQLException
      */
-    public <T> T selectOneFromMap(Class<T> resultClass,Map<String,Object> params) throws SQLException {
-        String sql = "SELECT * FROM "+BaseUtils.getServeModelValue(resultClass)+" WHERE  1 =1 ";
+    public <T> T selectOneFromMap(Class<T> resultClass, Map<String, Object> params) throws SQLException {
+        String sql = "SELECT * FROM " + BaseUtils.getServeModelValue(resultClass) + " WHERE  1 =1 ";
 
         for (String key : params.keySet()) {
-            sql += " AND `"+key +"` = :"+key+" ";
+            sql += " AND `" + key + "` = :" + key + " ";
         }
         return selectOne(resultClass, sql, params);
     }
 
     /**
      * 根据kv简单查询
+     *
      * @param resultClass
      * @param key
      * @param value
@@ -157,24 +160,47 @@ public class MysqlService {
      * @return
      * @throws SQLException
      */
-    public <T> List<T> selectListFromKV(Class<T> resultClass,String key,String value) throws SQLException {
-        String sql = "SELECT * FROM "+BaseUtils.getServeModelValue(resultClass)+" WHERE  `"+ key +"` = ? ";
+    public <T> List<T> selectListFromKV(Class<T> resultClass, String key, String value) throws SQLException {
+        String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass) + "` WHERE  `" + key + "` = ? ";
         return selectList(resultClass, sql, new String[]{value});
     }
 
     /**
      * 根据kv简单查询单条数据
+     *
      * @param resultClass
      * @param key
      * @param <T>
      * @return
      * @throws SQLException
      */
-    public <T> T selectOneFromKV(Class<T> resultClass, String key,String value) throws SQLException {
-        String sql = "SELECT * FROM "+BaseUtils.getServeModelValue(resultClass)+" WHERE  `"+key+"` = ? ";
+    public <T> T selectOneFromKV(Class<T> resultClass, String key, String value) throws SQLException {
+        String sql = "SELECT * FROM " + BaseUtils.getServeModelValue(resultClass) + " WHERE  `" + key + "` = ? ";
         return selectOne(resultClass, sql, new String[]{value});
     }
 
+    /**
+     * 根据queryParams 查询数据
+     * @param resultClass
+     * @param mysqlQueryParams
+     * @param <T>
+     * @return
+     * @throws SQLException
+     */
+    public <T> List<T> selectList(Class<T> resultClass, MysqlQueryParams mysqlQueryParams) throws SQLException {
+        mysqlQueryParams.generateSql();
+        Map<String, Object> param = mysqlQueryParams.getParamsMap();
+        log.debug("SQL:" + mysqlQueryParams.getSql());
+
+        RowMapper rowMapper;
+        if (BaseModel.class.isAssignableFrom(resultClass)) {
+            rowMapper = new ModelPropertyRowMapper(resultClass);
+        } else {
+            rowMapper = new DTOPropertyRowMapper(resultClass);
+        }
+
+        return namedParameterJdbcTemplate.query(mysqlQueryParams.getSql(), param, rowMapper);
+    }
 
     public <T> List<T> selectList(Class<T> resultClass, String sql, Object[] param) throws SQLException {
         log.debug("SQL:" + sql);

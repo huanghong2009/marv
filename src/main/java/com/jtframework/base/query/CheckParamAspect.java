@@ -57,60 +57,69 @@ public class CheckParamAspect {
     public void before(final JoinPoint joinPoint, CheckParam checkParam) throws BusinessException {
         Object[] args = joinPoint.getArgs();
         String[] argNames = ((MethodSignature) joinPoint.getSignature()).getParameterNames();
-        Set<String> checkMap;
-        if (BaseUtils.isNotBlank(checkParam.value())) {
-            String[] checks = checkParam.value().split(",");
-            checkMap = new HashSet<>(Arrays.asList(checks));
-        } else {
-            checkMap = new HashSet<>();
-        }
 
-        Map<String, Object> argAllFiledsMap = new HashMap<>();
-        /**
-         * 获取全部字段 和属性
-         */
-        for (int i = 0; i < args.length; i++) {
-            if (args[i] instanceof String || args[i] instanceof Integer ||
-                    args[i] instanceof Double ||
-                    args[i] instanceof Boolean || args[i] instanceof Long
-                    || args[i] instanceof BigDecimal || args[i] instanceof Date
-                    || args[i] instanceof LocalDate) {
-                argAllFiledsMap.put(argNames[i], args[i]);
+        if (args.length == 0 ){
+            if (argNames == null ){
+                log.error("--- 未编译参数名称,跳过参数检查过程...");
+            }
+        }else {
+            Set<String> checkMap;
+            if (BaseUtils.isNotBlank(checkParam.value())) {
+                String[] checks = checkParam.value().split(",");
+                checkMap = new HashSet<>(Arrays.asList(checks));
             } else {
-                Map<String, Object> objFileddMap = BaseUtils.getObjectFiledValue(args[i]);
-                for (String key : objFileddMap.keySet()) {
-                    argAllFiledsMap.put(argNames[i] + "." + key, objFileddMap.get(key));
-                }
-            }
-        }
-
-        /**
-         * 判断对象符合不符合规范
-         */
-        for (String key : argAllFiledsMap.keySet()) {
-            boolean flag = true;
-            if (checkParam.checkType().equals(CheckParam.Type.EXCLUDE)) {
-                if (checkMap.contains(key)) {
-                    flag = false;
-                }
-            } else if (checkParam.checkType().equals(CheckParam.Type.ONLY)) {
-                if (!checkMap.contains(key)) {
-                    flag = false;
-                }
+                checkMap = new HashSet<>();
             }
 
-            if (flag) {
-                Object value = argAllFiledsMap.get(key);
-                if (null == value) {
-                    throw new BusinessException("请检查参数");
-                }
-
-                if (value instanceof String) {
-                    if (BaseUtils.isBlank(String.valueOf(value))) {
-                        throw new BusinessException("请检查参数");
+            Map<String, Object> argAllFiledsMap = new HashMap<>();
+            /**
+             * 获取全部字段 和属性
+             */
+            for (int i = 0; i < args.length; i++) {
+                if (args[i] instanceof String || args[i] instanceof Integer ||
+                        args[i] instanceof Double ||
+                        args[i] instanceof Boolean || args[i] instanceof Long
+                        || args[i] instanceof BigDecimal || args[i] instanceof Date
+                        || args[i] instanceof LocalDate) {
+                    argAllFiledsMap.put(argNames[i], args[i]);
+                } else {
+                    Map<String, Object> objFileddMap = BaseUtils.getObjectFiledValue(args[i]);
+                    for (String key : objFileddMap.keySet()) {
+                        argAllFiledsMap.put(argNames[i] + "." + key, objFileddMap.get(key));
                     }
                 }
             }
+
+            /**
+             * 判断对象符合不符合规范
+             */
+            for (String key : argAllFiledsMap.keySet()) {
+                boolean flag = true;
+                if (checkParam.checkType().equals(CheckParam.Type.EXCLUDE)) {
+                    if (checkMap.contains(key)) {
+                        flag = false;
+                    }
+                } else if (checkParam.checkType().equals(CheckParam.Type.ONLY)) {
+                    if (!checkMap.contains(key)) {
+                        flag = false;
+                    }
+                }
+
+                if (flag) {
+                    Object value = argAllFiledsMap.get(key);
+                    if (null == value) {
+                        throw new BusinessException("请检查参数");
+                    }
+
+                    if (value instanceof String) {
+                        if (BaseUtils.isBlank(String.valueOf(value))) {
+                            throw new BusinessException("请检查参数");
+                        }
+                    }
+                }
+        }
+
+
         }
     }
 }
