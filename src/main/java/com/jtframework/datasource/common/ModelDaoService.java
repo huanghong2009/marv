@@ -1,4 +1,4 @@
-package com.jtframework.datasource.mysql;
+package com.jtframework.datasource.common;
 
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-public interface MysqlModelDaoService<T> {
+public interface ModelDaoService<T> {
 
 
     public void insert(T model) throws BusinessException;
@@ -15,8 +15,6 @@ public interface MysqlModelDaoService<T> {
     public T load(String id) throws BusinessException;
 
     public int delete(String id) throws BusinessException;
-
-    public int update(T model) throws BusinessException;
 
     public List<T> selectAll() throws BusinessException;
 

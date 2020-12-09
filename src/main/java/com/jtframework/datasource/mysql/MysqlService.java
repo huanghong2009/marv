@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * @version 创建时间：2017/12/19
  */
 @Slf4j
-public class MysqlService {
+public class MysqlService  {
     public JdbcTemplate jdbcTemplate;
     public NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
