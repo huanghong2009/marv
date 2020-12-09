@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.dao.ServerModel;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.utils.BaseUtils;
-
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoException;
@@ -20,6 +19,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * mongodb curd 工具类
@@ -54,6 +54,15 @@ public class MongodbService {
         log.info("{}:{}:{}--{} 初始化中 ......", host, port, database, mongoAuthClient.getUserName());
     }
 
+    /**
+     * 从1 开始，默认查询 10条 ，1 ，10
+     * @param resultClass
+     * @param query
+     * @param pageNo
+     * @param pageSize
+     * @param <T>
+     * @return
+     */
     public <T> PageVO<T> pageQuery(Class<T> resultClass, Query query, int pageNo, int pageSize) {
         int total = (int) this.mongoTemplate.count(query, getCollectionName(resultClass));
         if (total < 1) {
@@ -80,6 +89,69 @@ public class MongodbService {
 
     public <T> List<T> find(Class<T> resultClass, Query query) {
         return this.mongoTemplate.find(query, resultClass, getCollectionName(resultClass));
+    }
+
+    /**
+     * 根据kv简单查询
+     * @param resultClass
+     * @param key
+     * @param value
+     * @param <T>
+     * @return
+     */
+    public <T> List<T> findByKV(Class<T> resultClass, String key, String value) {
+        return this.mongoTemplate.find(createQuery().addCriteria(Criteria.where(key).is(value)), resultClass, getCollectionName(resultClass));
+    }
+
+    /**
+     * 根据map简单查询
+     * @param resultClass
+     * @param <T>
+     * @return
+     */
+    public <T> List<T> findByMap(Class<T> resultClass, Map<String,Object> params) {
+        Query query = createQuery();
+        for (String key : params.keySet()) {
+            query.addCriteria(Criteria.where(key).is(params.get(key)));
+        }
+        return this.mongoTemplate.find(query, resultClass, getCollectionName(resultClass));
+    }
+
+
+    /**
+     * 根据kv简单查询
+     * @param resultClass
+     * @param key
+     * @param value
+     * @param <T>
+     * @return
+     */
+    public <T> T  findOneByKV(Class<T> resultClass, String key, String value) {
+        return this.mongoTemplate.findOne(createQuery().addCriteria(Criteria.where(key).is(value)), resultClass, getCollectionName(resultClass));
+    }
+
+    /**
+     * 根据map简单查询
+     * @param resultClass
+     * @param <T>
+     * @return
+     */
+    public <T> T findOneByMap(Class<T> resultClass, Map<String,Object> params) {
+        Query query = createQuery();
+        for (String key : params.keySet()) {
+            query.addCriteria(Criteria.where(key).is(params.get(key)));
+        }
+        return this.mongoTemplate.findOne(query, resultClass, getCollectionName(resultClass));
+    }
+
+    /**
+     * 查询全部
+     * @param resultClass
+     * @param <T>
+     * @return
+     */
+    public <T> List<T> findAll(Class<T> resultClass) {
+        return this.mongoTemplate.findAll(resultClass, getCollectionName(resultClass));
     }
 
     public <T> T findOne(Class<T> resultClass, Query query) {
@@ -158,6 +230,8 @@ public class MongodbService {
     public long removeById(Class<?> resultClass, String id) {
         return remove(Query.query(Criteria.where("_id").is(id)),resultClass);
     }
+
+
 
     public boolean collectionExists(String colName) throws MongoException {
         return this.mongoTemplate.collectionExists(colName);

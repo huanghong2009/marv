@@ -1,24 +1,46 @@
-package com.jtframework.datasource.mysql;
+package com.jtframework.datasource.mongodb;
 
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-@Data
+
 @Slf4j
-public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl {
+public abstract class MongoModelDao<T> extends ModelDaoServiceImpl {
 
-    public abstract MysqlService getMysqlService();
+    public abstract MongodbService getMongoService();
 
+
+    /**
+     * 新增
+     *
+     * @param model
+     * @throws BusinessException
+     */
     public void insert(Object model) throws BusinessException {
         try {
-            getMysqlService().insert(model);
+            getMongoService().insert(model);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("保存 " + this.name + " 失败");
+        }
+    }
+
+    /**
+     * 保存，有id 修改，无id 插入
+     *
+     * @param model
+     * @throws BusinessException
+     */
+    public void save(Object model) throws BusinessException {
+        try {
+            getMongoService().save(model);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -28,7 +50,7 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl {
 
     public T load(String id) throws BusinessException {
         try {
-            return (T) getMysqlService().load(cls, id);
+            return (T) getMongoService().findById(cls, id);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -36,23 +58,14 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl {
         }
     }
 
+
     public int delete(String id) throws BusinessException {
         try {
-            return getMysqlService().delete(cls, id);
+            return (int) getMongoService().removeById(cls, id);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("删除" + this.name + "失败");
-        }
-    }
-
-    public int update(Object model) throws BusinessException {
-        try {
-            return getMysqlService().update(model);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            throw new BusinessException("修改" + this.name + "失败");
         }
     }
 
@@ -64,7 +77,7 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl {
      */
     public List<T> selectAll() throws BusinessException {
         try {
-            return getMysqlService().selectListAll(this.cls);
+            return getMongoService().findAll(cls);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -82,7 +95,7 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl {
      */
     public List<T> selectListByKV(String key, String value) throws BusinessException {
         try {
-            return getMysqlService().selectListFromKV(this.cls, key, value);
+            return getMongoService().findByKV(this.cls, key, value);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -100,7 +113,7 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl {
     @Override
     public List selectListForMap(Map params) throws BusinessException {
         try {
-            return getMysqlService().selectListFromMap(this.cls, params);
+            return getMongoService().findByMap(this.cls, params);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -118,7 +131,7 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl {
      */
     public T selectOneByKV(String key, String value) throws BusinessException {
         try {
-            return (T) getMysqlService().selectOneFromKV(this.cls, key, value);
+            return (T) getMongoService().findOneByKV(this.cls, key, value);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -136,14 +149,13 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl {
     @Override
     public Object selectOneByMap(Map params) throws BusinessException {
         try {
-            return (T) getMysqlService().selectOneFromMap(this.cls, params);
+            return (T) getMongoService().findOneByMap(this.cls, params);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("查询全部" + this.name + "失败");
         }
     }
-
 
 
     /**
@@ -154,13 +166,12 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl {
      */
     public PageVO<T> defalutPageQuery() throws SQLException {
         try {
-            return getMysqlService().pageQuery(this.cls);
+            return getMongoService().pageQuery(this.cls,getMongoService().createQuery(),1,10);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("分页查询" + this.name + "失败");
         }
     }
-
 
 }
