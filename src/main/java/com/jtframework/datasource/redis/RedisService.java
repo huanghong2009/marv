@@ -5,30 +5,36 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.jtframework.base.exception.BusinessException;
 import com.jtframework.utils.BaseUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
+
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.util.CollectionUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+
 @Slf4j
 public class RedisService {
+    //锁名称
+    public static final String LOCK_PREFIX = "redis_lock_";
+    //加锁失效时间，毫秒
+    public static final int LOCK_EXPIRE = 600; // ms
 
     public RedisTemplate<String, Object> redisTemplate;
 
@@ -670,57 +676,91 @@ public class RedisService {
         }
     }
 
-    static class MyRedisSerializer implements RedisSerializer<Object> {
+    /**
+     * 获取分布式锁
+     *
+     * @param key
+     */
+    private Boolean getLock(String key) {
+        if (BaseUtils.isNotBlank(key)) {
 
-        /**
-         * 序列化
-         *
-         * @param object
-         * @return
-         */
-        private static byte[] serializeObj(Object object) {
-            ObjectOutputStream oos = null;
-            ByteArrayOutputStream baos = null;
-            try {
-                baos = new ByteArrayOutputStream();
-                oos = new ObjectOutputStream(baos);
-                oos.writeObject(object);
-                byte[] bytes = baos.toByteArray();
-                return bytes;
-            } catch (Exception e) {
-                throw new RuntimeException("序列化失败!", e);
-            }
-        }
 
-        /**
-         * 反序列化
-         *
-         * @param bytes
-         * @return
-         */
-        private static Object deserializeObj(byte[] bytes) {
-            if (bytes == null) {
-                return null;
-            }
-            ByteArrayInputStream bais = null;
-            try {
-                bais = new ByteArrayInputStream(bytes);
-                ObjectInputStream ois = new ObjectInputStream(bais);
-                return ois.readObject();
-            } catch (Exception e) {
-                throw new RuntimeException("反序列化失败!", e);
-            }
-        }
+            return (Boolean) this.redisTemplate.execute(new RedisCallback() {
+                @Override
+                public Object doInRedis(RedisConnection redisConnection) throws DataAccessException {
+                    long expireAt = System.currentTimeMillis() + LOCK_EXPIRE + 1;
+                    Boolean acquire = redisConnection.setNX(key.getBytes(), String.valueOf(expireAt).getBytes());
 
-        @Override
-        public byte[] serialize(Object o) throws SerializationException {
-            return serializeObj(o);
-        }
+                    if (acquire) {
+                        return true;
+                    } else {
 
-        @Override
-        public Object deserialize(byte[] bytes) throws SerializationException {
-            return deserializeObj(bytes);
+                        byte[] value = redisConnection.get(key.getBytes());
+
+                        if (Objects.nonNull(value) && value.length > 0) {
+
+                            long expireTime = Long.parseLong(new String(value));
+                            // 如果锁已经过期
+                            if (expireTime < System.currentTimeMillis()) {
+                                // 重新加锁，防止死锁
+                                byte[] oldValue = redisConnection.getSet(key.getBytes(), String.valueOf(System.currentTimeMillis() + LOCK_EXPIRE + 1).getBytes());
+                                return Long.parseLong(new String(oldValue)) < System.currentTimeMillis();
+                            }
+                        }
+                    }
+                    return false;
+                }
+            });
+
+        } else {
+            throw new BusinessException("分布式锁 key 为空");
         }
     }
+
+    /**
+     * 删除锁
+     *
+     * @param key
+     */
+    public void deleteLock(String key) {
+        redisTemplate.delete(key);
+    }
+
+    /**
+     * 非阻塞式，获取分布式锁
+     *
+     * @param key     锁的key
+     * @param timeOut 等待锁的超时时间:秒
+     * @param handle  获取之后的调用的方法
+     */
+    public void lock(String key, Long timeOut, Runnable handle) {
+        final String keyLock = RedisService.LOCK_PREFIX + key;
+
+        long startTime = System.currentTimeMillis();
+
+        while (!this.getLock(keyLock)) {
+            if (System.currentTimeMillis() - startTime > timeOut * 1000) {
+                throw new BusinessException("获取分布式锁超时....");
+            }
+            try {
+                Thread.sleep(100L);
+            } catch (Exception e) {
+
+            }
+        }
+
+        try {
+            log.info("{} 分布式锁任务正在执行，正在释放...", key);
+            handle.run();
+            return;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+        } finally {
+            log.info("{} 分布式锁任务执行完成，正在释放...", key);
+            deleteLock(keyLock);
+        }
+    }
+
 
 }
