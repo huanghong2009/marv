@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @Configuration
 @EnableAsync
@@ -24,6 +25,7 @@ public class ThredPoolConfig {
                                                          @Value("${threadPool.maxPoolSize:100}")  Integer maxPoolSize,
                                                          @Value("${threadPool.queueCapacity:1000}") Integer queueCapacity) {
         ThreadPoolTaskExecutor pool = new ThreadPoolTaskExecutor();
+
         pool.setKeepAliveSeconds(300);
         //核心线程池数
         pool.setCorePoolSize(corePoolSize);
@@ -41,4 +43,28 @@ public class ThredPoolConfig {
         return pool;
     }
 
+//    /**
+//     * 定时任务线程池,暂时用不到
+//     * @return
+//     */
+//    @Bean
+//    public ThreadPoolTaskScheduler threadPoolTaskScheduler(@Value("${threadPool.corePoolSize:30}") Integer schedulerPoolSize) {
+//        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+//
+//        /**
+//         * 线程池大小
+//         */
+//        scheduler.setPoolSize(schedulerPoolSize);
+//
+//        /**
+//         * 线程名称前缀
+//         */
+//        scheduler.setThreadNamePrefix("scheduler-collector-");
+//
+//        scheduler.setAwaitTerminationSeconds(60);
+//
+//        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+//
+//        return scheduler;
+//    }
 }
