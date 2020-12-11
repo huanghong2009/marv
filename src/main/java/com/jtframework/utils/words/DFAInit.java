@@ -1,4 +1,4 @@
-package edu.jsxf.matrix.server.systemmanagement.common.sensitive.words;
+package com.jtframework.utils.words;
 
 import java.io.BufferedReader;
 import java.io.File;

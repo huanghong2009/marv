@@ -12,7 +12,7 @@ public interface ModelDaoService<T> {
 
     public void insert(T model) throws BusinessException;
 
-    public T load(String id) throws BusinessException;
+    public <T>T load(String id) throws BusinessException;
 
     public int delete(String id) throws BusinessException;
 
@@ -36,7 +36,7 @@ public interface ModelDaoService<T> {
      * @return
      * @throws BusinessException
      */
-    public T selectOneByKV(String key,String value) throws BusinessException;
+    public <T>T selectOneByKV(String key,String value) throws BusinessException;
 
     /**
      * 根据 map kv查询多条数据
@@ -54,7 +54,7 @@ public interface ModelDaoService<T> {
      * @return
      * @throws BusinessException
      */
-    public T selectOneByMap(Map<String,Object> params) throws BusinessException;
+    public <T>T selectOneByMap(Map<String,Object> params) throws BusinessException;
 
     /**
      * 分页查询，默认查询前10条
