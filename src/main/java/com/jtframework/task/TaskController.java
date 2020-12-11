@@ -9,7 +9,7 @@ import java.util.Map;
 
 @Controller
 @RequestMapping("/sys/workflow")
-public class BaseController {
+public class TaskController {
 
     @RequestMapping(value = "/exec-node", method = RequestMethod.POST)
     public ServerResponse execNode(Map<String,Object> stringObjectMap) {

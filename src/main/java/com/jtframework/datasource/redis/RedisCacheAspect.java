@@ -4,6 +4,7 @@ package com.jtframework.datasource.redis;
 import com.jtframework.base.rest.ServerResponse;
 import com.jtframework.utils.BaseUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
@@ -105,7 +106,7 @@ public class RedisCacheAspect {
      * ${tags}
      */
     @AfterReturning(value = "asAnnotation() && @annotation(resdisClean)", returning = "re")
-    public void after(ProceedingJoinPoint joinPoint, ResdisClean resdisClean, Object re) throws Throwable {
+    public void after(JoinPoint joinPoint, ResdisClean resdisClean, Object re) throws Throwable {
         try {
             MethodSignature signature = ((MethodSignature) joinPoint.getSignature());
             Object[] args = joinPoint.getArgs();

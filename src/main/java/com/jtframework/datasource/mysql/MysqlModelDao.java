@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Data
 @Slf4j
-public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl {
+public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl  {
 
     public abstract MysqlService getMysqlService();
 
