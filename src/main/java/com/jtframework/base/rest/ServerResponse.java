@@ -25,4 +25,12 @@ public class ServerResponse<T> {
         SUCCEED,
         ERROR
     }
+
+    public static ServerResponse succeed( String msg, Object data){
+        return new ServerResponse(State.SUCCEED.name(),msg,data);
+    }
+
+    public static ServerResponse error( String msg, Object data){
+        return new ServerResponse(State.ERROR.name(),msg,data);
+    }
 }

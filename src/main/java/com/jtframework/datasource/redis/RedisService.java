@@ -31,6 +31,11 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class RedisService {
+    /**
+     * redis一般只会有一个实例（不可能存在多个redis serivice，不存在这样的场景）
+     */
+    public static RedisService REDIS_STATIC_SERVICE;
+
     //锁名称
     public static final String LOCK_PREFIX = "redis_lock_";
     //加锁失效时间，毫秒
@@ -127,7 +132,16 @@ public class RedisService {
         log.info("redis :{}:{}:{} 正在初始化", redisConfig.getHost(), redisConfig.getPort(), redisConfig.getDatabase());
         this.redisTemplate = (RedisTemplate<String, Object>) getRedisTemplate(getLettuceConnectionFactory(redisConfig));
         log.info("redis :{}:{}:{} 初始化成功 ---- ", redisConfig.getHost(), redisConfig.getPort(), redisConfig.getDatabase());
+        RedisService.REDIS_STATIC_SERVICE = this;
     }
+
+
+    public void initRedisService(RedisTemplate redisTemplate) throws Exception {
+        log.info("redis : 正在执行系统template 初始化");
+        this.redisTemplate = redisTemplate;
+        RedisService.REDIS_STATIC_SERVICE = this;
+    }
+
 
     public void setRedisTemplate(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;

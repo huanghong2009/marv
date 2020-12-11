@@ -1,18 +1,20 @@
 package com.jtframework.datasource.redis;
 
 
-import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.rest.ServerResponse;
-import com.jtframework.base.system.ApplicationContextProvider;
 import com.jtframework.utils.BaseUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.Signature;
+import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,32 +22,57 @@ import java.util.Map;
 @Aspect
 @Slf4j
 public class RedisCacheAspect {
-    public static final String[] redisCleanAspectType = new String[]{"key", "hash"};
 
-    private static String getRedisKey(String key, Object[] args) {
-        if (BaseUtils.isBlank(key)) {
-            log.warn("ResdisClean keysAndType 不符合规范: ---");
-            return null;
+    /**
+     * 根据规则获取缓存key
+     *
+     * @param args
+     * @param argNames
+     * @param keyParams
+     * @return
+     */
+    private static String getRedisCacheKey(Object[] args, String[] argNames, String keyParams) {
+        Map<String, Object> argAllFiledsMap = new HashMap<>();
+        /**
+         * 获取全部字段 和属性
+         */
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof String || args[i] instanceof Integer ||
+                    args[i] instanceof Double ||
+                    args[i] instanceof Boolean || args[i] instanceof Long
+                    || args[i] instanceof BigDecimal || args[i] instanceof Date
+                    || args[i] instanceof LocalDate) {
+                argAllFiledsMap.put(argNames[i], args[i]);
+            } else {
+                Map<String, Object> objFileddMap = BaseUtils.getObjectFiledValue(args[i]);
+                for (String key : objFileddMap.keySet()) {
+                    argAllFiledsMap.put(argNames[i] + "." + key, objFileddMap.get(key));
+                }
+            }
         }
 
-        if (!key.matches("^[0-9]\\d*$")) {
-            log.warn("ResdisClean keysAndType 不符合规范: ---");
-            return null;
+        String[] keys = keyParams.split(",");
+        String result = "";
+
+        for (String key : keys) {
+            if (argAllFiledsMap.containsKey(key)) {
+                if (BaseUtils.isBlank(argAllFiledsMap.get(key).toString())) {
+                    return "";
+                }
+                if (argAllFiledsMap.get(key).toString().length() > 80) {
+                    return "";
+                }
+                result += argAllFiledsMap.get(key).toString() + "_";
+            } else {
+                return "";
+            }
         }
 
-        int keyIndex = Integer.parseInt(key);
-
-        if (keyIndex > args.length - 1) {
-            log.warn("ResdisClean keyIndex 越界: ---");
-            return null;
-        }
-        if (args[keyIndex] instanceof String || args[keyIndex] instanceof Integer) {
-            key = String.valueOf(args[keyIndex]);
-        } else {
-            key = String.valueOf(args[keyIndex].hashCode());
+        if (BaseUtils.isNotBlank(result)) {
+            result = result.substring(0, result.length() - 1);
         }
 
-        return key;
+        return result;
     }
 
     /**
@@ -77,82 +104,52 @@ public class RedisCacheAspect {
      * 操作步骤: TODO<br/>
      * ${tags}
      */
-    @Around("asAnnotation() && @annotation(resdisClean)")
-    public Object around(ProceedingJoinPoint joinPoint, ResdisClean resdisClean) throws Throwable {
-        ServerResponse serverResponse = new ServerResponse();
+    @AfterReturning(value = "asAnnotation() && @annotation(resdisClean)", returning = "re")
+    public void after(ProceedingJoinPoint joinPoint, ResdisClean resdisClean, Object re) throws Throwable {
         try {
-
-
-            Signature signature = joinPoint.getSignature();
+            MethodSignature signature = ((MethodSignature) joinPoint.getSignature());
             Object[] args = joinPoint.getArgs();
-            Object result = joinPoint.proceed(args);
+            String[] argNames = signature.getParameterNames();
 
-            //清除缓存
-            this.cleanRedisCache(resdisClean, args);
+            String keyParames = resdisClean.key();
+            String group = resdisClean.group();
 
-            return result;
+            String redisKey = "";
+
+            boolean flag = true;
+
+            if (BaseUtils.isBlank(keyParames)) {
+                log.error("{} 方法注解key为空,redis 缓存清除不生效...", signature.getName());
+                flag = false;
+            }
+
+            /**
+             * 获取 redis key
+             */
+            if (flag) {
+                redisKey = getRedisCacheKey(args, argNames, keyParames);
+                if (BaseUtils.isBlank(redisKey)) {
+                    log.error("{} key标注的参数为空,或最终的key长度过长,redis 缓存清除不生效...", signature.getName());
+                    flag = false;
+                }
+            }
+
+            /**
+             * 删除缓存
+             */
+            if (RedisService.REDIS_STATIC_SERVICE != null && flag) {
+                if (RedisService.REDIS_STATIC_SERVICE.hHasKey(group, redisKey)) {
+                    RedisService.REDIS_STATIC_SERVICE.hdel(group, redisKey);
+                    log.error("{},{} key标注缓存已删除...", group, redisKey);
+                }
+            }
+
         } catch (Throwable throwable) {
             throwable.printStackTrace();
             throw throwable;
         }
     }
 
-    private void cleanRedisCache(ResdisClean resdisClean, Object[] args) throws Exception {
-        if (BaseUtils.isNotBlank(resdisClean.beanName()) && BaseUtils.isNotBlank(resdisClean.keysAndType())) {
-
-            RedisService redisService = ApplicationContextProvider.getBean(resdisClean.beanName());
-
-            if (redisService == null) {
-                log.warn("ResdisClean 未获取到指定bean:{}", resdisClean.beanName());
-                return;
-            }
-
-            JSONObject datas = null;
-            try {
-                datas = JSONObject.parseObject(resdisClean.keysAndType());
-            } catch (Exception e) {
-                e.printStackTrace();
-                log.warn("ResdisClean keysAndType 不符合规范:{} ---", e.getMessage());
-                return;
-            }
-
-            Map<String, String> params = new HashMap<>();
-            for (String key : datas.keySet()) {
-
-                if (!datas.getString(key).equals(redisCleanAspectType[0]) && !datas.getString(key).equals(redisCleanAspectType[1])) {
-                    log.warn("ResdisClean keysAndType 不符合规范:{} ---", resdisClean.keysAndType());
-                    return;
-                }
-
-                String[] keyNow = key.split(":");
-                if (keyNow.length > 1) {
-                    String redisKey = getRedisKey(keyNow[1], args);
-                    if (BaseUtils.isBlank(redisKey))
-                        return;
-                    else
-                        keyNow[1] = redisKey;
-                }
-
-                /**
-                 * key处理
-                 */
-                if (datas.getString(key).equals(redisCleanAspectType[0])) {
-                    redisService.del(keyNow[0]);
-                } else {
-                    /**
-                     * hash处理
-                     */
-                    if (keyNow.length != 2) {
-                        log.warn("ResdisClean keysAndType 不符合规范:{} ---", resdisClean.keysAndType());
-                        return;
-                    }
-                    redisService.hdel(keyNow[0].split("-")[0], keyNow[1]);
-                }
-            }
-
-            log.info("正在清除缓存 {}：{}  ", resdisClean.beanName(), resdisClean.keysAndType());
-        }
-    }
 
     /**
      * 方法用途（切入点表达式可以用&&,||,!来组合使用）:
@@ -173,7 +170,6 @@ public class RedisCacheAspect {
     public void asRedisQuery() {
     }
 
-
     /**
      * 方法用途:
      * 清除redis缓存
@@ -186,65 +182,55 @@ public class RedisCacheAspect {
      */
     @Around("asRedisQuery() && @annotation(resdisQuery)")
     public Object asRedisQueryAround(ProceedingJoinPoint joinPoint, ResdisQuery resdisQuery) throws Throwable {
+
         ServerResponse serverResponse = new ServerResponse();
         try {
-            Signature signature = joinPoint.getSignature();
+            MethodSignature signature = ((MethodSignature) joinPoint.getSignature());
             Object[] args = joinPoint.getArgs();
-            String key = null;
-            RedisService redisService = null;
+            String[] argNames = signature.getParameterNames();
+
+
+            String keyParames = resdisQuery.key();
+            String group = resdisQuery.group();
+            Long timeOut = resdisQuery.timeOut();
 
             boolean flag = true;
-            if (BaseUtils.isBlank(resdisQuery.beanName()) || BaseUtils.isBlank(resdisQuery.key())) {
+
+            if (args.length == 0) {
+                log.error("{} 方法参数列表为空,redis 缓存不生效...", signature.getName());
                 flag = false;
-            } else {
-                if (!resdisQuery.type().equals(redisCleanAspectType[0]) && !resdisQuery.type().equals(redisCleanAspectType[1])) {
-                    log.warn("resdisQuery  type 不符合规范:{}", resdisQuery.type());
+            }
+
+            if (BaseUtils.isBlank(keyParames)) {
+                log.error("{} 方法注解key为空,redis 缓存不生效...", signature.getName());
+                flag = false;
+            }
+
+            String redisKey = "";
+
+            /**
+             * 获取 redis key
+             */
+            if (flag) {
+                redisKey = getRedisCacheKey(args, argNames, keyParames);
+                if (BaseUtils.isBlank(redisKey)) {
+                    log.error("{} key标注的参数为空,或最终的key长度过长,redis 缓存不生效...", signature.getName());
                     flag = false;
-                } else {
-                    if (resdisQuery.type().equals(redisCleanAspectType[0])) {
-                        key = getRedisKey(resdisQuery.key(), args);
-                    } else {
-                        key = getRedisKey(resdisQuery.key().split(":")[1], args);
-                    }
-
-                    if (BaseUtils.isBlank(key)) {
-                        log.warn("ResdisQuery key 不符合规范:{} ---", resdisQuery.key());
-                        flag = false;
-                    } else {
-                        redisService = ApplicationContextProvider.getBean(resdisQuery.beanName());
-
-                        if (redisService == null) {
-                            log.warn("resdisQuery 未获取到指定bean:{}", resdisQuery.beanName());
-                            flag = false;
-                        } else {
-                            if (resdisQuery.type().equals(redisCleanAspectType[0])) {
-                                if (redisService.hasKey(key)) {
-                                    return redisService.get(key);
-                                }
-                            } else if (resdisQuery.type().equals(redisCleanAspectType[1])) {
-                                String[] hkeys = resdisQuery.key().split("-");
-                                if (redisService.hHasKey(hkeys[0], key)) {
-                                    return redisService.hget(hkeys[0], key);
-                                }
-                            }
-                        }
-                    }
                 }
+            }
 
+            if (RedisService.REDIS_STATIC_SERVICE != null && flag) {
+                if (RedisService.REDIS_STATIC_SERVICE.hHasKey(group, redisKey)) {
+                    return RedisService.REDIS_STATIC_SERVICE.hget(group, redisKey);
+                }
             }
 
             Object result = joinPoint.proceed(args);
 
-            if (flag && redisService != null && BaseUtils.isNotBlank(key)) {
-                if (resdisQuery.type().equals(redisCleanAspectType[0])) {
-                    redisService.set(key, result);
-                } else if (resdisQuery.type().equals(redisCleanAspectType[1])) {
-                    String[] hkeys = resdisQuery.key().split("-");
-                    if (redisService.hHasKey(hkeys[0], key)) {
-                        return redisService.hset(hkeys[0], key,result);
-                    }
-                }
+            if (RedisService.REDIS_STATIC_SERVICE != null && flag) {
+                RedisService.REDIS_STATIC_SERVICE.hset(group, redisKey, result, timeOut);
             }
+
             return result;
         } catch (Throwable throwable) {
             throwable.printStackTrace();
