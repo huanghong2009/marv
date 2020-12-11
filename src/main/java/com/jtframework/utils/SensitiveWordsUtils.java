@@ -1,5 +1,7 @@
 package com.jtframework.utils;
 
+import com.jtframework.utils.words.DFAInit;
+
 import java.util.*;
 
 /**
