@@ -7,16 +7,18 @@ import java.lang.annotation.*;
 @Target(ElementType.METHOD)
 @Inherited
 public @interface ResdisClean {
-    String beanName();
-
     /**
-     * json 格式 示例  {"key1":"type"}
-     * key1: redis key值，使用 ":1"   ,将以方法对应index参数为key,
-     * 如果是hash，key 是 "key1-key2" ,同理,key2 可以是 ":1" 形式
-     * type ：redis 类型 枚举:
-     *
-     *       有以下几种: key,hash
+     * 分组
      * @return
      */
-    String keysAndType();
+    String group() default "default";
+
+    /**
+     * key值，以指定redis key，当做id，可以是多个，逗号分隔，多级以点分隔，例子如下
+     * 例1，普通key： 'userId'   【如userId = test，那么 test 就是key】
+     * 例2，联合key:  'userId,type' 【如 如userId = test ，type = ios，那么 test=ios 会被当做key】
+     * 例3 多级联合key ：'userId,obj.type'
+     * @return
+     */
+    String key();
 }
