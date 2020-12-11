@@ -11,7 +11,7 @@ import java.util.Map;
 
 
 @Slf4j
-public abstract class MongoModelDao<T> extends ModelDaoServiceImpl {
+public abstract class MongoModelDao<T> extends ModelDaoServiceImpl implements MongoModelDaoService {
 
     public abstract MongodbService getMongoService();
 
