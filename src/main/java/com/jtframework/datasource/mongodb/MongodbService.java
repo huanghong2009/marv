@@ -4,11 +4,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.dao.ServerModel;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.utils.BaseUtils;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoCredential;
-import com.mongodb.MongoException;
-import com.mongodb.internal.connection.ServerAddressHelper;
+import com.mongodb.*;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
@@ -27,7 +26,68 @@ import java.util.Map;
  * @author ttan
  */
 @Slf4j
+@Data
 public class MongodbService {
+
+    /**
+     * # TCP连接超时，毫秒
+     */
+    public int connectionTimeoutMs = 10000;
+
+    /**
+     * # TCP读取超时，毫秒
+     */
+    public int readTimeoutMs = 15000;
+
+    /**
+     * #当连接池无可用连接时客户端阻塞等待的时长，单位毫秒
+     */
+    public int poolMaxWaitTimeMs = 3000;
+
+    /**
+     * #TCP连接闲置时间，单位毫秒
+     */
+    public int connectionMaxIdleTimeMs = 60000;
+
+    /**
+     * #TCP连接最多可以使用多久，单位毫秒
+     */
+    public int connectionMaxLifeTimeMs = 120000;
+
+    /**
+     * #心跳检测发送频率，单位毫秒
+     */
+    public int heartbeatFrequencyMs = 20000;
+
+    /**
+     * #最小的心跳检测发送频率，单位毫秒
+     */
+    public int minHeartbeatFrequencyMs = 8000;
+
+    /**
+     * #心跳检测TCP连接超时，单位毫秒
+     */
+    public int heartbeatConnectionTimeoutMs = 10000;
+
+    /**
+     * #心跳检测TCP连接读取超时，单位毫秒
+     */
+    public int heartbeatReadTimeoutMs = 15000;
+
+    /**
+     * # 每个host的最大TCP连接数
+     */
+    public int connectionsPerHost = 100;
+
+    /***
+     * #每个host的最小TCP连接数
+     */
+    public int minConnectionsPerHost = 5;
+
+    /**
+     * #计算允许多少个线程阻塞等待可用TCP连接时的乘数，算法：threadsAllowedToBlockForConnectionMultiplier*connectionsPerHost，当前配置允许2*100个线程阻塞
+     */
+    public int threadsAllowedToBlockForConnectionMultiplier = 2;
 
     public MongoTemplate mongoTemplate;
 
@@ -41,21 +101,95 @@ public class MongodbService {
         return serverName;
     }
 
-    public void initMongodbService(String host, Integer port, String database) throws Exception{
-        List<MongoCredential> credentialsList = new ArrayList<>();
-        mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(ServerAddressHelper.createServerAddress(host, port)), database));
+    /**
+     * 非用户验证init
+     *
+     * @param host
+     * @param port
+     * @param database
+     * @throws Exception
+     */
+    public void initMongodbService(String host, Integer port, String database) throws Exception {
+        mongoTemplate = new MongoTemplate(getMongoDbFactory(host, port, database, null));
         log.info("{}:{}:{} 初始化中 ......", host, port, database);
     }
 
-    public void initMongodbService(String host, Integer port, String database, MongoAuthClient mongoAuthClient) throws Exception{
-        List<MongoCredential> credentialsList = new ArrayList<>();
-        credentialsList.add(MongoCredential.createCredential(mongoAuthClient.getUserName(), database, mongoAuthClient.getPassWord().toCharArray()));
-        mongoTemplate = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(ServerAddressHelper.createServerAddress(host, port), credentialsList), database));
+    /**
+     * 用户验证init
+     *
+     * @param host
+     * @param port
+     * @param database
+     * @param mongoAuthClient
+     * @throws Exception
+     */
+    public void initMongodbService(String host, Integer port, String database, MongoAuthClient mongoAuthClient) throws Exception {
+
+        mongoTemplate = new MongoTemplate(getMongoDbFactory(host, port, database, mongoAuthClient));
         log.info("{}:{}:{}--{} 初始化中 ......", host, port, database, mongoAuthClient.getUserName());
+    }
+
+
+    /**
+     * 创建database
+     *
+     * @param host
+     * @param port
+     * @param database
+     * @param mongoAuthClient
+     * @return
+     */
+    public MongoDbFactory getMongoDbFactory(String host, Integer port, String database, MongoAuthClient mongoAuthClient) {
+        //创建客户端参数
+        MongoClientOptions options = mongoClientOptions();
+
+        ServerAddress serverAddress = new ServerAddress(host, port);
+
+        MongoClient mongoClient = null;
+
+        if (mongoAuthClient == null) {
+            /** ps: 创建非认证客户端*/
+            mongoClient = new MongoClient(serverAddress, options);
+        } else {
+            //创建认证客户端
+            MongoCredential mongoCredential = MongoCredential.createScramSha1Credential(mongoAuthClient.getUserName(), database,
+                    mongoAuthClient.getPassWord().toCharArray());
+
+            List<MongoCredential> mongoCredentials = new ArrayList<>();
+            mongoCredentials.add(mongoCredential);
+
+            mongoClient = new MongoClient(serverAddress, mongoCredentials, options);
+        }
+
+        return new SimpleMongoDbFactory(mongoClient, database);
+    }
+
+
+    /**
+     * mongo客户端参数配置
+     *
+     * @return
+     */
+    public MongoClientOptions mongoClientOptions() {
+        return MongoClientOptions.builder()
+                .connectTimeout(this.getConnectionTimeoutMs())
+                .socketTimeout(this.getReadTimeoutMs())
+                .heartbeatConnectTimeout(this.getHeartbeatConnectionTimeoutMs())
+                .heartbeatSocketTimeout(this.getHeartbeatReadTimeoutMs())
+                .heartbeatFrequency(this.getHeartbeatFrequencyMs())
+                .minHeartbeatFrequency(this.getMinHeartbeatFrequencyMs())
+                .maxConnectionIdleTime(this.getConnectionMaxIdleTimeMs())
+                .maxConnectionLifeTime(this.getConnectionMaxLifeTimeMs())
+                .maxWaitTime(this.getPoolMaxWaitTimeMs())
+                .connectionsPerHost(this.getConnectionsPerHost())
+                .threadsAllowedToBlockForConnectionMultiplier(
+                        this.getThreadsAllowedToBlockForConnectionMultiplier())
+                .minConnectionsPerHost(this.getMinConnectionsPerHost()).build();
     }
 
     /**
      * 从1 开始，默认查询 10条 ，1 ，10
+     *
      * @param resultClass
      * @param query
      * @param pageNo
@@ -93,6 +227,7 @@ public class MongodbService {
 
     /**
      * 根据kv简单查询
+     *
      * @param resultClass
      * @param key
      * @param value
@@ -105,11 +240,12 @@ public class MongodbService {
 
     /**
      * 根据map简单查询
+     *
      * @param resultClass
      * @param <T>
      * @return
      */
-    public <T> List<T> findByMap(Class<T> resultClass, Map<String,Object> params) {
+    public <T> List<T> findByMap(Class<T> resultClass, Map<String, Object> params) {
         Query query = createQuery();
         for (String key : params.keySet()) {
             query.addCriteria(Criteria.where(key).is(params.get(key)));
@@ -120,23 +256,25 @@ public class MongodbService {
 
     /**
      * 根据kv简单查询
+     *
      * @param resultClass
      * @param key
      * @param value
      * @param <T>
      * @return
      */
-    public <T> T  findOneByKV(Class<T> resultClass, String key, String value) {
+    public <T> T findOneByKV(Class<T> resultClass, String key, String value) {
         return this.mongoTemplate.findOne(createQuery().addCriteria(Criteria.where(key).is(value)), resultClass, getCollectionName(resultClass));
     }
 
     /**
      * 根据map简单查询
+     *
      * @param resultClass
      * @param <T>
      * @return
      */
-    public <T> T findOneByMap(Class<T> resultClass, Map<String,Object> params) {
+    public <T> T findOneByMap(Class<T> resultClass, Map<String, Object> params) {
         Query query = createQuery();
         for (String key : params.keySet()) {
             query.addCriteria(Criteria.where(key).is(params.get(key)));
@@ -146,6 +284,7 @@ public class MongodbService {
 
     /**
      * 查询全部
+     *
      * @param resultClass
      * @param <T>
      * @return
@@ -228,9 +367,8 @@ public class MongodbService {
     }
 
     public long removeById(Class<?> resultClass, String id) {
-        return remove(Query.query(Criteria.where("_id").is(id)),resultClass);
+        return remove(Query.query(Criteria.where("_id").is(id)), resultClass);
     }
-
 
 
     public boolean collectionExists(String colName) throws MongoException {
