@@ -735,7 +735,7 @@ public class RedisService {
      * @param timeOut 等待锁的超时时间:秒
      * @param handle  获取之后的调用的方法
      */
-    public void lock(String key, Long timeOut, Runnable handle) {
+    public void lock(String key, Long timeOut, Runnable handle) throws Exception{
         final String keyLock = RedisService.LOCK_PREFIX + key;
 
         long startTime = System.currentTimeMillis();
@@ -758,6 +758,7 @@ public class RedisService {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
+            throw e;
         } finally {
             log.info("{} 分布式锁任务执行完成，正在释放...", key);
             deleteLock(keyLock);

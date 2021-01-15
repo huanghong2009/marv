@@ -43,28 +43,28 @@ public class ThredPoolConfig {
         return pool;
     }
 
-//    /**
-//     * 定时任务线程池,暂时用不到
-//     * @return
-//     */
-//    @Bean
-//    public ThreadPoolTaskScheduler threadPoolTaskScheduler(@Value("${threadPool.corePoolSize:30}") Integer schedulerPoolSize) {
-//        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-//
-//        /**
-//         * 线程池大小
-//         */
-//        scheduler.setPoolSize(schedulerPoolSize);
-//
-//        /**
-//         * 线程名称前缀
-//         */
-//        scheduler.setThreadNamePrefix("scheduler-collector-");
-//
-//        scheduler.setAwaitTerminationSeconds(60);
-//
-//        scheduler.setWaitForTasksToCompleteOnShutdown(true);
-//
-//        return scheduler;
-//    }
+    /**
+     * 定时任务线程池,暂时用不到
+     * @return
+     */
+    @Bean
+    public ThreadPoolTaskScheduler threadPoolTaskScheduler(@Value("${threadPool.corePoolSize:1}") Integer schedulerPoolSize) {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+
+        /**
+         * 线程池大小
+         */
+        scheduler.setPoolSize(schedulerPoolSize);
+
+        /**
+         * 线程名称前缀
+         */
+        scheduler.setThreadNamePrefix("scheduler-collector-");
+
+        scheduler.setAwaitTerminationSeconds(60);
+
+        scheduler.setWaitForTasksToCompleteOnShutdown(true);
+
+        return scheduler;
+    }
 }
