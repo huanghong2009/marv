@@ -13,7 +13,7 @@
 
     <groupId>com.jtframework</groupId>
     <artifactId>marv</artifactId>
-    <version>225.1.0</version>
+    <version>4.8</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -205,7 +205,7 @@
     <distributionManagement>
         <repository>
             <id>fundtp</id>
-            <url>http://47.115.30.217:8082/repository/fundtp/</url>
+            <url>http://47.115.113.154:8082/repository/fundtp/</url>
         </repository>
     </distributionManagement>
 </project>
