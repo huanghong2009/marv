@@ -21,9 +21,15 @@ public class ParamsDTO<T extends BaseModel> implements Serializable {
 
     public ParamsDTO(T params) {
         this.params = params;
+        initPage();
     }
 
-    public ParamsDTO(){
-        
+    public ParamsDTO() {
+        initPage();
+    }
+
+    private void initPage() {
+        this.toPage = 1;
+        this.pageSize = 10;
     }
 }
