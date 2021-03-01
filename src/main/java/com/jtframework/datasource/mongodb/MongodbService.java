@@ -312,8 +312,9 @@ public class MongodbService {
         this.mongoTemplate.save(model, getCollectionName(model.getClass()));
     }
 
+
     public void save(List<?> models) {
-        this.mongoTemplate.save(models, getCollectionName(models.get(0).getClass()));
+        this.save(models, getCollectionName(models.get(0).getClass()));
     }
 
     public void save(List<?> models, String collectionName) {
