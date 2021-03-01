@@ -1,11 +1,13 @@
 package com.jtframework.datasource.mysql;
 
 
+import cn.hutool.core.util.ReflectUtil;
 import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.dao.ServerField;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.sql.Clob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,54 +26,63 @@ public class ModelPropertyRowMapper<T> implements RowMapper<T> {
     }
 
     public T mapRow(ResultSet rs, int rowNum) throws SQLException {
-        Object t = null;
+        Object result = null;
 
         try {
             if (this.mappedClass.getName().startsWith("java.lang.")) {
                 return (T) rs.getObject(1);
             } else {
-                t = this.mappedClass.newInstance();
-                Field[] var4 = this.mappedClass.getDeclaredFields();
-                int var5 = var4.length;
+                result = this.mappedClass.newInstance();
+                Field[] fields = this.mappedClass.getDeclaredFields();
 
-                for(int var6 = 0; var6 < var5; ++var6) {
-                    Field field = var4[var6];
-                    ServerField serverField = (ServerField)field.getAnnotation(ServerField.class);
+                for (Field field : fields) {
+                    ServerField serverField = (ServerField) field.getAnnotation(ServerField.class);
                     String name = field.getName();
-                    String k = serverField != null ? serverField.value() : field.getName();
-                    if (!"class".equals(name) && !field.isSynthetic()) {
-                        try {
-                            Object rvalue = null;
-                            if (field.getType() == Date.class) {
-                                Timestamp tm = rs.getTimestamp(k);
-                                if (tm != null) {
-                                    rvalue = new Date(tm.getTime());
-                                }
-                            } else if (field.getType() == Clob.class) {
-                                Clob clob = rs.getClob(k);
-                                if (clob != null) {
-                                    rvalue = clob.getSubString(1L, (int)clob.length());
-                                }
-                            } else if (field.getType().isEnum()) {
-                                try {
-                                    rvalue = Enum.valueOf((Class<Enum>) field.getType(), rs.getString(k));
-                                } catch (Exception var13) {
-                                    ;
-                                }
-                            } else {
-                                rvalue = rs.getObject(k);
-                            }
 
-                            field.setAccessible(true);
-                            field.set(t, rvalue);
-                        } catch (Exception var14) {
-                            ;
+                    if (!serverField.isColumn().equals("true")) {
+                        continue;
+                    }
+
+                    String filedName = serverField != null ? serverField.value() : field.getName();
+                    if (!"class".equals(name) && !field.isSynthetic()) {
+                        Object value = null;
+                        Class fileType = field.getType();
+
+                        if (fileType == String.class) {
+                            value = rs.getString(filedName);
+                        } else if (fileType == Double.class || fileType == double.class) {
+                            value = rs.getDouble(filedName);
+                        } else if (fileType == int.class || fileType == Integer.class) {
+                            value = rs.getInt(filedName);
+                        } else if (fileType == float.class || fileType == Float.class) {
+                            value = rs.getFloat(filedName);
+                        } else if (fileType == boolean.class || fileType == Boolean.class) {
+                            value = rs.getBoolean(filedName);
+                        } else if (fileType == long.class || fileType == Long.class) {
+                            value = rs.getLong(filedName);
+                        } else if (fileType == BigDecimal.class) {
+                            value = rs.getBigDecimal(filedName);
+                        } else if (fileType == Date.class) {
+                            Timestamp tm = rs.getTimestamp(filedName);
+                            if (tm != null) {
+                                value = new Date(tm.getTime());
+                            }
+                        } else if (fileType.isEnum()) {
+                            try {
+                                value = Enum.valueOf((Class<Enum>) fileType, rs.getString(filedName));
+                            } catch (Exception var13) {
+                                throw new ClassCastException("数据无语转换成枚举");
+                            }
+                        } else {
+                            value = rs.getObject(filedName);
                         }
+
+                        ReflectUtil.setAccessible(field);
+                        ReflectUtil.setFieldValue(result, field, value);
                     }
                 }
-
-                ((BaseModel)t).setId(rs.getString("ID"));
-                return (T) t;
+                ((BaseModel) result).setId(rs.getString("ID"));
+                return (T) result;
             }
         } catch (Exception var15) {
             throw new SQLException(var15.getMessage());
