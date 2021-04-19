@@ -17,7 +17,7 @@ public class ParamsDTO<T extends BaseModel> implements Serializable {
 
     private boolean isDesc;
 
-    private T params;
+    private Object params;
 
     public ParamsDTO(T params) {
         this.params = params;
