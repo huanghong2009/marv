@@ -328,21 +328,26 @@ public final class BaseUtils {
         } else if (orig == null) {
             throw new IllegalArgumentException("No origin bean specified");
         } else if (!(dest instanceof Map) && !(dest instanceof JSONObject)) {
-            JSONObject ojson = JSONObject.parseObject(JSONObject.toJSONString(dest));
-            JSONObject jsonDest = new JSONObject((Map) orig);
-            Iterator iterator = jsonDest.keySet().iterator();
+            JSONObject jsonDest = JSONObject.parseObject(JSONObject.toJSONString(dest));
+
+            JSONObject jsonOrig = JSONObject.parseObject(JSONObject.toJSONString(orig));
+
+            Iterator iterator = jsonOrig.keySet().iterator();
             String key;
+
             while (iterator.hasNext()) {
                 key = (String) iterator.next();
-                if (ojson.get(key) == null && !copyNulls) {
+                if (jsonOrig.get(key) == null && !copyNulls) {
                     continue;
                 }
                 if (!searchInArray(key, ext)) {
-                    ojson.put(key, jsonDest.get(key));
+                    jsonDest.put(key, jsonOrig.get(key));
                 }
             }
 
-            fastCopy(dest, ojson.toJavaObject(dest.getClass()));
+
+
+            fastCopy(dest, jsonDest.toJavaObject(dest.getClass()));
 
         } else {
             throw new IllegalArgumentException("origin bean not be Map or JSONObject");
@@ -824,29 +829,30 @@ public final class BaseUtils {
 
     /**
      * Object转成指定的类型
+     *
      * @param obj
      * @param type
      * @param <T>
      * @return
      */
-    public static<T> T convert(Object obj, Class<T> type) {
+    public static <T> T convert(Object obj, Class<T> type) {
         if (obj != null && BaseUtils.isNotBlank(obj.toString())) {
-            if (type.equals(Integer.class)||type.equals(int.class)) {
-                return (T)new Integer(obj.toString());
-            } else if (type.equals(Long.class)||type.equals(long.class)) {
-                return (T)new Long(obj.toString());
-            } else if (type.equals(Boolean.class)||type.equals(boolean.class)) {
+            if (type.equals(Integer.class) || type.equals(int.class)) {
+                return (T) new Integer(obj.toString());
+            } else if (type.equals(Long.class) || type.equals(long.class)) {
+                return (T) new Long(obj.toString());
+            } else if (type.equals(Boolean.class) || type.equals(boolean.class)) {
                 return (T) new Boolean(obj.toString());
-            } else if (type.equals(Short.class)||type.equals(short.class)) {
+            } else if (type.equals(Short.class) || type.equals(short.class)) {
                 return (T) new Short(obj.toString());
-            } else if (type.equals(Float.class)||type.equals(float.class)) {
+            } else if (type.equals(Float.class) || type.equals(float.class)) {
                 return (T) new Float(obj.toString());
-            } else if (type.equals(Double.class)||type.equals(double.class)) {
+            } else if (type.equals(Double.class) || type.equals(double.class)) {
                 return (T) new Double(obj.toString());
-            } else if (type.equals(Byte.class)||type.equals(byte.class)) {
+            } else if (type.equals(Byte.class) || type.equals(byte.class)) {
                 return (T) new Byte(obj.toString());
-            } else if (type.equals(Character.class)||type.equals(char.class)) {
-                return (T)new Character(obj.toString().charAt(0));
+            } else if (type.equals(Character.class) || type.equals(char.class)) {
+                return (T) new Character(obj.toString().charAt(0));
             } else if (type.equals(String.class)) {
                 return (T) obj;
             } else if (type.equals(BigDecimal.class)) {
@@ -855,28 +861,25 @@ public final class BaseUtils {
                 //DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 return (T) LocalDateTime.parse(obj.toString());
             } else if (type.equals(Date.class)) {
-                try
-                {
+                try {
                     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
                     return (T) formatter.parse(obj.toString());
-                }
-                catch (ParseException e)
-                {
+                } catch (ParseException e) {
                     throw new RuntimeException(e.getMessage());
                 }
 
-            }else{
+            } else {
                 return null;
             }
         } else {
             if (type.equals(int.class)) {
-                return (T)new Integer(0);
+                return (T) new Integer(0);
             } else if (type.equals(long.class)) {
-                return (T)new Long(0L);
+                return (T) new Long(0L);
             } else if (type.equals(boolean.class)) {
-                return (T)new Boolean(false);
+                return (T) new Boolean(false);
             } else if (type.equals(short.class)) {
-                return (T)new Short("0");
+                return (T) new Short("0");
             } else if (type.equals(float.class)) {
                 return (T) new Float(0.0);
             } else if (type.equals(double.class)) {
@@ -885,7 +888,7 @@ public final class BaseUtils {
                 return (T) new Byte("0");
             } else if (type.equals(char.class)) {
                 return (T) new Character('\u0000');
-            }else {
+            } else {
                 return null;
             }
         }
