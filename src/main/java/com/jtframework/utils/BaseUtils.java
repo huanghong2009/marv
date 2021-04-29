@@ -329,21 +329,26 @@ public final class BaseUtils {
         } else if (orig == null) {
             throw new IllegalArgumentException("No origin bean specified");
         } else if (!(dest instanceof Map) && !(dest instanceof JSONObject)) {
-            JSONObject ojson = JSONObject.parseObject(JSONObject.toJSONString(dest));
-            JSONObject jsonDest = new JSONObject((Map) orig);
-            Iterator iterator = jsonDest.keySet().iterator();
+            JSONObject jsonDest = JSONObject.parseObject(JSONObject.toJSONString(dest));
+
+            JSONObject jsonOrig = JSONObject.parseObject(JSONObject.toJSONString(orig));
+
+            Iterator iterator = jsonOrig.keySet().iterator();
             String key;
+
             while (iterator.hasNext()) {
                 key = (String) iterator.next();
-                if (ojson.get(key) == null && !copyNulls) {
+                if (jsonOrig.get(key) == null && !copyNulls) {
                     continue;
                 }
                 if (!searchInArray(key, ext)) {
-                    ojson.put(key, jsonDest.get(key));
+                    jsonDest.put(key, jsonOrig.get(key));
                 }
             }
 
-            fastCopy(dest, ojson.toJavaObject(dest.getClass()));
+
+
+            fastCopy(dest, jsonDest.toJavaObject(dest.getClass()));
 
         } else {
             throw new IllegalArgumentException("origin bean not be Map or JSONObject");
