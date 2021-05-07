@@ -10,12 +10,15 @@ import com.jtframework.utils.BaseUtils;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -29,7 +32,9 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class MysqlService  {
+
     public JdbcTemplate jdbcTemplate;
+
     public NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     public int insert(Object model) throws SQLException {
@@ -588,6 +593,17 @@ public class MysqlService  {
         return list != null && list.size() > 0 ? list.get(0) : null;
     }
 
+
+
+    /**
+     * 数据源 初始化
+     */
+    public void initMysqlService(DataSource dataSource) throws Exception {
+        jdbcTemplate = new JdbcTemplate(dataSource);
+        namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+        log.info("--  mysql 初始化 完成  --");
+    }
+
     /**
      * 初始化
      */
@@ -624,8 +640,7 @@ public class MysqlService  {
         configuration.setDriverClassName("com.mysql.jdbc.Driver");
         configuration.setConnectionTestQuery("SELECT 1");
         log.info("mysql :{}: 正在初始化", mysqlConfig);
-        jdbcTemplate = new JdbcTemplate(new HikariDataSource(configuration));
-        namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+        initMysqlService(new HikariDataSource(configuration));
         log.info("mysql :{}: 初始化成功 ----", mysqlConfig);
     }
 
