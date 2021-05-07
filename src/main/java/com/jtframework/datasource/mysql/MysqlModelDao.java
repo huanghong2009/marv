@@ -5,6 +5,7 @@ import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -12,13 +13,46 @@ import java.util.Map;
 
 @Data
 @Slf4j
-public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl  {
+public class MysqlModelDao<T> extends ModelDaoServiceImpl {
 
-    public abstract MysqlService getMysqlService();
+    /**
+     * 注入默认数据源
+     */
+    @Autowired
+    MysqlServiceInit mysqlServiceInit;
 
+    /**
+     * 重写此方法即调用此方法数据源，否认采用默认数据源
+     *
+     * @return
+     */
+    public MysqlService getMysqlService() {
+        return null;
+    }
+
+    /**
+     * 获取数据源
+     *
+     * @return
+     */
+    private MysqlService getDao() throws Exception {
+        MysqlService mysqlService = getMysqlService();
+        if (mysqlService != null) {
+            return mysqlService;
+        }
+        mysqlService = mysqlServiceInit.getMysqlService();
+
+        if (mysqlService != null) {
+            return mysqlService;
+        } else {
+            throw new Exception("未注入数据源 且 未能成功初始化 默认数据源，请检查配置 ....");
+        }
+    }
+
+    @Override
     public void insert(Object model) throws BusinessException {
         try {
-            getMysqlService().insert(model);
+            getDao().insert(model);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -26,9 +60,10 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl  {
         }
     }
 
+    @Override
     public T load(String id) throws BusinessException {
         try {
-            return (T) getMysqlService().load(cls, id);
+            return (T) getDao().load(cls, id);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -36,9 +71,10 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl  {
         }
     }
 
+    @Override
     public int delete(String id) throws BusinessException {
         try {
-            return getMysqlService().delete(cls, id);
+            return getDao().delete(cls, id);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -48,7 +84,7 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl  {
 
     public int update(Object model) throws BusinessException {
         try {
-            return getMysqlService().update(model);
+            return getDao().update(model);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -62,9 +98,10 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl  {
      * @return
      * @throws BusinessException
      */
+    @Override
     public List<T> selectAll() throws BusinessException {
         try {
-            return getMysqlService().selectListAll(this.cls);
+            return getDao().selectListAll(this.cls);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -80,9 +117,10 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl  {
      * @return
      * @throws BusinessException
      */
+    @Override
     public List<T> selectListByKV(String key, String value) throws BusinessException {
         try {
-            return getMysqlService().selectListFromKV(this.cls, key, value);
+            return getDao().selectListFromKV(this.cls, key, value);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -100,7 +138,7 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl  {
     @Override
     public List selectListForMap(Map params) throws BusinessException {
         try {
-            return getMysqlService().selectListFromMap(this.cls, params);
+            return getDao().selectListFromMap(this.cls, params);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -116,9 +154,10 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl  {
      * @return
      * @throws BusinessException
      */
+    @Override
     public T selectOneByKV(String key, String value) throws BusinessException {
         try {
-            return (T) getMysqlService().selectOneFromKV(this.cls, key, value);
+            return (T) getDao().selectOneFromKV(this.cls, key, value);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -136,7 +175,7 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl  {
     @Override
     public Object selectOneByMap(Map params) throws BusinessException {
         try {
-            return (T) getMysqlService().selectOneFromMap(this.cls, params);
+            return (T) getDao().selectOneFromMap(this.cls, params);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -145,16 +184,16 @@ public abstract  class MysqlModelDao<T> extends ModelDaoServiceImpl  {
     }
 
 
-
     /**
      * 分页查询，默认查询前10条
      *
      * @return
      * @throws SQLException
      */
+    @Override
     public PageVO<T> defalutPageQuery() throws SQLException {
         try {
-            return getMysqlService().pageQuery(this.cls);
+            return getDao().pageQuery(this.cls);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
