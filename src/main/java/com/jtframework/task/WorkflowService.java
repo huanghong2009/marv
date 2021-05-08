@@ -4,14 +4,13 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.utils.BaseUtils;
+import com.jtframework.utils.ClassUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -115,7 +114,7 @@ public class WorkflowService {
                     throw new BusinessException("缺少必要参数");
                 }
                 Class  paramType = param.getType();
-                methodParms[i] = BaseUtils.convert(stringObjectMap.get(param.getName()),paramType);
+                methodParms[i] = ClassUtils.convert(stringObjectMap.get(param.getName()),paramType);
             }
 
             Object result = workflowModel.getMethod().invoke(workflowModel.getWorkflowService(), methodParms);

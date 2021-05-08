@@ -4,6 +4,7 @@ package com.jtframework.base.query;
 import cn.hutool.core.util.ReflectUtil;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.utils.BaseUtils;
+import com.jtframework.utils.ClassUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -82,7 +83,7 @@ public class CheckParamAspect {
                             || args[i] instanceof LocalDate) {
                         argAllFiledsMap.put(argNames[i], args[i]);
                     } else {
-                        Map<String, Object> objFileddMap = BaseUtils.getObjectFiledValue(args[i]);
+                        Map<String, Object> objFileddMap = ClassUtils.getObjectFiledValue(args[i]);
                         for (String key : objFileddMap.keySet()) {
                             argAllFiledsMap.put(argNames[i] + "." + key, objFileddMap.get(key));
                         }

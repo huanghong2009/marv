@@ -915,4 +915,49 @@ public class DateUtils {
         int maxDate = cal.getActualMaximum(5);
         return maxDate;
     }
+
+    /**
+     * 获得今天剩余秒数
+     *
+     * @return
+     */
+    public static int getToDayLastSeconds() throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar calendar = Calendar.getInstance();
+        // 得到今天 晚上的最后一刻 最后时间
+        String last = sdf2.format(new Date()) + " 23:59:59";
+
+        try {
+            // 转换为今天
+            Date latDate = sdf.parse(last);
+            // 得到的毫秒 除以1000转换 为秒
+            return (int) (latDate.getTime() - System.currentTimeMillis()) / 1000;
+        } catch (ParseException e) {
+            e.printStackTrace();
+            throw new Exception("获取剩余秒数异常");
+        }
+    }
+
+
+    /**
+     * 日期转cron表达式
+     *
+     * @param time
+     * @return
+     */
+    public static String getCron(String time) throws ParseException {
+        String dateFormat = "ss mm HH dd MM ? yyyy";
+        SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String formatTimeStr = null;
+        if (time != null) {
+            try {
+                formatTimeStr = sdf.format(sdf2.parse(time));
+            } catch (ParseException e) {
+                throw e;
+            }
+        }
+        return formatTimeStr;
+    }
 }
