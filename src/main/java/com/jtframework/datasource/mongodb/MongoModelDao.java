@@ -4,6 +4,7 @@ import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -11,9 +12,36 @@ import java.util.Map;
 
 
 @Slf4j
-public abstract class MongoModelDao<T> extends ModelDaoServiceImpl implements MongoModelDaoService {
+public  class MongoModelDao<T> extends ModelDaoServiceImpl implements MongoModelDaoService {
 
-    public abstract MongodbService getMongoService();
+    /**
+     * 注入默认数据源
+     */
+    @Autowired
+    MongoServiceInit mongoServiceInit;
+
+    public  MongodbService getMongoService(){
+        return null;
+    }
+
+    /**
+     * 获取数据源
+     *
+     * @return
+     */
+    private MongodbService getDao() throws Exception {
+        MongodbService mongodbService = getMongoService();
+        if (mongodbService != null) {
+            return mongodbService;
+        }
+        mongodbService = mongoServiceInit.getMongodbService();
+
+        if (mongodbService != null) {
+            return mongodbService;
+        } else {
+            throw new Exception("未注入数据源 且 未能成功初始化 默认数据源，请检查配置 ....");
+        }
+    }
 
 
     /**
@@ -39,6 +67,7 @@ public abstract class MongoModelDao<T> extends ModelDaoServiceImpl implements Mo
      * @param model
      * @throws BusinessException
      */
+    @Override
     public void save(Object model) throws BusinessException {
         try {
             getMongoService().save(model);
@@ -49,6 +78,7 @@ public abstract class MongoModelDao<T> extends ModelDaoServiceImpl implements Mo
         }
     }
 
+    @Override
     public T load(String id) throws BusinessException {
         try {
             return (T) getMongoService().findById(cls, id);
@@ -60,6 +90,7 @@ public abstract class MongoModelDao<T> extends ModelDaoServiceImpl implements Mo
     }
 
 
+    @Override
     public int delete(String id) throws BusinessException {
         try {
             return (int) getMongoService().removeById(cls, id);
@@ -76,6 +107,7 @@ public abstract class MongoModelDao<T> extends ModelDaoServiceImpl implements Mo
      * @return
      * @throws BusinessException
      */
+    @Override
     public List<T> selectAll() throws BusinessException {
         try {
             return getMongoService().findAll(cls);
