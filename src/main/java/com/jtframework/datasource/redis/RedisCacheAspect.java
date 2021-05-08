@@ -3,6 +3,7 @@ package com.jtframework.datasource.redis;
 
 import com.jtframework.base.rest.ServerResponse;
 import com.jtframework.utils.BaseUtils;
+import com.jtframework.utils.ClassUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -45,7 +46,7 @@ public class RedisCacheAspect {
                     || args[i] instanceof LocalDate) {
                 argAllFiledsMap.put(argNames[i], args[i]);
             } else {
-                Map<String, Object> objFileddMap = BaseUtils.getObjectFiledValue(args[i]);
+                Map<String, Object> objFileddMap = ClassUtils.getObjectFiledValue(args[i]);
                 for (String key : objFileddMap.keySet()) {
                     argAllFiledsMap.put(argNames[i] + "." + key, objFileddMap.get(key));
                 }

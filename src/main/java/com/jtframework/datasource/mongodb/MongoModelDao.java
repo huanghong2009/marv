@@ -22,6 +22,7 @@ public abstract class MongoModelDao<T> extends ModelDaoServiceImpl implements Mo
      * @param model
      * @throws BusinessException
      */
+    @Override
     public void insert(Object model) throws BusinessException {
         try {
             getMongoService().insert(model);
@@ -93,6 +94,7 @@ public abstract class MongoModelDao<T> extends ModelDaoServiceImpl implements Mo
      * @return
      * @throws BusinessException
      */
+    @Override
     public List<T> selectListByKV(String key, String value) throws BusinessException {
         try {
             return getMongoService().findByKV(this.cls, key, value);
@@ -129,6 +131,7 @@ public abstract class MongoModelDao<T> extends ModelDaoServiceImpl implements Mo
      * @return
      * @throws BusinessException
      */
+    @Override
     public T selectOneByKV(String key, String value) throws BusinessException {
         try {
             return (T) getMongoService().findOneByKV(this.cls, key, value);
@@ -164,6 +167,7 @@ public abstract class MongoModelDao<T> extends ModelDaoServiceImpl implements Mo
      * @return
      * @throws SQLException
      */
+    @Override
     public PageVO<T> defalutPageQuery() throws SQLException {
         try {
             return getMongoService().pageQuery(this.cls,getMongoService().createQuery(),1,10);
