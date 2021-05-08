@@ -114,6 +114,11 @@ public class MongodbService {
         log.info("{}:{}:{} 初始化中 ......", host, port, database);
     }
 
+    public void initMongodbService(MongoTemplate mongoTemplate) throws Exception {
+        mongoTemplate = mongoTemplate;
+        log.info("默认mongodb 初始化中 ......");
+    }
+
     /**
      * 用户验证init
      *
