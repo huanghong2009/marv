@@ -1,5 +1,6 @@
 package com.jtframework.datasource.mysql;
 
+import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
@@ -50,7 +51,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
     @Override
-    public void insert(Object model) throws BusinessException {
+    public void insert(BaseModel model) throws BusinessException {
         try {
             getDao().insert(model);
         } catch (Exception e) {
@@ -82,7 +83,8 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         }
     }
 
-    public int update(Object model) throws BusinessException {
+    @Override
+    public int update(BaseModel model) throws BusinessException {
         try {
             return getDao().update(model);
         } catch (Exception e) {

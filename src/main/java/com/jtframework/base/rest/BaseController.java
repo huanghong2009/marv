@@ -93,8 +93,16 @@ public class BaseController<T extends BaseModel> {
         }
     }
 
-
-
-
+    @ApiOperation("覆盖性修改")
+    @GetMapping(value = "/update")
+    public ServerResponse update(T model){
+        try {
+            return ServerResponse.succeed("默认分页查询:"+name+"成功",getModelDaoService().update(model));
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            return ServerResponse.error(e.getMessage(),"默认分页查询"+name+"失败...");
+        }
+    }
 
 }

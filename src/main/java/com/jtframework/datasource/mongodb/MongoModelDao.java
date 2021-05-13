@@ -1,5 +1,6 @@
 package com.jtframework.datasource.mongodb;
 
+import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
@@ -12,7 +13,7 @@ import java.util.Map;
 
 
 @Slf4j
-public  class MongoModelDao<T> extends ModelDaoServiceImpl implements MongoModelDaoService {
+public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl implements MongoModelDaoService {
 
     /**
      * 注入默认数据源
@@ -51,7 +52,7 @@ public  class MongoModelDao<T> extends ModelDaoServiceImpl implements MongoModel
      * @throws BusinessException
      */
     @Override
-    public void insert(Object model) throws BusinessException {
+    public void insert(BaseModel model) throws BusinessException {
         try {
             getMongoService().insert(model);
         } catch (Exception e) {
@@ -60,6 +61,7 @@ public  class MongoModelDao<T> extends ModelDaoServiceImpl implements MongoModel
             throw new BusinessException("保存 " + this.name + " 失败");
         }
     }
+
 
     /**
      * 保存，有id 修改，无id 插入
@@ -89,6 +91,24 @@ public  class MongoModelDao<T> extends ModelDaoServiceImpl implements MongoModel
         }
     }
 
+
+    /**
+     * 覆盖性修改
+     *
+     * @param model
+     * @throws BusinessException
+     */
+    @Override
+    public int update(BaseModel model) throws BusinessException {
+        try {
+            getMongoService().save(model);
+            return 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("保存 " + this.name + " 失败");
+        }
+    }
 
     @Override
     public int delete(String id) throws BusinessException {
