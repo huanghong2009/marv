@@ -1,6 +1,5 @@
 package com.jtframework.base.query;
 
-import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.dao.BaseModel;
 import lombok.Data;
 

@@ -1,5 +1,6 @@
 package com.jtframework.datasource.common;
 
+import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
 
@@ -7,10 +8,17 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-public interface ModelDaoService<T> {
+public interface ModelDaoService<T extends BaseModel> {
 
 
     public void insert(T model) throws BusinessException;
+
+    /**
+     * 覆盖性修改
+     * @param model
+     * @throws BusinessException
+     */
+    public int update(T model)throws BusinessException;
 
     public <T>T load(String id) throws BusinessException;
 

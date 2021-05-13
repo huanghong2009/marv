@@ -11,24 +11,22 @@ import javax.annotation.PostConstruct;
 @Slf4j
 public class MongoServiceInit {
 
-    @Autowired(required = false)
-    MongoTemplate mongoTemplate;
+
+    private MongoTemplate mongoTemplate;
 
     private MongodbService mongodbService;
 
-    /**
-     * 注入完之后初始化
-     */
-    @PostConstruct
-    public void init() throws Exception {
+    public MongoServiceInit(MongoTemplate mongoTemplate) throws Exception {
         if (mongoTemplate != null) {
+            this.mongoTemplate = mongoTemplate;
             log.info(" ----- 默认 mongo数据源 bean 加载 -------");
             mongodbService = new MongodbService();
             mongodbService.initMongodbService(mongoTemplate);
         }
     }
 
-    public MongodbService getMongodbService()  {
+
+    public MongodbService getMongodbService() {
         return mongodbService;
     }
 }

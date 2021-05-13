@@ -34,7 +34,4 @@ public class RedisConfig {
     private Long maxWaitMillis;
 
 
-
-
-
 }

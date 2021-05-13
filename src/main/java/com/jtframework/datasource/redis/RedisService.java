@@ -43,7 +43,7 @@ public class RedisService {
 
     public RedisTemplate<String, Object> redisTemplate;
 
-    private static LettuceConnectionFactory getLettuceConnectionFactory(RedisConfig redisConfig) throws Exception{
+    public static LettuceConnectionFactory getLettuceConnectionFactory(RedisConfig redisConfig) throws Exception{
         // 连接池配置
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
 
@@ -207,6 +207,15 @@ public class RedisService {
                 redisTemplate.delete(CollectionUtils.arrayToList(key));
             }
         }
+    }
+
+    /**
+     * 删除缓存
+     *
+     */
+    @SuppressWarnings("unchecked")
+    public void del(Set<String> keys) {
+        redisTemplate.delete(keys);
     }
 
     /**
@@ -646,7 +655,9 @@ public class RedisService {
     public boolean lSet(String key, List<Object> value, long time) {
         try {
             redisTemplate.opsForList().rightPushAll(key, value);
-            if (time > 0) expire(key, time);
+            if (time > 0){
+                expire(key, time);
+            }
             return true;
         } catch (Exception e) {
             e.printStackTrace();
