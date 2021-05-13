@@ -1,27 +1,17 @@
 package com.jtframework.utils;
 
-import cn.hutool.core.util.ReflectUtil;
-import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.dao.ServerModel;
 import org.eclipse.jetty.util.StringUtil;
-import org.springframework.cglib.beans.BeanCopier;
 import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.SecureRandom;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,6 +22,46 @@ import java.util.regex.Pattern;
  */
 public final class BaseUtils {
 
+
+    /**
+     * 把下划线加小写转成驼峰格式
+     *
+     * @param str
+     * @return
+     */
+    public static String changeUnderToUpperLetter(String str) {
+        String regExp = "(_)([a-z]{1})";
+        Pattern pattern = Pattern.compile(regExp);
+        Matcher matcher = pattern.matcher(str);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            // 把_小写 格式 改成大写，即驼峰命名，匹配后进行把下划线替换成空，然后转换成大写的
+            matcher.appendReplacement(sb, matcher.group().replaceAll("_", "").toUpperCase());
+        }
+        matcher.appendTail(sb);
+        System.out.println("changeUnderToUpper: " + sb.toString());
+        return sb.toString();
+    }
+
+    /**
+     * 驼峰格式转换为下划线小写格式
+     *
+     * @param str
+     * @return
+     */
+    public static String changeUpperToUnderLetter(String str) {
+        String regExp = "([A-Z]{1})"; // 匹配单个字符
+        Pattern pattern = Pattern.compile(regExp);
+        Matcher matcher = pattern.matcher(str);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            // 把大写的 改成 _小写的内容。匹配大写后改成小写的，前面加一个下划线
+            matcher.appendReplacement(sb, "_" + matcher.group().toLowerCase());
+        }
+        matcher.appendTail(sb);
+        System.out.println("changeUpperLetter: " + sb.toString());
+        return sb.toString();
+    }
 
     /**
      * BigDecimal 计算
@@ -97,10 +127,9 @@ public final class BaseUtils {
     }
 
 
-
-
     /**
      * 判断在不在arry list 里面
+     *
      * @param key
      * @param arry
      * @return
@@ -119,6 +148,7 @@ public final class BaseUtils {
 
     /**
      * 批量替换
+     *
      * @param source
      * @param keywords
      * @param target
@@ -161,6 +191,7 @@ public final class BaseUtils {
 
     /**
      * 字符串url encode
+     *
      * @param input
      * @return
      */
@@ -174,6 +205,7 @@ public final class BaseUtils {
 
     /**
      * 字符串url decode
+     *
      * @param input
      * @return
      */
@@ -214,8 +246,6 @@ public final class BaseUtils {
         }
         return sw.toString();
     }
-
-
 
 
     /**
@@ -339,8 +369,6 @@ public final class BaseUtils {
     }
 
 
-
-
     /**
      * 校验是不是手机号
      *
@@ -407,6 +435,7 @@ public final class BaseUtils {
 
     /**
      * 获取类的ServerModel 值
+     *
      * @param cls
      * @return
      */
@@ -417,6 +446,7 @@ public final class BaseUtils {
 
     /**
      * 获取类的ServerModel 描述
+     *
      * @param cls
      * @return
      */

@@ -1,10 +1,13 @@
 package com.jtframework.datasource.mysql;
 
+import cn.hutool.core.util.ReflectUtil;
+import com.jtframework.base.dao.ServerField;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.utils.BaseUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +22,11 @@ public class MysqlQueryParams {
     public StringBuffer sql = new StringBuffer("");
 
     public String countSql;
+
+    /**
+     * model
+     */
+    public Class modelCls;
 
     /**
      * sql map
@@ -50,6 +58,7 @@ public class MysqlQueryParams {
     private int startIndex = 0;
 
     public MysqlQueryParams(Class cls) {
+        this.modelCls = cls;
         this.table = BaseUtils.getServeModelValue(cls);
     }
 
@@ -104,8 +113,22 @@ public class MysqlQueryParams {
      * @param column
      * @param mysqlSort
      */
-    public void sort(String column, MysqlSort mysqlSort) {
-        this.orderColumn = column;
+    public void sort(String column, MysqlSort mysqlSort) throws Exception {
+
+        if (this.modelCls != null) {
+
+            Field filed = ReflectUtil.getField(this.modelCls, column);
+            ServerField serverField = filed.getAnnotation(ServerField.class);
+            if (!serverField.isColumn().equals("true")) {
+                throw new Exception("该fild不是数据库字段无法进行排序");
+            }
+
+            this.orderColumn = serverField.value();
+
+        } else {
+            this.orderColumn = BaseUtils.changeUpperToUnderLetter(column);
+        }
+
         this.mysqlSort = mysqlSort;
     }
 
