@@ -90,7 +90,8 @@ public class MysqlQueryParams {
      * @return
      */
     public MysqlQueryParam addParam(String column) {
-        MysqlQueryParam mysqlQueryParam = new MysqlQueryParam(column);
+        String key = BaseUtils.changeUpperToUnderLetter(column);
+        MysqlQueryParam mysqlQueryParam = new MysqlQueryParam(key);
         params.add(mysqlQueryParam);
         return mysqlQueryParam;
     }
@@ -102,7 +103,8 @@ public class MysqlQueryParams {
      * @return
      */
     public MysqlQueryParam addParam(String column, String value) {
-        MysqlQueryParam mysqlQueryParam = new MysqlQueryParam(column, value);
+        String key = BaseUtils.changeUpperToUnderLetter(column);
+        MysqlQueryParam mysqlQueryParam = new MysqlQueryParam(key, value);
         params.add(mysqlQueryParam);
         return mysqlQueryParam;
     }
