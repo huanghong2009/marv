@@ -24,12 +24,8 @@ public  class BaseModel implements Serializable, Cloneable {
      * 生成model的sql
      * :todo 后续配置mysql dataBase 扫描路径，判断有没有表，没有表执行建表语句
      */
-    public static void generateMysqlCreateTableSql(Class<? extends BaseModel> cls,String javaPath) throws NoSuchFieldException, IllegalAccessException {
+    public static void generateMysqlCreateTableSql(Class<? extends BaseModel> cls) throws NoSuchFieldException, IllegalAccessException {
         System.out.println("正在生成建表语句");
-        JSONObject docs = DocletUtils.getClassDoc(javaPath);
-        String classDoc = docs.getString("classDoc");
-        JSONObject fildDoc = docs.getJSONObject("filedDoc");
-
 
         ServerModel serverModel = (ServerModel) cls.getAnnotation(ServerModel.class);
         String sql = "CREATE TABLE `" + serverModel.value() + "` (  \r\n";
@@ -39,6 +35,10 @@ public  class BaseModel implements Serializable, Cloneable {
 
         for (Field field : fields) {
             ServerField serverField = field.getAnnotation(ServerField.class);
+
+            if (serverField.isColumn().equals("false")){
+                continue;
+            }
 
             String value = "";
             if (isNotBlank(serverField.value())) {
@@ -58,10 +58,10 @@ public  class BaseModel implements Serializable, Cloneable {
             } else {
                 sql += " varchar(20) COLLATE utf8mb4_general_ci ";
             }
-            sql += "DEFAULT NULL COMMENT '" +  (fildDoc.containsKey(field.getName()) ? fildDoc.getString(field.getName()):"") + "',\r\n";
+            sql += "DEFAULT NULL COMMENT '" +  serverField.name() + "',\r\n";
         }
         sql = sql.substring(0,sql.length()-1);
-        sql += " )ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='" + classDoc + "表';";
+        sql += " )ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='" + serverModel.desc() + "表';";
         System.out.println(sql);
     }
 }
