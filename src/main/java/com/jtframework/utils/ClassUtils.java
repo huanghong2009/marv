@@ -5,7 +5,6 @@ import cn.hutool.core.util.ReflectUtil;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -162,15 +161,17 @@ public class ClassUtils {
                 /**
                  * 判断是不是常用类型
                  */
-                if (type.isPrimitive() || type.isArray() || type.isEnum() ||
-                        type.isAssignableFrom(Date.class) || type.isAssignableFrom(BigDecimal.class) ||
-                        type.isAssignableFrom(String.class)) {
+                if (type.isPrimitive() || type.isArray() || type.isEnum() || type.getName().equals(Date.class.getTypeName()) ||
+                        Number.class.isAssignableFrom(type) | Boolean.class.isAssignableFrom(type) || Character.class.isAssignableFrom(type)
+                        || type.getName().equals(String.class.getTypeName())
+
+                ) {
                     if (BaseUtils.isBlank(objName)) {
                         result.put(ReflectUtil.getFieldName(field), value);
                     } else {
                         result.put(objName + "." + ReflectUtil.getFieldName(field), value);
                     }
-                } else if (type.isAssignableFrom(List.class) || type.isAssignableFrom(Map.class) || type.isAssignableFrom(Set.class)) {
+                } else if (List.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type) || Set.class.isAssignableFrom(type)) {
                     continue;
                 } else {
                     getObjectFiledValue(ReflectUtil.getFieldName(field), value, result, num + 1);

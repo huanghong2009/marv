@@ -323,6 +323,7 @@ public class MysqlService  {
         return namedParameterJdbcTemplate.batchUpdate(sql, (SqlParameterSource[]) ((List) psList).toArray(new SqlParameterSource[((List) psList).size()]));
     }
 
+
     public int update(String table, String where, Map<String, Object> record) throws SQLException {
         return update(table, where, record, (String) null, (String) null);
     }
@@ -404,22 +405,23 @@ public class MysqlService  {
                 sql = " UPDATE " + table.toUpperCase() + " SET $values$ WHERE " + where;
                 String values = "";
                 ServerModel serverModel = (ServerModel) record.getClass().getAnnotation(ServerModel.class);
-                Field[] var9 = record.getClass().getDeclaredFields();
-                int var10 = var9.length;
+                Field[] fields = record.getClass().getDeclaredFields();
 
-                for (int var11 = 0; var11 < var10; ++var11) {
-                    Field field = var9[var11];
+                for (int i  = 0; i < fields.length; i++) {
+                    Field field = fields[i];
+
                     if (!field.getName().equalsIgnoreCase("serialVersionUID") && !field.isSynthetic()) {
                         ServerField serverField = (ServerField) field.getAnnotation(ServerField.class);
-                        String k = serverField != null ? serverField.value() : field.getName();
+                        String fileKey = serverField != null ? serverField.value() : field.getName();
                         field.setAccessible(true);
-                        Object v = field.get(record);
-                        if (v != null) {
-                            params.put(k, v);
+                        Object value = field.get(record);
+
+                        if (value != null) {
+                            params.put(fileKey, value);
                             if ("".equals(values)) {
-                                values = " " + k.toUpperCase() + "=:" + k;
+                                values = " " + fileKey.toUpperCase() + "=:" + fileKey;
                             } else {
-                                values = values + "," + k.toUpperCase() + "=:" + k;
+                                values = values + "," + fileKey.toUpperCase() + "=:" + fileKey;
                             }
                         }
                     }
@@ -428,10 +430,11 @@ public class MysqlService  {
                 sql = sql.replace("$values$", values);
                 log.debug("SQL:" + sql);
                 params.putAll(param);
-                Iterator var17 = params.entrySet().iterator();
 
-                while (var17.hasNext()) {
-                    Map.Entry<String, Object> obj = (Map.Entry) var17.next();
+                Iterator iterator = params.entrySet().iterator();
+
+                while (iterator.hasNext()) {
+                    Map.Entry<String, Object> obj = (Map.Entry) iterator.next();
                     if (null != obj && obj.getValue().getClass().isEnum()) {
                         params.put(obj.getKey(), obj.getValue().toString());
                     }
