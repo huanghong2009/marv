@@ -235,7 +235,7 @@ public class MysqlService  {
     }
 
     public int countExec(String csql, Object param) throws SQLException {
-        String sql = "SELECT COUNT(*) AS t " + SqlUtils.removeOrders(SqlUtils.removeSelect(csql));
+        String sql = "SELECT COUNT(1) AS t " + SqlUtils.removeOrders(SqlUtils.removeSelect(csql));
         log.debug("SQL:" + sql);
         if (null == param || param instanceof Object[]) {
             return ((Integer) jdbcTemplate.queryForObject(sql, (Object[]) param, Integer.class)).intValue();
@@ -260,7 +260,7 @@ public class MysqlService  {
             while (it.hasNext()) {
                 String key = (String) it.next();
                 if (bean.get(key) != null) {
-                    fields = fields + "," + key;
+                    fields = fields + ",`" + key+"`";
                     values = values + ",:" + key;
                 }
             }

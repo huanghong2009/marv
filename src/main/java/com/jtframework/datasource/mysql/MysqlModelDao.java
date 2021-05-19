@@ -36,7 +36,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
      *
      * @return
      */
-    private MysqlService getDao() throws Exception {
+    public MysqlService getDao() throws Exception {
         MysqlService mysqlService = getMysqlService();
         if (mysqlService != null) {
             return mysqlService;
