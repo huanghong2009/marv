@@ -41,7 +41,7 @@ public class MysqlQueryParams {
     /**
      * 查询参数
      */
-    private List<MysqlQueryParam> params = new ArrayList<>();
+    private List<MysqlQueryParam> params = new ArrayList<MysqlQueryParam>();
 
     /**
      * orderby 两个字段
@@ -91,9 +91,9 @@ public class MysqlQueryParams {
      */
     public MysqlQueryParam addParam(String column) {
         String key = BaseUtils.changeUpperToUnderLetter(column);
-        MysqlQueryParam mysqlQueryParam = new MysqlQueryParam(key);
-        params.add(mysqlQueryParam);
-        return mysqlQueryParam;
+        MysqlQueryParam mysqlQuery = new MysqlQueryParam(key);
+        params.add(mysqlQuery);
+        return mysqlQuery;
     }
 
     /**
@@ -104,9 +104,9 @@ public class MysqlQueryParams {
      */
     public MysqlQueryParam addParam(String column, String value) {
         String key = BaseUtils.changeUpperToUnderLetter(column);
-        MysqlQueryParam mysqlQueryParam = new MysqlQueryParam(key, value);
-        params.add(mysqlQueryParam);
-        return mysqlQueryParam;
+        MysqlQueryParam mysqlQuery = new MysqlQueryParam(key, value);
+        params.add(mysqlQuery);
+        return mysqlQuery;
     }
 
     /**
@@ -155,28 +155,24 @@ public class MysqlQueryParams {
 
         for (MysqlQueryParam param : params) {
             String filed = param.column.toUpperCase();
-            if (param.symbol.equals(MysqlSymbol.IS)) {
-                sql.append(" AND " + filed + " = :" + filed + " ");
-            } else if (param.symbol.equals(MysqlSymbol.NIS)) {
-                sql.append(" AND " + filed + " != :" + filed + " ");
-            } else if (param.symbol.equals(MysqlSymbol.IN)) {
-                sql.append(" AND " + filed + " IN( :" + filed + ") ");
-            } else if (param.symbol.equals(MysqlSymbol.NIN)) {
-                sql.append(" AND " + filed + " NOT IN( :" + filed + ") ");
-            } else if (param.symbol.equals(MysqlSymbol.LIKE)) {
-                sql.append(" AND " + filed + " LIKE '%' :" + filed + " '%' ");
-            } else if (param.symbol.equals(MysqlSymbol.LEFT_LIKE)) {
-                sql.append(" AND " + filed + " LIKE  :" + filed + " '%' ");
-            } else if (param.symbol.equals(MysqlSymbol.RIGHT_LIKE)) {
-                sql.append(" AND " + filed + " LIKE '%' :" + filed + " ");
-            } else if (param.symbol.equals(MysqlSymbol.INCR)) {
-                sql.append(" AND " + filed + " =" + filed + " + :" + filed + " ");
-            } else if (param.symbol.equals(MysqlSymbol.DECR)) {
-                sql.append(" AND " + filed + " =" + filed + " - :" + filed + " ");
+            String prix = "";
+
+            if (param.orMysqlQuery != null) {
+                prix = " AND ( ";
             } else {
-                continue;
+                prix = " AND ";
             }
+            sql.append(prix);
+
+            getParamsSql(param);
+
             paramsMap.put(filed, param.value);
+
+            if (param.orMysqlQuery != null) {
+                sql.append(" OR ");
+                getParamsSql(param.orMysqlQuery);
+                sql.append(" ) ");
+            }
         }
 
         this.countSql = new String(this.sql);
@@ -195,6 +191,30 @@ public class MysqlQueryParams {
 
     }
 
+    private void getParamsSql(MysqlQuery param) {
+        String filed = param.column.toUpperCase();
+
+        if (param.symbol.equals(MysqlSymbol.IS)) {
+            sql.append(filed + " = :" + filed + " ");
+        } else if (param.symbol.equals(MysqlSymbol.NIS)) {
+            sql.append(filed + " != :" + filed + " ");
+        } else if (param.symbol.equals(MysqlSymbol.IN)) {
+            sql.append(filed + " IN( :" + filed + ") ");
+        } else if (param.symbol.equals(MysqlSymbol.NIN)) {
+            sql.append(filed + " NOT IN( :" + filed + ") ");
+        } else if (param.symbol.equals(MysqlSymbol.LIKE)) {
+            sql.append(filed + " LIKE '%' :" + filed + " '%' ");
+        } else if (param.symbol.equals(MysqlSymbol.LEFT_LIKE)) {
+            sql.append(filed + " LIKE  :" + filed + " '%' ");
+        } else if (param.symbol.equals(MysqlSymbol.RIGHT_LIKE)) {
+            sql.append(filed + " LIKE '%' :" + filed + " ");
+        } else if (param.symbol.equals(MysqlSymbol.INCR)) {
+            sql.append(filed + " =" + filed + " + :" + filed + " ");
+        } else if (param.symbol.equals(MysqlSymbol.DECR)) {
+            sql.append(filed + " =" + filed + " - :" + filed + " ");
+        }
+    }
+
     public String getSql() {
         return this.sql.toString();
     }
@@ -202,79 +222,5 @@ public class MysqlQueryParams {
     public enum MysqlSort {
         ASC,
         DESC
-    }
-
-    public enum MysqlSymbol {
-        IS,
-        NIS,
-        IN,
-        NIN,
-        LEFT_LIKE,
-        RIGHT_LIKE,
-        LIKE,
-        INCR,
-        DECR
-    }
-
-    public class MysqlQueryParam {
-        String column;
-        MysqlSymbol symbol;
-        Object value;
-
-        MysqlQueryParam(String column) {
-            this.column = column;
-            this.symbol = MysqlSymbol.IS;
-        }
-
-        MysqlQueryParam(String column, String value) {
-            this.column = column;
-            this.symbol = MysqlSymbol.IS;
-            this.value = value;
-        }
-
-        public void is(String value) {
-            this.symbol = MysqlSymbol.IS;
-            this.value = value;
-        }
-
-        public void nis(String value) {
-            this.symbol = MysqlSymbol.NIS;
-            this.value = value;
-        }
-
-        public void in(List<String> value) {
-            this.symbol = MysqlSymbol.IN;
-            this.value = value;
-        }
-
-        public void NIN(List<String> value) {
-            this.symbol = MysqlSymbol.NIN;
-            this.value = value;
-        }
-
-        public void leftLike(String value) {
-            this.symbol = MysqlSymbol.LEFT_LIKE;
-            this.value = value;
-        }
-
-        public void rightLike(String value) {
-            this.symbol = MysqlSymbol.RIGHT_LIKE;
-            this.value = value;
-        }
-
-        public void like(String value) {
-            this.symbol = MysqlSymbol.LIKE;
-            this.value = value;
-        }
-
-        public void incr(String value) {
-            this.symbol = MysqlSymbol.INCR;
-            this.value = value;
-        }
-
-        public void decr(String value) {
-            this.symbol = MysqlSymbol.DECR;
-            this.value = value;
-        }
     }
 }
