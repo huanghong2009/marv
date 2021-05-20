@@ -37,7 +37,7 @@ public class MysqlQueryParams {
      */
     private String table;
 
-    private String as = "marv";
+    private boolean sqlQuery = false;
     /**
      * 查询参数
      */
@@ -63,13 +63,10 @@ public class MysqlQueryParams {
     }
 
     public MysqlQueryParams(String sql) {
-        this.table = " ( " + sql + " ) AS " + this.as + " ";
+        this.sqlQuery = true;
+        this.table = sql;
     }
 
-    public MysqlQueryParams(String sql, String as) {
-        this.as = as;
-        this.table = " ( " + sql + " ) AS " + as + " ";
-    }
 
     public static MysqlQueryParams addParam(Class cls, String key, String value) {
         MysqlQueryParams mysqlQueryParams = new MysqlQueryParams(cls);
@@ -77,8 +74,8 @@ public class MysqlQueryParams {
         return mysqlQueryParams;
     }
 
-    public static MysqlQueryParams addParam(String sql, String as, String key, String value) {
-        MysqlQueryParams mysqlQueryParams = new MysqlQueryParams(sql, as);
+    public static MysqlQueryParams addParam(String sql, String key, String value) {
+        MysqlQueryParams mysqlQueryParams = new MysqlQueryParams(sql);
         mysqlQueryParams.addParam(key, value);
         return mysqlQueryParams;
     }
@@ -103,8 +100,8 @@ public class MysqlQueryParams {
      * @return
      */
     public MysqlQueryParam addParam(String column, String value) {
-        String key = BaseUtils.changeUpperToUnderLetter(column);
-        MysqlQueryParam mysqlQuery = new MysqlQueryParam(key, value);
+
+        MysqlQueryParam mysqlQuery = new MysqlQueryParam(column, value);
         params.add(mysqlQuery);
         return mysqlQuery;
     }
@@ -151,10 +148,14 @@ public class MysqlQueryParams {
      */
     public void generateSql() {
         paramsMap.clear();
-        sql.append("SELECT * FROM " + this.table.toUpperCase() + " WHERE 1=1 ");
+        if (this.sqlQuery) {
+            sql.append(this.table + " WHERE 1=1 ");
+        } else {
+            sql.append("SELECT * FROM " + this.table + " WHERE 1=1 ");
+        }
 
         for (MysqlQueryParam param : params) {
-            String filed = param.column.toUpperCase();
+            String filed = param.column;
             String prix = "";
 
             if (param.orMysqlQuery != null) {
@@ -165,8 +166,6 @@ public class MysqlQueryParams {
             sql.append(prix);
 
             getParamsSql(param);
-
-            paramsMap.put(filed, param.value);
 
             if (param.orMysqlQuery != null) {
                 sql.append(" OR ");
@@ -179,7 +178,7 @@ public class MysqlQueryParams {
 
         if (BaseUtils.isNotBlank(orderColumn) && mysqlSort != null) {
             sql.append(" ORDER BY :ORDER_COLUMN " + mysqlSort.name());
-            paramsMap.put("ORDER_COLUMN", orderColumn.toUpperCase());
+            paramsMap.put("ORDER_COLUMN", orderColumn);
         }
 
         if (this.toPage > 0 && this.pageSize > 0) {
@@ -192,7 +191,9 @@ public class MysqlQueryParams {
     }
 
     private void getParamsSql(MysqlQuery param) {
-        String filed = param.column.toUpperCase();
+        String filed = param.column;
+
+        paramsMap.put(filed, param.value);
 
         if (param.symbol.equals(MysqlSymbol.IS)) {
             sql.append(filed + " = :" + filed + " ");

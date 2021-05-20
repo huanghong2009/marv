@@ -94,7 +94,7 @@ public class BaseController<T extends BaseModel> {
     }
 
     @ApiOperation("覆盖性修改")
-    @GetMapping(value = "/update")
+    @PostMapping(value = "/update")
     public ServerResponse update(T model){
         try {
             return ServerResponse.succeed("默认分页查询:"+name+"成功",getModelDaoService().update(model));

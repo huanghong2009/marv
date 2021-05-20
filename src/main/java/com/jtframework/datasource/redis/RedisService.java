@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 
@@ -788,5 +789,41 @@ public class RedisService {
         }
     }
 
+
+    /**
+     * 非阻塞式，获取分布式锁
+     *
+     * @param key     锁的key
+     * @param timeOut 等待锁的超时时间:秒
+     * @param handle  获取之后的调用的方法
+     */
+    public Object lock(String key, Long timeOut, Callable handle) throws Exception{
+        final String keyLock = RedisService.LOCK_PREFIX + key;
+
+        long startTime = System.currentTimeMillis();
+
+        while (!this.getLock(keyLock)) {
+            if (System.currentTimeMillis() - startTime > timeOut * 1000) {
+                throw new BusinessException("获取分布式锁超时....");
+            }
+            try {
+                Thread.sleep(100L);
+            } catch (Exception e) {
+
+            }
+        }
+
+        try {
+            log.info("{} 分布式锁任务正在执行，正在释放...", key);
+            return handle.call();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw e;
+        } finally {
+            log.info("{} 分布式锁任务执行完成，正在释放...", key);
+            deleteLock(keyLock);
+        }
+    }
 
 }
