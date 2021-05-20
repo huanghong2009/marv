@@ -1,5 +1,7 @@
 package com.jtframework.datasource.mysql;
 
+import com.jtframework.utils.BaseUtils;
+
 import java.util.List;
 
 public class MysqlQuery {
@@ -8,12 +10,14 @@ public class MysqlQuery {
     Object value;
 
     public MysqlQuery(String column) {
-        this.column = column;
+        String key = BaseUtils.changeUpperToUnderLetter(column);
+        this.column = key;
         this.symbol = MysqlSymbol.IS;
     }
 
     public MysqlQuery(String column, String value) {
-        this.column = column;
+        String key = BaseUtils.changeUpperToUnderLetter(column);
+        this.column = key;
         this.symbol = MysqlSymbol.IS;
         this.value = value;
     }

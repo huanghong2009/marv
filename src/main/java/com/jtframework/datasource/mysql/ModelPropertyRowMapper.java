@@ -38,12 +38,16 @@ public class ModelPropertyRowMapper<T> implements RowMapper<T> {
                 for (Field field : fields) {
                     ServerField serverField = (ServerField) field.getAnnotation(ServerField.class);
                     String name = field.getName();
+                    String filedName = serverField != null ? serverField.value() : field.getName();
 
                     if (!serverField.isColumn().equals("true")) {
-                        continue;
+                        try {
+                            rs.findColumn(filedName);
+                        } catch (Exception e) {
+                            continue;
+                        }
                     }
 
-                    String filedName = serverField != null ? serverField.value() : field.getName();
                     if (!"class".equals(name) && !field.isSynthetic()) {
                         Object value = null;
                         Class fileType = field.getType();

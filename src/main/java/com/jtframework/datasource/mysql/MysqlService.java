@@ -402,7 +402,7 @@ public class MysqlService  {
             try {
                 String sql = "";
                 Map<String, Object> params = new HashMap();
-                sql = " UPDATE " + table.toUpperCase() + " SET $values$ WHERE " + where;
+                sql = " UPDATE " + table + " SET $values$ WHERE " + where;
                 String values = "";
                 ServerModel serverModel = (ServerModel) record.getClass().getAnnotation(ServerModel.class);
                 Field[] fields = record.getClass().getDeclaredFields();
@@ -412,6 +412,11 @@ public class MysqlService  {
 
                     if (!field.getName().equalsIgnoreCase("serialVersionUID") && !field.isSynthetic()) {
                         ServerField serverField = (ServerField) field.getAnnotation(ServerField.class);
+
+                        if (!serverField.isColumn().equals("true")){
+                            continue;
+                        }
+
                         String fileKey = serverField != null ? serverField.value() : field.getName();
                         field.setAccessible(true);
                         Object value = field.get(record);
@@ -452,7 +457,7 @@ public class MysqlService  {
     }
 
     public int delete(String table, String where, Object[] param) throws SQLException {
-        String sql = "DELETE FROM " + table.toUpperCase() + " WHERE ?where?";
+        String sql = "DELETE FROM " + table + " WHERE ?where?";
         if (BaseUtils.isNotBlank(where)) {
             sql = sql.replace("?where?", where);
         }
@@ -462,7 +467,7 @@ public class MysqlService  {
     }
 
     public int delete(String table, String where, Map<String, Object> param) throws SQLException {
-        String sql = "DELETE FROM " + table.toUpperCase() + " WHERE ?where?";
+        String sql = "DELETE FROM " + table + " WHERE ?where?";
         if (BaseUtils.isNotBlank(where)) {
             sql = sql.replace("?where?", where);
         }
@@ -472,7 +477,7 @@ public class MysqlService  {
     }
 
     public int delete(String table, String where, Object param) throws SQLException {
-        String sql = "DELETE FROM " + table.toUpperCase() + " WHERE ?where?";
+        String sql = "DELETE FROM " + table + " WHERE ?where?";
         if (BaseUtils.isNotBlank(where)) {
             sql = sql.replace("?where?", where);
         }
