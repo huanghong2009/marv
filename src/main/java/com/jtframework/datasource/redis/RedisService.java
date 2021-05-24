@@ -703,45 +703,37 @@ public class RedisService {
     }
 
     /**
-     * 获取分布式锁
      *
-     * @param key
+     *
+     * @param key key值
+     * @return 是否获取到
      */
-    private Boolean getLock(String key) {
-        if (BaseUtils.isNotBlank(key)) {
+    public boolean getLock(String key){
+        String lock = LOCK_PREFIX + key;
+        // 利用lambda表达式
+        return (Boolean) redisTemplate.execute((RedisCallback) connection -> {
 
-
-            return (Boolean) this.redisTemplate.execute(new RedisCallback() {
-                @Override
-                public Object doInRedis(RedisConnection redisConnection) throws DataAccessException {
-                    long expireAt = System.currentTimeMillis() + LOCK_EXPIRE + 1;
-                    Boolean acquire = redisConnection.setNX(key.getBytes(), String.valueOf(expireAt).getBytes());
-
-                    if (acquire) {
-                        return true;
-                    } else {
-
-                        byte[] value = redisConnection.get(key.getBytes());
-
-                        if (Objects.nonNull(value) && value.length > 0) {
-
-                            long expireTime = Long.parseLong(new String(value));
-                            // 如果锁已经过期
-                            if (expireTime < System.currentTimeMillis()) {
-                                // 重新加锁，防止死锁
-                                byte[] oldValue = redisConnection.getSet(key.getBytes(), String.valueOf(System.currentTimeMillis() + LOCK_EXPIRE + 1).getBytes());
-                                return Long.parseLong(new String(oldValue)) < System.currentTimeMillis();
-                            }
-                        }
+            long expireAt = System.currentTimeMillis() + LOCK_EXPIRE + 1;
+            Boolean acquire = connection.setNX(lock.getBytes(), String.valueOf(expireAt).getBytes());
+            if (acquire) {
+                return true;
+            } else {
+                byte[] value = connection.get(lock.getBytes());
+                if (Objects.nonNull(value) && value.length > 0) {
+                    long expireTime = Long.parseLong(new String(value));
+                    // 如果锁已经过期
+                    if (expireTime < System.currentTimeMillis()) {
+                        // 重新加锁，防止死锁
+                        byte[] oldValue = connection.getSet(lock.getBytes(), String.valueOf(System.currentTimeMillis() + LOCK_EXPIRE + 1).getBytes());
+                        return Long.parseLong(new String(oldValue)) < System.currentTimeMillis();
                     }
-                    return false;
                 }
-            });
-
-        } else {
-            throw new BusinessException("分布式锁 key 为空");
-        }
+            }
+            return false;
+        });
     }
+
+
 
     /**
      * 删除锁
@@ -762,30 +754,35 @@ public class RedisService {
     public void lock(String key, Long timeOut, Runnable handle) throws Exception{
         final String keyLock = RedisService.LOCK_PREFIX + key;
 
-        long startTime = System.currentTimeMillis();
-
-        while (!this.getLock(keyLock)) {
-            if (System.currentTimeMillis() - startTime > timeOut * 1000) {
-                throw new BusinessException("获取分布式锁超时....");
-            }
+        if (this.getLock(keyLock)) {
             try {
-                Thread.sleep(100L);
-            } catch (Exception e) {
-
+                handle.run();
+            } finally {
+                this.deleteLock(keyLock);
             }
-        }
+        } else {
+            // 设置失败次数计数器, 当到达5次时, 返回失败
+            int failCount = 1;
+            while (failCount <= 5) {
+                // 等待100ms重试
+                try {
+                    Thread.sleep(100L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
-        try {
-            log.info("{} 分布式锁任务正在执行，正在释放...", key);
-            handle.run();
-            return;
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            throw e;
-        } finally {
-            log.info("{} 分布式锁任务执行完成，正在释放...", key);
-            deleteLock(keyLock);
+                if (this.getLock(keyLock)) {
+                    try {
+                        handle.run();
+                    } finally {
+                        this.deleteLock(keyLock);
+                    }
+                } else {
+                    failCount++;
+                }
+            }
+
+            throw new RuntimeException("获取锁超时，请稍等再试");
         }
     }
 
@@ -800,29 +797,36 @@ public class RedisService {
     public Object lock(String key, Long timeOut, Callable handle) throws Exception{
         final String keyLock = RedisService.LOCK_PREFIX + key;
 
-        long startTime = System.currentTimeMillis();
 
-        while (!this.getLock(keyLock)) {
-            if (System.currentTimeMillis() - startTime > timeOut * 1000) {
-                throw new BusinessException("获取分布式锁超时....");
-            }
+        if (this.getLock(keyLock)) {
             try {
-                Thread.sleep(100L);
-            } catch (Exception e) {
-
+                handle.call();
+            } finally {
+                this.deleteLock(keyLock);
             }
-        }
+        } else {
+            // 设置失败次数计数器, 当到达5次时, 返回失败
+            int failCount = 1;
+            while (failCount <= 5) {
+                // 等待100ms重试
+                try {
+                    Thread.sleep(100L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
-        try {
-            log.info("{} 分布式锁任务正在执行，正在释放...", key);
-            return handle.call();
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            throw e;
-        } finally {
-            log.info("{} 分布式锁任务执行完成，正在释放...", key);
-            deleteLock(keyLock);
+                if (this.getLock(keyLock)) {
+                    try {
+                        handle.call();
+                    } finally {
+                        this.deleteLock(keyLock);
+                    }
+                } else {
+                    failCount++;
+                }
+            }
+
+            throw new RuntimeException("获取锁超时，请稍等再试");
         }
     }
 
