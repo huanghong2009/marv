@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * @version 创建时间：2017/12/19
  */
 @Slf4j
-public class MysqlService  {
+public class MysqlService {
 
     public JdbcTemplate jdbcTemplate;
 
@@ -90,7 +90,7 @@ public class MysqlService  {
     }
 
     public <T> List<T> selectListAll(Class<T> resultClass) throws SQLException {
-        String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass)+"`";
+        String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass) + "`";
         return selectList(resultClass, sql, new String[]{});
     }
 
@@ -186,6 +186,7 @@ public class MysqlService  {
 
     /**
      * 根据queryParams 查询数据
+     *
      * @param resultClass
      * @param mysqlQueryParams
      * @param <T>
@@ -219,10 +220,12 @@ public class MysqlService  {
 
     public <T> List<T> selectList(Class<T> resultClass, String sql, Map<String, Object> param) throws SQLException {
         log.debug("SQL:" + sql);
-        if (!BaseModel.class.isAssignableFrom(resultClass) && !resultClass.getName().startsWith("java.lang.")) {
-            return ParamsDTO.class.isAssignableFrom(resultClass) ? namedParameterJdbcTemplate.query(sql, param, new DTOPropertyRowMapper(resultClass)) : (List<T>) namedParameterJdbcTemplate.queryForList(sql, param);
-        } else {
+        if (BaseModel.class.isAssignableFrom(resultClass)) {
             return namedParameterJdbcTemplate.query(sql, param, new ModelPropertyRowMapper(resultClass));
+        } else if (ParamsDTO.class.isAssignableFrom(resultClass)) {
+            return namedParameterJdbcTemplate.query(sql, param, new DTOPropertyRowMapper(resultClass));
+        } else {
+            return namedParameterJdbcTemplate.queryForList(sql, param, resultClass);
         }
     }
 
@@ -260,7 +263,7 @@ public class MysqlService  {
             while (it.hasNext()) {
                 String key = (String) it.next();
                 if (bean.get(key) != null) {
-                    fields = fields + ",`" + key+"`";
+                    fields = fields + ",`" + key + "`";
                     values = values + ",:" + key;
                 }
             }
@@ -407,13 +410,13 @@ public class MysqlService  {
                 ServerModel serverModel = (ServerModel) record.getClass().getAnnotation(ServerModel.class);
                 Field[] fields = record.getClass().getDeclaredFields();
 
-                for (int i  = 0; i < fields.length; i++) {
+                for (int i = 0; i < fields.length; i++) {
                     Field field = fields[i];
 
                     if (!field.getName().equalsIgnoreCase("serialVersionUID") && !field.isSynthetic()) {
                         ServerField serverField = (ServerField) field.getAnnotation(ServerField.class);
 
-                        if (!serverField.isColumn().equals("true")){
+                        if (!serverField.isColumn().equals("true")) {
                             continue;
                         }
 
@@ -424,9 +427,9 @@ public class MysqlService  {
                         if (value != null) {
                             params.put(fileKey, value);
                             if ("".equals(values)) {
-                                values = " " + fileKey.toUpperCase() + "=:" + fileKey;
+                                values = " `" + fileKey.toUpperCase() + "` =:" + fileKey;
                             } else {
-                                values = values + "," + fileKey.toUpperCase() + "=:" + fileKey;
+                                values = values + ",`" + fileKey.toUpperCase() + "` =:" + fileKey;
                             }
                         }
                     }
@@ -526,8 +529,9 @@ public class MysqlService  {
                             fields = k.toUpperCase();
                             values = ":" + k.toUpperCase();
                         } else {
-                            fields = fields + "," + k.toUpperCase();
-                            values = values + ",:" + k.toUpperCase();
+                            fields = fields + ",`" + k + "`";
+                            ;
+                            values = values + ",:" + k;
                         }
                     }
                 }
@@ -593,14 +597,13 @@ public class MysqlService  {
 
     public <T> T selectOne(Class<T> resultClass, String sql, Object[] param) throws SQLException {
         List<T> list = selectList(resultClass, sql, param);
-        return list != null && list.size() > 0 ? list.get(0) : null;
+        return list != null && list.size() > 0 && list.get(0) != null ? list.get(0) : null;
     }
 
     public <T> T selectOne(Class<T> resultClass, String sql, Map<String, Object> param) throws SQLException {
         List<T> list = selectList(resultClass, sql, param);
-        return list != null && list.size() > 0 ? list.get(0) : null;
+        return list != null && list.size() > 0 && list.get(0) != null ? list.get(0) : null;
     }
-
 
 
     /**

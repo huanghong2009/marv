@@ -2,6 +2,7 @@ package com.jtframework.datasource.mysql;
 
 import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
+import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import lombok.Data;
@@ -73,6 +74,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
     @Override
+    @CheckParam
     public int delete(String id) throws BusinessException {
         try {
             return getDao().delete(cls, id);
@@ -84,6 +86,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
     @Override
+    @CheckParam(checkType = CheckParam.Type.ONLY,value = "model.id")
     public int update(BaseModel model) throws BusinessException {
         try {
             return getDao().update(model);

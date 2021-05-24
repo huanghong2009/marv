@@ -177,8 +177,8 @@ public class MysqlQueryParams {
         this.countSql = new String(this.sql);
 
         if (BaseUtils.isNotBlank(orderColumn) && mysqlSort != null) {
-            sql.append(" ORDER BY :ORDER_COLUMN " + mysqlSort.name());
-            paramsMap.put("ORDER_COLUMN", orderColumn);
+            sql.append(" ORDER BY " + orderColumn + " " + mysqlSort.name());
+
         }
 
         if (this.toPage > 0 && this.pageSize > 0) {
