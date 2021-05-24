@@ -2,6 +2,7 @@ package com.jtframework.datasource.mongodb;
 
 import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
+import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -99,7 +100,9 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
      * @throws BusinessException
      */
     @Override
+    @CheckParam(checkType = CheckParam.Type.ONLY,value = "model.id")
     public int update(BaseModel model) throws BusinessException {
+
         try {
             getMongoService().save(model);
             return 0;
@@ -111,6 +114,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     }
 
     @Override
+    @CheckParam
     public int delete(String id) throws BusinessException {
         try {
             return (int) getMongoService().removeById(cls, id);

@@ -81,6 +81,7 @@ public class BaseController<T extends BaseModel> {
     }
 
 
+
     @ApiOperation("默认分页查询")
     @GetMapping(value = "/defalut_page_query")
     public ServerResponse defalutPageQuery(){
@@ -97,11 +98,11 @@ public class BaseController<T extends BaseModel> {
     @PostMapping(value = "/update")
     public ServerResponse update(T model){
         try {
-            return ServerResponse.succeed("默认分页查询:"+name+"成功",getModelDaoService().update(model));
+            return ServerResponse.succeed("修改:"+name+"成功",getModelDaoService().update(model));
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            return ServerResponse.error(e.getMessage(),"默认分页查询"+name+"失败...");
+            return ServerResponse.error(e.getMessage(),"修改"+name+"失败...");
         }
     }
 
