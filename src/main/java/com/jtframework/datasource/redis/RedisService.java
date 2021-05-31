@@ -32,19 +32,17 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class RedisService {
-    /**
-     * redis一般只会有一个实例（不可能存在多个redis serivice，不存在这样的场景）
-     */
-    public static RedisService REDIS_STATIC_SERVICE;
-
     //锁名称
     public static final String LOCK_PREFIX = "redis_lock_";
     //加锁失效时间，毫秒
     public static final int LOCK_EXPIRE = 600; // ms
-
+    /**
+     * redis一般只会有一个实例（不可能存在多个redis serivice，不存在这样的场景）
+     */
+    public static RedisService REDIS_STATIC_SERVICE;
     public RedisTemplate<String, Object> redisTemplate;
 
-    public static LettuceConnectionFactory getLettuceConnectionFactory(RedisConfig redisConfig) throws Exception{
+    public static LettuceConnectionFactory getLettuceConnectionFactory(RedisConfig redisConfig) throws Exception {
         // 连接池配置
         GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
 
@@ -212,7 +210,6 @@ public class RedisService {
 
     /**
      * 删除缓存
-     *
      */
     @SuppressWarnings("unchecked")
     public void del(Set<String> keys) {
@@ -656,7 +653,7 @@ public class RedisService {
     public boolean lSet(String key, List<Object> value, long time) {
         try {
             redisTemplate.opsForList().rightPushAll(key, value);
-            if (time > 0){
+            if (time > 0) {
                 expire(key, time);
             }
             return true;
@@ -702,38 +699,6 @@ public class RedisService {
         }
     }
 
-    /**
-     *
-     *
-     * @param key key值
-     * @return 是否获取到
-     */
-    public boolean getLock(String key){
-        String lock = LOCK_PREFIX + key;
-        // 利用lambda表达式
-        return (Boolean) redisTemplate.execute((RedisCallback) connection -> {
-
-            long expireAt = System.currentTimeMillis() + LOCK_EXPIRE + 1;
-            Boolean acquire = connection.setNX(lock.getBytes(), String.valueOf(expireAt).getBytes());
-            if (acquire) {
-                return true;
-            } else {
-                byte[] value = connection.get(lock.getBytes());
-                if (Objects.nonNull(value) && value.length > 0) {
-                    long expireTime = Long.parseLong(new String(value));
-                    // 如果锁已经过期
-                    if (expireTime < System.currentTimeMillis()) {
-                        // 重新加锁，防止死锁
-                        byte[] oldValue = connection.getSet(lock.getBytes(), String.valueOf(System.currentTimeMillis() + LOCK_EXPIRE + 1).getBytes());
-                        return Long.parseLong(new String(oldValue)) < System.currentTimeMillis();
-                    }
-                }
-            }
-            return false;
-        });
-    }
-
-
 
     /**
      * 删除锁
@@ -744,48 +709,6 @@ public class RedisService {
         redisTemplate.delete(key);
     }
 
-    /**
-     * 非阻塞式，获取分布式锁
-     *
-     * @param key     锁的key
-     * @param timeOut 等待锁的超时时间:秒
-     * @param handle  获取之后的调用的方法
-     */
-    public void lock(String key, Long timeOut, Runnable handle) throws Exception{
-        final String keyLock = RedisService.LOCK_PREFIX + key;
-
-        if (this.getLock(keyLock)) {
-            try {
-                handle.run();
-            } finally {
-                this.deleteLock(keyLock);
-            }
-        } else {
-            // 设置失败次数计数器, 当到达5次时, 返回失败
-            int failCount = 1;
-            while (failCount <= 5) {
-                // 等待100ms重试
-                try {
-                    Thread.sleep(100L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                if (this.getLock(keyLock)) {
-                    try {
-                        handle.run();
-                    } finally {
-                        this.deleteLock(keyLock);
-                    }
-                } else {
-                    failCount++;
-                }
-            }
-
-            throw new RuntimeException("获取锁超时，请稍等再试");
-        }
-    }
-
 
     /**
      * 非阻塞式，获取分布式锁
@@ -794,40 +717,16 @@ public class RedisService {
      * @param timeOut 等待锁的超时时间:秒
      * @param handle  获取之后的调用的方法
      */
-    public Object lock(String key, Long timeOut, Callable handle) throws Exception{
-        final String keyLock = RedisService.LOCK_PREFIX + key;
+    public Object lock(String key, Long timeOut, Callable handle) throws Exception {
 
-
-        if (this.getLock(keyLock)) {
-            try {
-                handle.call();
-            } finally {
-                this.deleteLock(keyLock);
-            }
+        if (!redisTemplate.opsForValue().setIfAbsent(key, "value", timeOut, TimeUnit.SECONDS)) {
+            throw new Exception("操作太频繁");
         } else {
-            // 设置失败次数计数器, 当到达5次时, 返回失败
-            int failCount = 1;
-            while (failCount <= 5) {
-                // 等待100ms重试
-                try {
-                    Thread.sleep(100L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                if (this.getLock(keyLock)) {
-                    try {
-                        handle.call();
-                    } finally {
-                        this.deleteLock(keyLock);
-                    }
-                } else {
-                    failCount++;
-                }
+            try {
+                return handle.call();
+            } finally {
+                redisTemplate.delete(key);
             }
-
-            throw new RuntimeException("获取锁超时，请稍等再试");
         }
     }
-
 }

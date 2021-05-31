@@ -427,9 +427,9 @@ public class MysqlService {
                         if (value != null) {
                             params.put(fileKey, value);
                             if ("".equals(values)) {
-                                values = " `" + fileKey.toUpperCase() + "` =:" + fileKey;
+                                values = " `" + fileKey + "` =:" + fileKey;
                             } else {
-                                values = values + ",`" + fileKey.toUpperCase() + "` =:" + fileKey;
+                                values = values + ",`" + fileKey + "` =:" + fileKey;
                             }
                         }
                     }
@@ -526,8 +526,8 @@ public class MysqlService {
                         String k = serverField != null ? serverField.value() : field.getName();
 
                         if ("".equals(fields)) {
-                            fields = k.toUpperCase();
-                            values = ":" + k.toUpperCase();
+                            fields = k;
+                            values = ":" + k;
                         } else {
                             fields = fields + ",`" + k + "`";
                             ;
@@ -560,11 +560,11 @@ public class MysqlService {
                                 String k = serverField != null ? serverField.value() : field.getName();
                                 Object filed_o = field.get(o);
                                 if (null != filed_o && filed_o.getClass().isEnum()) {
-                                    obj.put(k.toUpperCase(), filed_o.toString());
+                                    obj.put(k, filed_o.toString());
                                 } else if (filed_o instanceof Date) {
-                                    obj.put(k.toUpperCase(), sdf1.format(filed_o));
+                                    obj.put(k, sdf1.format(filed_o));
                                 } else {
-                                    obj.put(k.toUpperCase(), filed_o);
+                                    obj.put(k, filed_o);
                                 }
                             }
                         }
