@@ -2,7 +2,7 @@ package com.jtframework.datasource.mysql;
 
 import com.jtframework.utils.BaseUtils;
 
-public class MysqlQueryParam extends MysqlQuery{
+public class MysqlQueryParam extends MysqlQuery {
 
     MysqlQuery orMysqlQuery;
 
@@ -11,10 +11,15 @@ public class MysqlQueryParam extends MysqlQuery{
     }
 
     public MysqlQueryParam(String column, String value) {
-        super(column,value);
+        super(column, value);
     }
 
     public void or(MysqlQuery mysqlQuery) {
         this.orMysqlQuery = mysqlQuery;
+    }
+
+    public void betweenAnd(String start, String end) {
+        this.symbol = MysqlSymbol.BETWEEN_ADN;
+        this.value = start + "," + end;
     }
 }

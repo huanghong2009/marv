@@ -10,5 +10,6 @@ public enum MysqlSymbol {
     LIKE,
     INCR,
     DECR,
-    OR
+    OR,
+    BETWEEN_ADN
 }
