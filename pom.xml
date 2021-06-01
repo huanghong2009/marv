@@ -257,14 +257,14 @@
 
     <distributionManagement>
 
-                <repository>
-                    <id>fundtp</id>
-                    <url>http://47.115.113.154:8082/repository/fundtp/</url>
-                </repository>
+<!--                <repository>-->
+<!--                    <id>fundtp</id>-->
+<!--                    <url>http://47.115.113.154:8082/repository/fundtp/</url>-->
+<!--                </repository>-->
         <!--        茶油-->
-<!--        <repository>-->
-<!--            <id>xintou-nexus</id>-->
-<!--            <url>http://nexus.xtb365.com/repository/common/</url>-->
-<!--        </repository>-->
+        <repository>
+            <id>xintou-nexus</id>
+            <url>http://nexus.xtb365.com/repository/common/</url>
+        </repository>
     </distributionManagement>
 </project>
