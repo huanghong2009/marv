@@ -1,9 +1,11 @@
 package com.jtframework.datasource.mysql;
 
 import com.jtframework.utils.BaseUtils;
+import lombok.Data;
 
 import java.util.List;
 
+@Data
 public class MysqlQuery {
     String column;
     MysqlSymbol symbol;

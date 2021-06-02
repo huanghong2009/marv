@@ -11,5 +11,5 @@ public enum MysqlSymbol {
     INCR,
     DECR,
     OR,
-    BETWEEN_ADN
+    BETWEEN_AND
 }

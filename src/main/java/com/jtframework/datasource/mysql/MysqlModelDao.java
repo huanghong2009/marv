@@ -5,6 +5,7 @@ import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
+import com.jtframework.utils.BaseUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,11 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
 
     @Override
     public void insert(BaseModel model) throws BusinessException {
+
+        if (BaseUtils.isBlank(model.getId())){
+            model.setId(null);
+        }
+
         try {
             getDao().insert(model);
         } catch (Exception e) {
@@ -63,6 +69,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
     @Override
+    @CheckParam
     public T load(String id) throws BusinessException {
         try {
             return (T) getDao().load(cls, id);
@@ -123,6 +130,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
      * @throws BusinessException
      */
     @Override
+    @CheckParam
     public List<T> selectListByKV(String key, String value) throws BusinessException {
         try {
             return getDao().selectListFromKV(this.cls, key, value);
@@ -160,6 +168,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
      * @throws BusinessException
      */
     @Override
+    @CheckParam
     public T selectOneByKV(String key, String value) throws BusinessException {
         try {
             return (T) getDao().selectOneFromKV(this.cls, key, value);

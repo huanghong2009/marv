@@ -38,10 +38,17 @@ public class MysqlQueryParams {
     private String table;
 
     private boolean sqlQuery = false;
+
     /**
      * 查询参数
      */
     private List<MysqlQueryParam> params = new ArrayList<MysqlQueryParam>();
+
+
+    /**
+     * or查询参数（需要单独处理）
+     */
+    private List<MysqlQueryParam> orParams = new ArrayList<MysqlQueryParam>();
 
     /**
      * orderby 两个字段
@@ -93,6 +100,31 @@ public class MysqlQueryParams {
         return mysqlQuery;
     }
 
+
+    /**
+     * 添加一个or 查询
+     *
+     * @param column
+     * @return
+     */
+    public MysqlQueryParam addOrParam(String column) {
+        MysqlQueryParam mysqlQuery = addParam(column);
+        mysqlQuery.isOr = true;
+        return mysqlQuery;
+    }
+
+    /**
+     * 添加一个or 查询
+     *
+     * @param column
+     * @return
+     */
+    public MysqlQueryParam addOrParam(String column, String value) {
+        MysqlQueryParam mysqlQuery = addParam(column, value);
+        mysqlQuery.isOr = true;
+        return mysqlQuery;
+    }
+
     /**
      * 添加一个查询参数
      *
@@ -100,7 +132,6 @@ public class MysqlQueryParams {
      * @return
      */
     public MysqlQueryParam addParam(String column, String value) {
-
         MysqlQueryParam mysqlQuery = new MysqlQueryParam(column, value);
         params.add(mysqlQuery);
         return mysqlQuery;
@@ -155,23 +186,12 @@ public class MysqlQueryParams {
         }
 
         for (MysqlQueryParam param : params) {
-            String filed = param.column;
-            String prix = "";
+            String prix = " AND ";
 
-            if (param.orMysqlQuery != null) {
-                prix = " AND ( ";
-            } else {
-                prix = " AND ";
-            }
             sql.append(prix);
 
-            getParamsSql(param);
+            sql.append(getParamsSql(param));
 
-            if (param.orMysqlQuery != null) {
-                sql.append(" OR ");
-                getParamsSql(param.orMysqlQuery);
-                sql.append(" ) ");
-            }
         }
 
         this.countSql = new String(this.sql);
@@ -190,30 +210,43 @@ public class MysqlQueryParams {
 
     }
 
-    private void getParamsSql(MysqlQuery param) {
+    private String getParamsSql(MysqlQuery param) {
+        String result = " ";
         String filed = param.column;
 
-        paramsMap.put(filed, param.value);
+        boolean oneFileds = true;
 
         if (param.symbol.equals(MysqlSymbol.IS)) {
-            sql.append(filed + " = :" + filed + " ");
+            result = filed + " = :" + filed + " ";
         } else if (param.symbol.equals(MysqlSymbol.NIS)) {
-            sql.append(filed + " != :" + filed + " ");
+            result = filed + " != :" + filed + " ";
         } else if (param.symbol.equals(MysqlSymbol.IN)) {
-            sql.append(filed + " IN( :" + filed + ") ");
+            result = filed + " IN( :" + filed + ") ";
         } else if (param.symbol.equals(MysqlSymbol.NIN)) {
-            sql.append(filed + " NOT IN( :" + filed + ") ");
+            result = filed + " NOT IN( :" + filed + ") ";
         } else if (param.symbol.equals(MysqlSymbol.LIKE)) {
-            sql.append(filed + " LIKE '%' :" + filed + " '%' ");
+            result = filed + " LIKE '%' :" + filed + " '%' ";
         } else if (param.symbol.equals(MysqlSymbol.LEFT_LIKE)) {
-            sql.append(filed + " LIKE  :" + filed + " '%' ");
+            result = filed + " LIKE  :" + filed + " '%' ";
         } else if (param.symbol.equals(MysqlSymbol.RIGHT_LIKE)) {
-            sql.append(filed + " LIKE '%' :" + filed + " ");
+            result = filed + " LIKE '%' :" + filed + " ";
         } else if (param.symbol.equals(MysqlSymbol.INCR)) {
-            sql.append(filed + " =" + filed + " + :" + filed + " ");
+            result = filed + " =" + filed + " + :" + filed + " ";
         } else if (param.symbol.equals(MysqlSymbol.DECR)) {
-            sql.append(filed + " =" + filed + " - :" + filed + " ");
+            result = filed + " =" + filed + " - :" + filed + " ";
+        } else if (param.symbol.equals(MysqlSymbol.BETWEEN_AND)) {
+            String[] values = String.valueOf(param.value).split(",");
+
+            result = filed + " BETWEEN  :" + filed + "0 AND :" + filed + "1 ";
+            paramsMap.put(filed + "0", values[0]);
+            paramsMap.put(filed + "1", values[1]);
+            oneFileds = false;
         }
+
+        if (oneFileds) {
+            paramsMap.put(filed, param.value);
+        }
+        return result;
     }
 
     public String getSql() {

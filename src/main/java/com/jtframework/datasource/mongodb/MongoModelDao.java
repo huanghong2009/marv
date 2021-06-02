@@ -71,6 +71,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
      * @throws BusinessException
      */
     @Override
+    @CheckParam(checkType = CheckParam.Type.ONLY,value ="model.id")
     public void save(Object model) throws BusinessException {
         try {
             getMongoService().save(model);
@@ -82,6 +83,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     }
 
     @Override
+    @CheckParam("id")
     public T load(String id) throws BusinessException {
         try {
             return (T) getMongoService().findById(cls, id);

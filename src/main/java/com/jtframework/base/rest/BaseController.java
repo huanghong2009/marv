@@ -2,6 +2,8 @@ package com.jtframework.base.rest;
 
 import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
+import com.jtframework.base.query.CheckParam;
+import com.jtframework.base.query.ParamsDTO;
 import com.jtframework.datasource.common.ModelDaoService;
 import com.jtframework.utils.BaseUtils;
 import io.swagger.annotations.ApiOperation;
@@ -42,21 +44,9 @@ public class BaseController<T extends BaseModel> {
     }
 
 
-    @ApiOperation("新增")
-    @PostMapping(value = "/add")
-    public ServerResponse insert(T model){
-        try {
-            getModelDaoService().insert(model);
-            return ServerResponse.succeed("新增:"+name+"成功",null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            return ServerResponse.error(e.getMessage(),"新增"+name+"失败...");
-        }
-    }
-
     @ApiOperation("加载对象")
     @PostMapping(value = "/load")
+    @CheckParam
     public ServerResponse load(String id){
         try {
             return ServerResponse.succeed("加载对象:"+name+"成功", getModelDaoService().load(id));
@@ -79,31 +69,4 @@ public class BaseController<T extends BaseModel> {
             return ServerResponse.error(e.getMessage(),"删除"+name+"失败...");
         }
     }
-
-
-
-    @ApiOperation("默认分页查询")
-    @GetMapping(value = "/defalut_page_query")
-    public ServerResponse defalutPageQuery(){
-        try {
-            return ServerResponse.succeed("默认分页查询:"+name+"成功",getModelDaoService().defalutPageQuery());
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            return ServerResponse.error(e.getMessage(),"默认分页查询"+name+"失败...");
-        }
-    }
-
-    @ApiOperation("覆盖性修改")
-    @PostMapping(value = "/update")
-    public ServerResponse update(T model){
-        try {
-            return ServerResponse.succeed("修改:"+name+"成功",getModelDaoService().update(model));
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            return ServerResponse.error(e.getMessage(),"修改"+name+"失败...");
-        }
-    }
-
 }
