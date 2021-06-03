@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * @version 创建时间：2017/12/19
  */
 @Slf4j
-public class MysqlService  {
+public class MysqlService {
 
     public JdbcTemplate jdbcTemplate;
 
@@ -65,8 +65,9 @@ public class MysqlService  {
                         } else {
                             valueFormat = value;
                         }
+                        bean.put(serverField.value(), valueFormat);
                     }
-                    bean.put(serverField.value(), valueFormat);
+
                 }
 
             } catch (IllegalAccessException e) {
@@ -90,7 +91,7 @@ public class MysqlService  {
     }
 
     public <T> List<T> selectListAll(Class<T> resultClass) throws SQLException {
-        String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass)+"`";
+        String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass) + "`";
         return selectList(resultClass, sql, new String[]{});
     }
 
@@ -186,6 +187,7 @@ public class MysqlService  {
 
     /**
      * 根据queryParams 查询数据
+     *
      * @param resultClass
      * @param mysqlQueryParams
      * @param <T>
@@ -592,7 +594,6 @@ public class MysqlService  {
         List<T> list = selectList(resultClass, sql, param);
         return list != null && list.size() > 0 ? list.get(0) : null;
     }
-
 
 
     /**
