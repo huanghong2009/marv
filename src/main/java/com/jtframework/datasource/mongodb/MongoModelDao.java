@@ -7,6 +7,7 @@ import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -55,7 +56,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @Override
     public void insert(BaseModel model) throws BusinessException {
         try {
-            getMongoService().insert(model);
+            getDao().insert(model);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -73,7 +74,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @Override
     public void save(Object model) throws BusinessException {
         try {
-            getMongoService().save(model);
+            getDao().save(model);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -84,7 +85,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @Override
     public T load(String id) throws BusinessException {
         try {
-            return (T) getMongoService().findById(cls, id);
+            return (T) getDao().findById(cls, id);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -104,7 +105,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     public int update(BaseModel model) throws BusinessException {
 
         try {
-            getMongoService().save(model);
+            getDao().save(model);
             return 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -117,7 +118,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @CheckParam
     public int delete(String id) throws BusinessException {
         try {
-            return (int) getMongoService().removeById(cls, id);
+            return (int) getDao().removeById(cls, id);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -134,7 +135,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @Override
     public List<T> selectAll() throws BusinessException {
         try {
-            return getMongoService().findAll(cls);
+            return getDao().findAll(cls);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -153,7 +154,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @Override
     public List<T> selectListByKV(String key, String value) throws BusinessException {
         try {
-            return getMongoService().findByKV(this.cls, key, value);
+            return getDao().findByKV(this.cls, key, value);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -171,7 +172,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @Override
     public List selectListForMap(Map params) throws BusinessException {
         try {
-            return getMongoService().findByMap(this.cls, params);
+            return getDao().findByMap(this.cls, params);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -190,7 +191,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @Override
     public T selectOneByKV(String key, String value) throws BusinessException {
         try {
-            return (T) getMongoService().findOneByKV(this.cls, key, value);
+            return (T) getDao().findOneByKV(this.cls, key, value);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -208,7 +209,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @Override
     public Object selectOneByMap(Map params) throws BusinessException {
         try {
-            return (T) getMongoService().findOneByMap(this.cls, params);
+            return (T) getDao().findOneByMap(this.cls, params);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -226,11 +227,32 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @Override
     public PageVO<T> defalutPageQuery() throws SQLException {
         try {
-            return getMongoService().pageQuery(this.cls,getMongoService().createQuery(),1,10);
+            return getDao().pageQuery(this.cls,getMongoService().createQuery(),1,10);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("分页查询" + this.name + "失败");
+        }
+    }
+
+    /**
+     * 根据id 修改一个key value
+     *
+     * @param id
+     * @param key
+     * @param value
+     * @throws SQLException
+     */
+    @Override
+    public int updateKVById(String id, String key, Object value) throws SQLException {
+        try {
+            Update update = new Update();
+            update.set(key,value);
+            return (int) getDao().updateById(id,update,this.cls);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("修改" + this.name + "失败");
         }
     }
 
