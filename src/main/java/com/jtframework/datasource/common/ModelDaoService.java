@@ -15,12 +15,13 @@ public interface ModelDaoService<T extends BaseModel> {
 
     /**
      * 覆盖性修改
+     *
      * @param model
      * @throws BusinessException
      */
-    public int update(T model)throws BusinessException;
+    public int update(T model) throws BusinessException;
 
-    public <T>T load(String id) throws BusinessException;
+    public <T> T load(String id) throws BusinessException;
 
     public int delete(String id) throws BusinessException;
 
@@ -34,7 +35,7 @@ public interface ModelDaoService<T extends BaseModel> {
      * @return
      * @throws BusinessException
      */
-    public List<T> selectListByKV(String key,String value) throws BusinessException;
+    public List<T> selectListByKV(String key, String value) throws BusinessException;
 
     /**
      * 根据kv查询单条数据
@@ -44,7 +45,7 @@ public interface ModelDaoService<T extends BaseModel> {
      * @return
      * @throws BusinessException
      */
-    public <T>T selectOneByKV(String key,String value) throws BusinessException;
+    public <T> T selectOneByKV(String key, String value) throws BusinessException;
 
     /**
      * 根据 map kv查询多条数据
@@ -53,7 +54,7 @@ public interface ModelDaoService<T extends BaseModel> {
      * @return
      * @throws BusinessException
      */
-    public List<T> selectListForMap(Map<String,String> params) throws BusinessException;
+    public List<T> selectListForMap(Map<String, String> params) throws BusinessException;
 
     /**
      * 根据kv查询单条数据
@@ -62,7 +63,7 @@ public interface ModelDaoService<T extends BaseModel> {
      * @return
      * @throws BusinessException
      */
-    public <T>T selectOneByMap(Map<String,Object> params) throws BusinessException;
+    public <T> T selectOneByMap(Map<String, Object> params) throws BusinessException;
 
     /**
      * 分页查询，默认查询前10条
@@ -71,4 +72,11 @@ public interface ModelDaoService<T extends BaseModel> {
      * @throws SQLException
      */
     PageVO<T> defalutPageQuery() throws SQLException;
+
+    /**
+     * 根据id 修改一个key value
+     *
+     * @throws SQLException
+     */
+    int updateKVById(String id, String key, Object value) throws SQLException;
 }

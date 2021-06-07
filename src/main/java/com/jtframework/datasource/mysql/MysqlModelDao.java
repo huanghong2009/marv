@@ -215,5 +215,25 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         }
     }
 
+    /**
+     * 根据id 修改一个key value
+     *
+     * @param id
+     * @param key
+     * @param value
+     * @throws SQLException
+     */
+    @Override
+    public int updateKVById(String id, String key, Object value) throws SQLException {
+
+        try {
+            return getDao().updateKVById(this.cls,id,key,value);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("修改" + this.name + "失败");
+        }
+    }
+
 
 }

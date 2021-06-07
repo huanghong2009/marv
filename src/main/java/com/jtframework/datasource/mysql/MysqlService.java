@@ -4,6 +4,7 @@ import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.dao.ServerField;
 import com.jtframework.base.dao.ServerModel;
 import com.jtframework.base.exception.BusinessException;
+import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.base.query.ParamsDTO;
 import com.jtframework.utils.BaseUtils;
@@ -136,6 +137,25 @@ public class MysqlService {
             sql += " AND `" + key + "` = :" + key + " ";
         }
         return selectList(resultClass, sql, params);
+    }
+
+
+    /**
+     * 根据id 修改一个key value
+     *
+     * @param id
+     * @param key
+     * @param value
+     * @throws SQLException
+     */
+
+    public int updateKVById(Class<? extends BaseModel> resultClass,String id, String key, Object value) throws SQLException {
+        String sql = "UPDATE `"+BaseUtils.getServeModelValue(resultClass)+"` SET `"+key +"` = :"+key +" WHERE  id = :ID";
+        Map<String,Object> params = new HashMap<>();
+        params.put(key,value);
+        params.put("ID",id);
+
+        return this.exec(sql,params);
     }
 
     /**
