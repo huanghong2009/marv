@@ -65,8 +65,9 @@ public class MysqlService {
                         } else {
                             valueFormat = value;
                         }
+                        bean.put(serverField.value(), valueFormat);
                     }
-                    bean.put(serverField.value(), valueFormat);
+
                 }
 
             } catch (IllegalAccessException e) {
