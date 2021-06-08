@@ -235,5 +235,18 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         }
     }
 
+    /**
+     * 根据id 修改一个key value
+     *
+     * @param id
+     * @param parmas
+     * @throws SQLException
+     */
+    @Override
+    public int updateMapById(String id, Map parmas) throws SQLException {
+
+        return 0;
+    }
+
 
 }

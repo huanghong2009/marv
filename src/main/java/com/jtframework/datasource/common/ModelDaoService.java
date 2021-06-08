@@ -79,4 +79,11 @@ public interface ModelDaoService<T extends BaseModel> {
      * @throws SQLException
      */
     int updateKVById(String id, String key, Object value) throws SQLException;
+
+    /**
+     * 根据id 修改一个key value
+     *
+     * @throws SQLException
+     */
+    int updateMapById(String id, Map<String,Object> parmas) throws SQLException;
 }
