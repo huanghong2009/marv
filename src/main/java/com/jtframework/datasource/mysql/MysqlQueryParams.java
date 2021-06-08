@@ -100,28 +100,15 @@ public class MysqlQueryParams {
         return mysqlQuery;
     }
 
-
     /**
-     * 添加一个or 查询
+     * 添加一个查询参数
      *
-     * @param column
+     * @param sql 自定义 sql
      * @return
      */
-    public MysqlQueryParam addOrParam(String column) {
-        MysqlQueryParam mysqlQuery = addParam(column);
-        mysqlQuery.isOr = true;
-        return mysqlQuery;
-    }
-
-    /**
-     * 添加一个or 查询
-     *
-     * @param column
-     * @return
-     */
-    public MysqlQueryParam addOrParam(String column, String value) {
-        MysqlQueryParam mysqlQuery = addParam(column, value);
-        mysqlQuery.isOr = true;
+    public MysqlQueryParam addParamSql(String sql) {
+        MysqlQueryParam mysqlQuery = new MysqlQueryParam(sql, true);
+        params.add(mysqlQuery);
         return mysqlQuery;
     }
 
@@ -212,6 +199,10 @@ public class MysqlQueryParams {
 
     private String getParamsSql(MysqlQuery param) {
         String result = " ";
+
+        if (BaseUtils.isNotBlank(param.getSql())){
+            return  param.getSql();
+        }
         String filed = param.column;
 
         boolean oneFileds = true;

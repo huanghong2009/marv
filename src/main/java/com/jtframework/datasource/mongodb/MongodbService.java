@@ -376,6 +376,9 @@ public class MongodbService {
         return remove(Query.query(Criteria.where("_id").is(id)), resultClass);
     }
 
+    public long removeByIds(Class<?> resultClass, List<String> ids) {
+        return remove(Query.query(Criteria.where("_id").in(ids)), resultClass);
+    }
 
     public boolean collectionExists(String colName) throws MongoException {
         return this.mongoTemplate.collectionExists(colName);

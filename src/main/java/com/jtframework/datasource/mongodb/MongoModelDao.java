@@ -7,6 +7,8 @@ import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import java.sql.SQLException;
@@ -15,7 +17,7 @@ import java.util.Map;
 
 
 @Slf4j
-public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl implements MongoModelDaoService {
+public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl implements MongoModelDaoService {
 
     /**
      * 注入默认数据源
@@ -23,7 +25,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @Autowired
     MongoServiceInit mongoServiceInit;
 
-    public  MongodbService getMongoService(){
+    public MongodbService getMongoService() {
         return null;
     }
 
@@ -72,7 +74,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
      * @throws BusinessException
      */
     @Override
-    @CheckParam(checkType = CheckParam.Type.ONLY,value ="model.id")
+    @CheckParam(checkType = CheckParam.Type.ONLY, value = "model.id")
     public void save(Object model) throws BusinessException {
         try {
             getDao().save(model);
@@ -103,7 +105,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
      * @throws BusinessException
      */
     @Override
-    @CheckParam(checkType = CheckParam.Type.ONLY,value = "model.id")
+    @CheckParam(checkType = CheckParam.Type.ONLY, value = "model.id")
     public int update(BaseModel model) throws BusinessException {
 
         try {
@@ -121,6 +123,17 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     public int delete(String id) throws BusinessException {
         try {
             return (int) getDao().removeById(cls, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("删除" + this.name + "失败");
+        }
+    }
+
+    @Override
+    public int delete(List ids) throws BusinessException {
+        try {
+            return (int) getDao().removeByIds(cls, ids);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -229,7 +242,7 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     @Override
     public PageVO<T> defalutPageQuery() throws SQLException {
         try {
-            return getDao().pageQuery(this.cls,getMongoService().createQuery(),1,10);
+            return getDao().pageQuery(this.cls, getMongoService().createQuery(), 1, 10);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -249,8 +262,66 @@ public  class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl imp
     public int updateKVById(String id, String key, Object value) throws SQLException {
         try {
             Update update = new Update();
-            update.set(key,value);
-            return (int) getDao().updateById(id,update,this.cls);
+            update.set(key, value);
+            return (int) getDao().updateById(id, update, this.cls);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("修改" + this.name + "失败");
+        }
+    }
+
+    /**
+     * 根据map 修改一个mao
+     *
+     * @param whereParmas
+     * @param updateParmas
+     * @throws SQLException
+     */
+    @Override
+    public int updateMapByMap(Map whereParmas, Map updateParmas) throws Exception {
+        try {
+            Update update = new Update();
+            for (Object pk : updateParmas.keySet()) {
+                String key = pk.toString();
+                update.set(key, updateParmas.get(key));
+            }
+
+
+            Query query = new Query();
+            for (Object pk : whereParmas.keySet()) {
+                String key = pk.toString();
+                query.addCriteria((new Criteria(key)).is(whereParmas.get(key)));
+            }
+
+            return (int) getDao().updateMulti(query, update, this.cls);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("修改" + this.name + "失败");
+        }
+    }
+
+    /**
+     * 根据id 修改一个key value
+     *
+     * @param id
+     * @param updateParmas
+     * @throws SQLException
+     */
+    @Override
+    public int updateMapById(String id, Map updateParmas) throws Exception {
+        try {
+            Update update = new Update();
+            for (Object pk  : updateParmas.keySet()) {
+                String key = pk.toString();
+                update.set(key, updateParmas.get(key));
+            }
+
+            Query query = new Query();
+            query.addCriteria((new Criteria("_id")).is(id));
+
+            return (int) getDao().updateFirst(query, update, this.cls);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());

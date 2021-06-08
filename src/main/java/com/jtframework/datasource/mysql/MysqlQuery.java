@@ -11,6 +11,13 @@ public class MysqlQuery {
     MysqlSymbol symbol;
     Object value;
 
+    String sql;
+
+
+    public MysqlQuery(String sql,boolean state) {
+        this.sql = sql;
+    }
+
     public MysqlQuery(String column) {
         String key = BaseUtils.changeUpperToUnderLetter(column);
         this.column = key;

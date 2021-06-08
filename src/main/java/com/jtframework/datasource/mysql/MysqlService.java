@@ -40,6 +40,9 @@ public class MysqlService {
     public JdbcTemplate jdbcTemplate;
 
     public NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private String table;
+    private Map<String, Object> whereParams;
+    private Map<String, Object> updateParams;
 
     public int insert(Object model) throws SQLException {
         SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -152,13 +155,13 @@ public class MysqlService {
      * @throws SQLException
      */
 
-    public int updateKVById(Class<? extends BaseModel> resultClass,String id, String key, Object value) throws SQLException {
-        String sql = "UPDATE `"+BaseUtils.getServeModelValue(resultClass)+"` SET `"+key +"` = :"+key +" WHERE  id = :ID";
-        Map<String,Object> params = new HashMap<>();
-        params.put(key,value);
-        params.put("ID",id);
+    public int updateKVById(Class<? extends BaseModel> resultClass, String id, String key, Object value) throws SQLException {
+        String sql = "UPDATE `" + BaseUtils.getServeModelValue(resultClass) + "` SET `" + key + "` = :" + key + " WHERE  id = :ID";
+        Map<String, Object> params = new HashMap<>();
+        params.put(key, value);
+        params.put("ID", id);
 
-        return this.exec(sql,params);
+        return this.exec(sql, params);
     }
 
     /**
@@ -350,60 +353,58 @@ public class MysqlService {
         return namedParameterJdbcTemplate.batchUpdate(sql, (SqlParameterSource[]) ((List) psList).toArray(new SqlParameterSource[((List) psList).size()]));
     }
 
-    /**
-     *
-     * @param table 表名
-     * @param updateParams 参数map
-     * @param whereParams where 条件map
-     * @return
-     * @throws SQLException
-     */
-    public int update(String table,Map<String, Object> updateParams,Map<String,Object> whereParams) throws SQLException {
-
-        return update(table, where, record, (String) null, (String) null);
-    }
-
-
-    /**
-     * 修改
-     * @param table 表名
-     * @param where wehre sql
-     * @param updateParams 参数sql
-     * @return
-     * @throws SQLException
-     */
-    public int update(String table, String where, Map<String, Object> updateParams) throws SQLException {
-        return update(table, where, updateParams, (String) null, (String) null);
-    }
-
-
-
-    public int update(Object model) throws SQLException {
+    public int update(Object model) throws SQLException, IllegalAccessException {
         if (model instanceof BaseModel) {
             BaseModel baseObj = (BaseModel) model;
             if (BaseUtils.isBlank(baseObj.getId())) {
                 return 0;
             } else {
-                ServerModel serverModel = (ServerModel) model.getClass().getAnnotation(ServerModel.class);
-                Map<String, Object> param = new HashMap();
-                param.put("ID", ((BaseModel) model).getId());
-                return update(serverModel != null ? serverModel.value() : model.getClass().getSimpleName(), " ID=:ID ", param, model);
+                Map<String, Object> updateParams = new HashMap();
+
+                ServerModel serverModel = model.getClass().getAnnotation(ServerModel.class);
+
+                Map<String, Object> whereParams = new HashMap();
+                whereParams.put("ID", ((BaseModel) model).getId());
+
+                Field[] fields = model.getClass().getDeclaredFields();
+                for (Field field : fields) {
+                    if (!field.getName().equalsIgnoreCase("serialVersionUID") && !field.isSynthetic()) {
+                        ServerField serverField = field.getAnnotation(ServerField.class);
+
+                        if (!serverField.isColumn().equals("true")) {
+                            continue;
+                        }
+
+                        String fileKey = serverField != null ? serverField.value() : field.getName();
+                        field.setAccessible(true);
+                        Object value = field.get(model);
+
+                        if (value != null) {
+                            updateParams.put(fileKey, value);
+                        }
+                    }
+                }
+
+                return update(serverModel != null ? serverModel.value() : model.getClass().getSimpleName(), whereParams, updateParams);
             }
         } else {
             return 0;
         }
     }
 
-
-
-
     /**
      * 拼装where 条件 sql
+     *
      * @param whereParams
      * @return
      */
-    private MysqlParams getUpdateWhereParamsSql(String table,Map<String, Object> whereParams,Map<String, Object> updateParams) throws SQLException{
-        if (updateParams==null || updateParams.keySet().size() == 0){
+    private MysqlParams getUpdateWhereParams(String table, Map<String, Object> whereParams, Map<String, Object> updateParams) throws SQLException {
+        if (BaseUtils.isBlank(table)) {
+            log.error("错误的表名");
+            throw new SQLException("bean is null");
+        }
+
+        if (updateParams == null || updateParams.keySet().size() == 0) {
             log.error("错误的up参数");
             throw new SQLException("bean is null");
         }
@@ -418,46 +419,40 @@ public class MysqlService {
          * 这里加1 是为了防止 set 和where 参数一致问题
          */
         for (String key : updateParams.keySet()) {
-            if (null == updateParams.get(key)){
+            if (null == updateParams.get(key)) {
                 log.error("错误的up参数");
                 throw new SQLException("bean is null");
             }
 
-            if (BaseUtils.isBlank(setSql)){
+            if (BaseUtils.isBlank(setSql)) {
                 setSql = " SET ";
             }
-            setSql = setSql +" `"+ key +"`=:"+key +"1 ";
+            setSql = setSql + " `" + key + "`=:" + key + "1, ";
 
-            params.addValue(key+"1",updateParams.get(key));
+            params.addValue(key + "1", updateParams.get(key));
         }
+        /**
+         * 去掉最后一个, 号
+         */
+        setSql = setSql.substring(0, setSql.length() - 1);
 
-        String whereSql = "";
-
+        String whereSql = " WHERE 1=1 ";
 
 
         /**
          * 这里加2 是为了防止 where 和update 参数一致问题
          */
-        for (String key : updateParams.keySet()) {
-            if (null == updateParams.get(key)){
-                log.error("错误的up参数");
+        for (String key : whereParams.keySet()) {
+            if (null == updateParams.get(key)) {
+                log.error("错误的wp参数");
                 throw new SQLException("bean is null");
             }
 
-            if (BaseUtils.isBlank(whereSql)){
-                whereSql = " SET ";
-            }
+            setSql = setSql + " AND `" + key + "`=:" + key + "2 ";
 
-            setSql = setSql +" `"+ key +"`=:"+key +"1 ";
-
-            params.addValue(key+"1",updateParams.get(key));
+            params.addValue(key + "2", whereParams.get(key));
         }
 
-
-
-        if (BaseUtils.isBlank(sql)){
-            sql = " 1=1 ";
-        }
 
         String sql = " UPDATE `" + table + "` ";
 
@@ -468,61 +463,36 @@ public class MysqlService {
 
     }
 
-    public int update(String table, Map<String, Object> whereParams, Map<String, Object> updateParams) throws SQLException {
-        if (updateParams == null) {
-
-        }
-
-        String sql = "";
+    public int update(Class<? extends BaseModel> cls, Map<String, Object> whereParams, Map<String, Object> updateParams) throws SQLException {
+        String table = BaseUtils.getServeModelValue(cls);
+        MysqlParams mysqlParams = getUpdateWhereParams(table, whereParams, updateParams);
         try {
-            Map<String, Object> params = new HashMap();
-            sql = " UPDATE " + table + " SET $values$ WHERE " + where;
-            String values = "";
-
-            Field[] fields = record.getClass().getDeclaredFields();
-
-            for (int i = 0; i < fields.length; i++) {
-                Field field = fields[i];
-
-                if (!field.getName().equalsIgnoreCase("serialVersionUID") && !field.isSynthetic()) {
-                    ServerField serverField = (ServerField) field.getAnnotation(ServerField.class);
-
-                    if (!serverField.isColumn().equals("true")) {
-                        continue;
-                    }
-
-                    String fileKey = serverField != null ? serverField.value() : field.getName();
-                    field.setAccessible(true);
-                    Object value = field.get(record);
-
-                    if (value != null) {
-                        params.put(fileKey, value);
-                        if ("".equals(values)) {
-                            values = " `" + fileKey + "` =:" + fileKey;
-                        } else {
-                            values = values + ",`" + fileKey + "` =:" + fileKey;
-                        }
-                    }
-                }
-            }
-
-            sql = sql.replace("$values$", values);
-            log.debug("SQL:" + sql);
-            params.putAll(param);
-
-            Iterator iterator = params.entrySet().iterator();
-
-            while (iterator.hasNext()) {
-                Map.Entry<String, Object> obj = (Map.Entry) iterator.next();
-                if (null != obj && obj.getValue().getClass().isEnum()) {
-                    params.put(obj.getKey(), obj.getValue().toString());
-                }
-            }
-
-            return namedParameterJdbcTemplate.update(sql, (Map) params);
-        } catch (Exception var16) {
-            throw new SQLException(var16);
+            return namedParameterJdbcTemplate.update(mysqlParams.getSql(), mysqlParams.getParams());
+        } catch (Exception e) {
+            throw new SQLException(e);
         }
+    }
+
+    public int update(String table, Map<String, Object> whereParams, Map<String, Object> updateParams) throws SQLException {
+
+        MysqlParams mysqlParams = getUpdateWhereParams(table, whereParams, updateParams);
+        try {
+            return namedParameterJdbcTemplate.update(mysqlParams.getSql(), mysqlParams.getParams());
+        } catch (Exception e) {
+            throw new SQLException(e);
+        }
+    }
+
+
+    public int delete(Class resultClass, List<String> ids) throws SQLException {
+        String sql = "DELETE FROM " + table + " WHERE ID IN (:IDS) ";
+
+        Map<String,Object> params = new HashMap<>();
+        params.put("IDS",ids);
+
+        log.debug("SQL:" + sql);
+
+        return namedParameterJdbcTemplate.update(sql, params);
     }
 
     public int delete(Class resultClass, String id) throws SQLException {

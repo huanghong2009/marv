@@ -25,6 +25,8 @@ public interface ModelDaoService<T extends BaseModel> {
 
     public int delete(String id) throws BusinessException;
 
+    public int delete(List<String> id) throws BusinessException;
+
     public List<T> selectAll() throws BusinessException;
 
     /**
@@ -85,5 +87,12 @@ public interface ModelDaoService<T extends BaseModel> {
      *
      * @throws SQLException
      */
-    int updateMapById(String id, Map<String,Object> parmas) throws SQLException;
+    int updateMapById(String id, Map<String,Object> updateParmas) throws  Exception;
+
+    /**
+     * 根据map 修改一个mao
+     *
+     * @throws SQLException
+     */
+    int updateMapByMap(Map<String,Object> whereParmas,Map<String,Object> updateParmas) throws  Exception;
 }

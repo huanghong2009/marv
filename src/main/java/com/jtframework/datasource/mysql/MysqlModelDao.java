@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,6 +86,17 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     public int delete(String id) throws BusinessException {
         try {
             return getDao().delete(cls, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("删除" + this.name + "失败");
+        }
+    }
+
+    @Override
+    public int delete(List ids) throws BusinessException {
+        try {
+            return getDao().delete(cls, ids);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -236,16 +248,41 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
     /**
-     * 根据id 修改一个key value
+     * 根据map 修改一个mao
      *
-     * @param id
-     * @param parmas
+     * @param whereParmas
+     * @param updateParmas
      * @throws SQLException
      */
     @Override
-    public int updateMapById(String id, Map parmas) throws SQLException {
+    public int updateMapByMap(Map whereParmas, Map updateParmas) throws Exception {
+        try {
+            return getDao().update(this.cls,whereParmas,updateParmas);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("修改" + this.name + "失败");
+        }
+    }
 
-        return 0;
+    /**
+     * 根据id 修改一个key value
+     *
+     * @param id
+     * @param updateParmas
+     * @throws SQLException
+     */
+    @Override
+    public int updateMapById(String id, Map updateParmas) throws Exception {
+        try {
+            Map<String,Object> whereParmas = new HashMap<>();
+            whereParmas.put("id",id);
+            return getDao().update(this.cls,whereParmas,updateParmas);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("修改" + this.name + "失败");
+        }
     }
 
 

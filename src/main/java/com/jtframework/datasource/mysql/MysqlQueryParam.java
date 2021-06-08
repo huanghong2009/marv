@@ -15,6 +15,11 @@ public class MysqlQueryParam extends MysqlQuery {
         super(column, value);
     }
 
+    public MysqlQueryParam(String sql,boolean state) {
+        super(sql, state);
+    }
+
+
     public void betweenAnd(String start, String end) {
         this.symbol = MysqlSymbol.BETWEEN_AND;
         this.value = start + "," + end;
