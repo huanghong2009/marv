@@ -34,11 +34,12 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      *
      * @return
      */
-    private MongodbService getDao() throws Exception {
+    public MongodbService getDao() throws Exception {
         MongodbService mongodbService = getMongoService();
         if (mongodbService != null) {
             return mongodbService;
         }
+
         mongodbService = mongoServiceInit.getMongodbService();
 
         if (mongodbService != null) {
