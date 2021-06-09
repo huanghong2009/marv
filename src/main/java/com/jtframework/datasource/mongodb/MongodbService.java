@@ -110,12 +110,12 @@ public class MongodbService {
      * @throws Exception
      */
     public void initMongodbService(String host, Integer port, String database) throws Exception {
-        mongoTemplate = new MongoTemplate(getMongoDbFactory(host, port, database, null));
+        this.mongoTemplate = new MongoTemplate(getMongoDbFactory(host, port, database, null));
         log.info("{}:{}:{} 初始化中 ......", host, port, database);
     }
 
     public void initMongodbService(MongoTemplate mongoTemplate) throws Exception {
-        mongoTemplate = mongoTemplate;
+        this.mongoTemplate = mongoTemplate;
         log.info("默认mongodb 初始化中 ......");
     }
 
@@ -130,7 +130,7 @@ public class MongodbService {
      */
     public void initMongodbService(String host, Integer port, String database, MongoAuthClient mongoAuthClient) throws Exception {
 
-        mongoTemplate = new MongoTemplate(getMongoDbFactory(host, port, database, mongoAuthClient));
+        this.mongoTemplate = new MongoTemplate(getMongoDbFactory(host, port, database, mongoAuthClient));
         log.info("{}:{}:{}--{} 初始化中 ......", host, port, database, mongoAuthClient.getUserName());
     }
 

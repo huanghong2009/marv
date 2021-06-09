@@ -443,18 +443,18 @@ public class MysqlService {
          * 这里加2 是为了防止 where 和update 参数一致问题
          */
         for (String key : whereParams.keySet()) {
-            if (null == updateParams.get(key)) {
+            if (null == whereParams.get(key)) {
                 log.error("错误的wp参数");
                 throw new SQLException("bean is null");
             }
 
-            setSql = setSql + " AND `" + key + "`=:" + key + "2 ";
+            whereSql = whereSql + " AND `" + key + "`=:" + key + "2 ";
 
             params.addValue(key + "2", whereParams.get(key));
         }
 
 
-        String sql = " UPDATE `" + table + "` ";
+        String sql = " UPDATE `" + table + "` " + setSql + whereSql;
 
         mysqlParams.setSql(sql);
         mysqlParams.setParams(params);
@@ -650,8 +650,8 @@ public class MysqlService {
      * 数据源 初始化
      */
     public void initMysqlService(DataSource dataSource) throws Exception {
-        jdbcTemplate = new JdbcTemplate(dataSource);
-        namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
         log.info("--  mysql 初始化 完成  --");
     }
 
