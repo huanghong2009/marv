@@ -427,7 +427,7 @@ public class MysqlService {
             if (BaseUtils.isBlank(setSql)) {
                 setSql = " SET ";
             }
-            setSql = setSql + " `" + key + "`=:" + key + "1, ";
+            setSql = setSql + "  `" + key + "`=:" + key + "1,";
 
             params.addValue(key + "1", updateParams.get(key));
         }
