@@ -15,13 +15,7 @@
  */
 package com.jtframework.base.rest;
 
-import com.jtframework.utils.BaseUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-
 import java.lang.annotation.*;
-import java.lang.reflect.Method;
 
 /**
  * @author jacky
