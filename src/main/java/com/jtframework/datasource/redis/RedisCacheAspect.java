@@ -1,7 +1,6 @@
 package com.jtframework.datasource.redis;
 
 
-import com.jtframework.base.rest.ServerResponse;
 import com.jtframework.utils.BaseUtils;
 import com.jtframework.utils.ClassUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -12,12 +11,11 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -25,57 +23,10 @@ import java.util.Map;
 @Slf4j
 public class RedisCacheAspect {
 
-    /**
-     * 根据规则获取缓存key
-     *
-     * @param args
-     * @param argNames
-     * @param keyParams
-     * @return
-     */
-    private static String getRedisCacheKey(Object[] args, String[] argNames, String keyParams) {
-        Map<String, Object> argAllFiledsMap = new HashMap<>();
-        /**
-         * 获取全部字段 和属性
-         */
-        for (int i = 0; i < args.length; i++) {
-            if (args[i] instanceof String || args[i] instanceof Integer ||
-                    args[i] instanceof Double ||
-                    args[i] instanceof Boolean || args[i] instanceof Long
-                    || args[i] instanceof BigDecimal || args[i] instanceof Date
-                    || args[i] instanceof LocalDate) {
-                argAllFiledsMap.put(argNames[i], args[i]);
-            } else {
-                Map<String, Object> objFileddMap = ClassUtils.getObjectFiledValue(args[i]);
-                for (String key : objFileddMap.keySet()) {
-                    argAllFiledsMap.put(argNames[i] + "." + key, objFileddMap.get(key));
-                }
-            }
-        }
+    @Autowired
+    private RedisServiceInit redisServiceInit;
 
-        String[] keys = keyParams.split(",");
-        String result = "";
 
-        for (String key : keys) {
-            if (argAllFiledsMap.containsKey(key)) {
-                if (BaseUtils.isBlank(argAllFiledsMap.get(key).toString())) {
-                    return "";
-                }
-                if (argAllFiledsMap.get(key).toString().length() > 80) {
-                    return "";
-                }
-                result += argAllFiledsMap.get(key).toString() + "_";
-            } else {
-                return "";
-            }
-        }
-
-        if (BaseUtils.isNotBlank(result)) {
-            result = result.substring(0, result.length() - 1);
-        }
-
-        return result;
-    }
 
     /**
      * 方法用途（切入点表达式可以用&&,||,!来组合使用）:
@@ -107,42 +58,76 @@ public class RedisCacheAspect {
      * ${tags}
      */
     @AfterReturning(value = "asAnnotation() && @annotation(resdisClean)", returning = "re")
-    public void after(JoinPoint joinPoint, ResdisClean resdisClean, Object re) throws Throwable {
+    public void after(JoinPoint joinPoint, ResdisClean resdisClean, Object re)  {
         try {
             MethodSignature signature = ((MethodSignature) joinPoint.getSignature());
             Object[] args = joinPoint.getArgs();
             String[] argNames = signature.getParameterNames();
 
-            String keyParames = resdisClean.key();
+            String[] keyParames = resdisClean.key();
             String group = resdisClean.group();
 
-            String redisKey = "";
 
-            boolean flag = true;
+            if (keyParames == null || keyParames.length == 0) {
+                log.error("{} 方法注解key为空,redis 去缓存不生效...", signature.getName());
 
-            if (BaseUtils.isBlank(keyParames)) {
-                log.error("{} 方法注解key为空,redis 缓存清除不生效...", signature.getName());
-                flag = false;
             }
 
-            /**
-             * 获取 redis key
-             */
-            if (flag) {
-                redisKey = getRedisCacheKey(args, argNames, keyParames);
-                if (BaseUtils.isBlank(redisKey)) {
-                    log.error("{} key标注的参数为空,或最终的key长度过长,redis 缓存清除不生效...", signature.getName());
-                    flag = false;
+            if (args.length == 0) {
+                log.error("{} 方法参数列表为空,redis 去缓存不生效...", signature.getName());
+                return;
+            }
+
+            if (redisServiceInit.getRedisService() == null) {
+                log.error("{} redis 未配置，缓存不生效...", signature.getName());
+                return ;
+            }
+
+            List<String> redisKeys = new ArrayList<>();
+
+            Map<String, Object> argAllFiledsMap = ClassUtils.getObjectFiledValue(args, argNames);
+
+            for (String keyParame : keyParames) {
+                String[] keys = keyParame.split(",");
+
+                String redisKey = "";
+
+                for (String key : keys) {
+                    if (BaseUtils.isBlank(key) || !argAllFiledsMap.containsKey(key)) {
+                        log.error("{} key标注的参数为空,获取该值未找到参数配置， 去缓存不生效...", signature.getName());
+                        return;
+                    }
+
+                    Object paramData = argAllFiledsMap.get(key);
+
+                    /**
+                     * 空值参数不处理
+                     */
+                    if (paramData == null || BaseUtils.isBlank(paramData.toString())) {
+                        log.error("{} key标注的参数为空, 去缓存不生效...", signature.getName());
+                        return;
+                    }
+                    redisKey = redisKey + paramData.toString() + ",";
+                }
+
+                if (BaseUtils.isNotBlank(redisKey)) {
+                    redisKey = redisKey.substring(0, redisKey.length() - 1);
+                    redisKeys.add(redisKey);
+                } else {
+                    log.error("{} key标注的参数为空,redis 缓存不生效...", signature.getName());
+                    return ;
                 }
             }
 
-            /**
-             * 删除缓存
-             */
-            if (RedisService.REDIS_STATIC_SERVICE != null && flag) {
-                if (RedisService.REDIS_STATIC_SERVICE.hHasKey(group, redisKey)) {
-                    RedisService.REDIS_STATIC_SERVICE.hdel(group, redisKey);
-                    log.error("{},{} key标注缓存已删除...", group, redisKey);
+
+            for (String redisKey : redisKeys) {
+                if (redisServiceInit.getRedisService().hHasKey(group,redisKey)){
+                    try {
+                        redisServiceInit.getRedisService().hdel(group,redisKey);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        log.error("清理缓存出错：{}-{}:{}",group,redisKey,e.getMessage());
+                    }
                 }
             }
 
@@ -185,53 +170,68 @@ public class RedisCacheAspect {
     @Around("asRedisQuery() && @annotation(resdisQuery)")
     public Object asRedisQueryAround(ProceedingJoinPoint joinPoint, ResdisQuery resdisQuery) throws Throwable {
 
-        ServerResponse serverResponse = new ServerResponse();
         try {
             MethodSignature signature = ((MethodSignature) joinPoint.getSignature());
             Object[] args = joinPoint.getArgs();
             String[] argNames = signature.getParameterNames();
-
-
-            String keyParames = resdisQuery.key();
             String group = resdisQuery.group();
             Long timeOut = resdisQuery.timeOut();
 
-            boolean flag = true;
+            String keyParame = resdisQuery.key();
+
+            if (BaseUtils.isBlank(keyParame)) {
+                log.error("{} 方法注解key为空,redis 缓存不生效...", signature.getName());
+                return joinPoint.proceed(args);
+            }
 
             if (args.length == 0) {
                 log.error("{} 方法参数列表为空,redis 缓存不生效...", signature.getName());
-                flag = false;
+                return joinPoint.proceed(args);
             }
 
-            if (BaseUtils.isBlank(keyParames)) {
-                log.error("{} 方法注解key为空,redis 缓存不生效...", signature.getName());
-                flag = false;
+            if (redisServiceInit.getRedisService() == null) {
+                log.error("{} redis 未配置，缓存不生效...", signature.getName());
+                return joinPoint.proceed(args);
             }
+
+            Map<String, Object> argAllFiledsMap = ClassUtils.getObjectFiledValue(args, argNames);
+
+            String[] keys = keyParame.split(",");
 
             String redisKey = "";
 
-            /**
-             * 获取 redis key
-             */
-            if (flag) {
-                redisKey = getRedisCacheKey(args, argNames, keyParames);
-                if (BaseUtils.isBlank(redisKey)) {
-                    log.error("{} key标注的参数为空,或最终的key长度过长,redis 缓存不生效...", signature.getName());
-                    flag = false;
+            for (String key : keys) {
+                if (BaseUtils.isNotBlank(key) && argAllFiledsMap.containsKey(key)) {
+                    Object paramData = argAllFiledsMap.get(key);
+
+                    /**
+                     * 空值参数不处理
+                     */
+                    if (paramData == null || BaseUtils.isBlank(paramData.toString())){
+                        log.error("{} key标注的参数为空, 缓存不生效...", signature.getName());
+                        return joinPoint.proceed(args);
+                    }
+
+                    redisKey = redisKey + paramData.toString() + ",";
                 }
             }
 
-            if (RedisService.REDIS_STATIC_SERVICE != null && flag) {
-                if (RedisService.REDIS_STATIC_SERVICE.hHasKey(group, redisKey)) {
-                    return RedisService.REDIS_STATIC_SERVICE.hget(group, redisKey);
-                }
+            if (BaseUtils.isNotBlank(redisKey)) {
+                redisKey = redisKey.substring(0, redisKey.length() - 1);
+            } else {
+                log.error("{} key标注的参数为空,或最终的key长度过长,redis 缓存不生效...", signature.getName());
+                return joinPoint.proceed(args);
+            }
+
+
+
+            if (redisServiceInit.getRedisService().hHasKey(group,redisKey)){
+                return redisServiceInit.getRedisService().hget(keyParame,redisKey);
             }
 
             Object result = joinPoint.proceed(args);
 
-            if (RedisService.REDIS_STATIC_SERVICE != null && flag) {
-                RedisService.REDIS_STATIC_SERVICE.hset(group, redisKey, result, timeOut);
-            }
+            redisServiceInit.getRedisService().hset(keyParame,redisKey,redisKey,timeOut);
 
             return result;
         } catch (Throwable throwable) {

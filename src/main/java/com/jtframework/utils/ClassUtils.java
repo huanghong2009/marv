@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -181,6 +182,34 @@ public class ClassUtils {
         return result;
     }
 
+    /**
+     * 获取对象的属性，最多递归2层
+     *
+     * @param args
+     * @return
+     */
+    public static Map<String, Object> getObjectFiledValue(Object[] args, String[] argNames) {
+        Map<String, Object> argAllFiledsMap = new HashMap<>();
+        /**
+         * 获取全部字段 和属性
+         */
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof String || args[i] instanceof Integer ||
+                    args[i] instanceof Double ||
+                    args[i] instanceof Boolean || args[i] instanceof Long
+                    || args[i] instanceof BigDecimal || args[i] instanceof Date
+                    || args[i] instanceof LocalDate) {
+                argAllFiledsMap.put(argNames[i], args[i]);
+            } else {
+                Map<String, Object> objFileddMap = ClassUtils.getObjectFiledValue(args[i]);
+                for (String key : objFileddMap.keySet()) {
+                    argAllFiledsMap.put(argNames[i] + "." + key, objFileddMap.get(key));
+                }
+            }
+        }
+
+        return argAllFiledsMap;
+    }
 
     /**
      * 获取对象的属性，最多递归2层

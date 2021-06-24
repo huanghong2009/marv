@@ -11,7 +11,7 @@ public @interface ResdisClean {
      * 分组
      * @return
      */
-    String group() default "default";
+    String group() default "RedisCache";
 
     /**
      * key值，以指定redis key，当做id，可以是多个，逗号分隔，多级以点分隔，例子如下
@@ -20,5 +20,5 @@ public @interface ResdisClean {
      * 例3 多级联合key ：'userId,obj.type'
      * @return
      */
-    String key();
+    String[] key();
 }
