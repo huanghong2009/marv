@@ -243,7 +243,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     @Override
     public PageVO<T> defalutPageQuery() throws SQLException {
         try {
-            return getDao().pageQuery(this.cls, getMongoService().createQuery(), 1, 10);
+            return getDao().pageQuery(this.cls, getDao().createQuery(), 1, 10);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
