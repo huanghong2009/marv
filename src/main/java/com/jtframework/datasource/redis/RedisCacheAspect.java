@@ -43,7 +43,7 @@ public class RedisCacheAspect {
      * @within: 匹配使用指定注解的类
      * @annotation:指定方法所应用的注解
      */
-    @Pointcut("@annotation(com.jtframework.datasource.redis.ResdisClean)")
+    @Pointcut("@annotation(com.jtframework.datasource.redis.RedisClean)")
     public void asAnnotation() {
     }
 
@@ -57,15 +57,15 @@ public class RedisCacheAspect {
      * 操作步骤: TODO<br/>
      * ${tags}
      */
-    @AfterReturning(value = "asAnnotation() && @annotation(resdisClean)", returning = "re")
-    public void after(JoinPoint joinPoint, ResdisClean resdisClean, Object re)  {
+    @AfterReturning(value = "asAnnotation() && @annotation(redisClean)", returning = "re")
+    public void after(JoinPoint joinPoint, RedisClean redisClean, Object re)  {
         try {
             MethodSignature signature = ((MethodSignature) joinPoint.getSignature());
             Object[] args = joinPoint.getArgs();
             String[] argNames = signature.getParameterNames();
 
-            String[] keyParames = resdisClean.key();
-            String group = resdisClean.group();
+            String[] keyParames = redisClean.key();
+            String group = redisClean.group();
 
 
             if (keyParames == null || keyParames.length == 0) {
@@ -226,12 +226,12 @@ public class RedisCacheAspect {
 
 
             if (redisServiceInit.getRedisService().hHasKey(group,redisKey)){
-                return redisServiceInit.getRedisService().hget(keyParame,redisKey);
+                return redisServiceInit.getRedisService().hget(group,redisKey);
             }
 
             Object result = joinPoint.proceed(args);
 
-            redisServiceInit.getRedisService().hset(keyParame,redisKey,redisKey,timeOut);
+            redisServiceInit.getRedisService().hset(group,redisKey,result,timeOut);
 
             return result;
         } catch (Throwable throwable) {
