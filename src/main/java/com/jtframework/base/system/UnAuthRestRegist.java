@@ -29,9 +29,11 @@ public class UnAuthRestRegist implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         if (redisServiceInit.getRedisService() != null) {
-            List<Object> data = new ArrayList<>(getUnAuthUrls());
+            List<String> data = new ArrayList<>(getUnAuthUrls());
             if (data.size() > 0){
-                redisServiceInit.getRedisService().sSet(UnAuthRestRegist.UNAUTH_URL_KEY, data);
+                for (String datum : data) {
+                    redisServiceInit.getRedisService().sSet(UnAuthRestRegist.UNAUTH_URL_KEY, datum);
+                }
             }
         }
     }

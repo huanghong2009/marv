@@ -14,7 +14,7 @@ public class RedisServiceInit {
 
     private RedisService redisService;
 
-    public RedisServiceInit(RedisTemplate redisTemplate) throws Exception {
+    public RedisServiceInit(RedisTemplate<String,Object> redisTemplate) throws Exception {
         if (redisTemplate != null) {
             this.redisTemplate = redisTemplate;
             log.info(" ----- 默认 redis数据源 bean 加载 -------");
