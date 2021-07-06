@@ -23,6 +23,13 @@ public @interface ResdisQuery {
      */
     String key();
 
+
+    /**
+     * 是否开启二级缓存
+     * @return
+     */
+    boolean isEnadbleL2Cache() default true;
+
     /**
      * 秒数
      * @return

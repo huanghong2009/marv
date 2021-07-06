@@ -14,18 +14,20 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @Aspect
 @Slf4j
 public class RedisCacheAspect {
 
+    /**
+     * 二级缓存
+     */
+    public static HashMap<String, HashMap<String, Object>> cache = new HashMap<>();
+
     @Autowired
     private RedisServiceInit redisServiceInit;
-
 
 
     /**
@@ -58,7 +60,7 @@ public class RedisCacheAspect {
      * ${tags}
      */
     @AfterReturning(value = "asAnnotation() && @annotation(redisClean)", returning = "re")
-    public void after(JoinPoint joinPoint, RedisClean redisClean, Object re)  {
+    public void after(JoinPoint joinPoint, RedisClean redisClean, Object re) {
         try {
             MethodSignature signature = ((MethodSignature) joinPoint.getSignature());
             Object[] args = joinPoint.getArgs();
@@ -80,7 +82,7 @@ public class RedisCacheAspect {
 
             if (redisServiceInit.getRedisService() == null) {
                 log.error("{} redis 未配置，缓存不生效...", signature.getName());
-                return ;
+                return;
             }
 
             List<String> redisKeys = new ArrayList<>();
@@ -115,18 +117,18 @@ public class RedisCacheAspect {
                     redisKeys.add(redisKey);
                 } else {
                     log.error("{} key标注的参数为空,redis 缓存不生效...", signature.getName());
-                    return ;
+                    return;
                 }
             }
 
 
             for (String redisKey : redisKeys) {
-                if (redisServiceInit.getRedisService().hHasKey(group,redisKey)){
+                if (redisServiceInit.getRedisService().hHasKey(group, redisKey)) {
                     try {
-                        redisServiceInit.getRedisService().hdel(group,redisKey);
+                        redisServiceInit.getRedisService().hdel(group, redisKey);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        log.error("清理缓存出错：{}-{}:{}",group,redisKey,e.getMessage());
+                        log.error("清理缓存出错：{}-{}:{}", group, redisKey, e.getMessage());
                     }
                 }
             }
@@ -207,7 +209,7 @@ public class RedisCacheAspect {
                     /**
                      * 空值参数不处理
                      */
-                    if (paramData == null || BaseUtils.isBlank(paramData.toString())){
+                    if (paramData == null || BaseUtils.isBlank(paramData.toString())) {
                         log.error("{} key标注的参数为空, 缓存不生效...", signature.getName());
                         return joinPoint.proceed(args);
                     }
@@ -223,15 +225,40 @@ public class RedisCacheAspect {
                 return joinPoint.proceed(args);
             }
 
+            if (resdisQuery.isEnadbleL2Cache() && !cache.containsKey(group)) {
+                cache.put(group, new HashMap<String, Object>());
+            }
 
+            if (redisServiceInit.getRedisService().hHasKey(group, redisKey)) {
 
-            if (redisServiceInit.getRedisService().hHasKey(group,redisKey)){
-                return redisServiceInit.getRedisService().hget(group,redisKey);
+                /**
+                 * 开启二级缓存
+                 */
+                if (resdisQuery.isEnadbleL2Cache()) {
+                    if (cache.get(group).containsKey(redisKey)) {
+                        return cache.get(group).get(redisKey);
+                    }
+
+                    Object result = redisServiceInit.getRedisService().hget(group, redisKey);
+
+                    cache.get(group).put(redisKey, result);
+
+                    return result;
+                } else {
+                    return redisServiceInit.getRedisService().hget(group, redisKey);
+                }
             }
 
             Object result = joinPoint.proceed(args);
 
-            redisServiceInit.getRedisService().hset(group,redisKey,result,timeOut);
+            redisServiceInit.getRedisService().hset(group, redisKey, result, timeOut);
+
+            /**
+             * 更新二级缓存
+             */
+            if (resdisQuery.isEnadbleL2Cache()){
+                cache.get(group).put(redisKey, result);
+            }
 
             return result;
         } catch (Throwable throwable) {
