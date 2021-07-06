@@ -1,28 +1,37 @@
 package com.jtframework.datasource.mysql;
 
+import com.jtframework.base.system.ApplicationContextProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 
 @Component
 @Slf4j
-public class MysqlServiceInit {
+public class MysqlServiceInit implements InitializingBean {
 
-    DataSource dataSource;
+    @Autowired
+    private ApplicationContextProvider applicationContextProvider;
+
+    private DataSource dataSource;
 
     private MysqlService mysqlService;
 
-    public MysqlServiceInit(DataSource dataSource) throws Exception {
-        if (dataSource != null) {
-            this.dataSource = dataSource;
+    public MysqlService getMysqlService() {
+        return mysqlService;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        if (applicationContextProvider.containsBean("dataSource")) {
+            this.dataSource = applicationContextProvider.getBean("dataSource",DataSource.class);
             log.info(" ----- 默认 mysql数据源 bean 加载 -------");
             mysqlService = new MysqlService();
             mysqlService.initMysqlService(dataSource);
+        } else {
+            log.warn("未配置mysql......");
         }
-    }
-
-    public MysqlService getMysqlService() {
-        return mysqlService;
     }
 }

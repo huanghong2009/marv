@@ -23,10 +23,7 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      * @return
      */
     public static  <T> T getBean(String name) throws Exception {
-        if (applicationContext == null) {
-            throw new Exception("applicationContext 未初始化 ");
-        }
-        return (T)applicationContext.getBean(name);
+        return (T)getApplicationContext().getBean(name);
     }
 
     /**
@@ -34,7 +31,10 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      *
      * @return
      */
-    public ApplicationContext getApplicationContext() {
+    public static ApplicationContext getApplicationContext() throws Exception {
+        if (applicationContext == null ){
+            throw new Exception("applicationContext 未初始化");
+        }
         return applicationContext;
     }
 
@@ -43,6 +43,7 @@ public class ApplicationContextProvider implements ApplicationContextAware {
         ApplicationContextProvider.applicationContext = applicationContext;
     }
 
+
     /**
      * 通过class获取Bean.
      *
@@ -50,8 +51,18 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      * @param <T>
      * @return
      */
-    public <T> T getBean(Class<T> clazz) {
+    public  <T> T getBean(Class<T> clazz) throws Exception {
         return getApplicationContext().getBean(clazz);
+    }
+
+    /**
+     * 通过class获取Bean.
+     *
+     * @param name
+     * @return
+     */
+    public  boolean containsBean(String name) throws Exception {
+        return getApplicationContext().containsBean(name);
     }
 
     /**
@@ -62,7 +73,7 @@ public class ApplicationContextProvider implements ApplicationContextAware {
      * @param <T>
      * @return
      */
-    public <T> T getBean(String name, Class<T> clazz) {
+    public <T> T getBean(String name, Class<T> clazz) throws Exception {
         return getApplicationContext().getBean(name, clazz);
     }
 }
