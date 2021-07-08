@@ -5,7 +5,6 @@ import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -84,13 +83,13 @@ public class ExcelFileUtils {
      *
      * @param response
      */
-    public static void export(HttpServletResponse response, List<T> data) throws IOException {
+    public static void export(HttpServletResponse response, List data,Class resultClass) throws IOException {
         response.setContentType("application/vnd.ms-excel");
         response.setCharacterEncoding("utf-8");
         // 这里URLEncoder.encode可以防止中文乱码 当然和easyexcel没有关系
         String fileName = URLEncoder.encode("导出", "UTF-8");
         response.setHeader("Content-disposition", "attachment;filename=" + fileName + ".xlsx");
-        EasyExcel.write(response.getOutputStream(), T.class)
+        EasyExcel.write(response.getOutputStream(), resultClass)
                 .sheet("sheet0")
                 // 设置字段宽度为自动调整，不太精确
                 .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
@@ -102,18 +101,18 @@ public class ExcelFileUtils {
      * map string 为sheet 名称
      * @param response
      */
-    public static void exports(HttpServletResponse response, Map<String,List<T>> datas) throws IOException {
+    public static void exports(HttpServletResponse response, Map<String,List> datas,Class resultClass) throws IOException {
         response.setContentType("application/vnd.ms-excel");
         response.setCharacterEncoding("utf-8");
         // 这里URLEncoder.encode可以防止中文乱码 当然和easyexcel没有关系
         String fileName = URLEncoder.encode("导出", "UTF-8");
         response.setHeader("Content-disposition", "attachment;filename=" + fileName + ".xlsx");
-        ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream(),T.class).build();
+        ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream(),resultClass).build();
 
         int num = 0 ;
         for (String key : datas.keySet()) {
             //获取sheet0对象
-            WriteSheet mainSheet = EasyExcel.writerSheet(0, key).head(T.class).build();
+            WriteSheet mainSheet = EasyExcel.writerSheet(0, key).head(resultClass).build();
             //向sheet0写入数据 传入空list这样只导出表头
             excelWriter.write(datas.get(key),mainSheet);
             num ++;
