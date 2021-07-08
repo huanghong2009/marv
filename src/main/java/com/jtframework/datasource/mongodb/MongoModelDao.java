@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -132,7 +133,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     }
 
     @Override
-    public int delete(List ids) throws BusinessException {
+    public int delete(Collection ids) throws BusinessException {
         try {
             return (int) getDao().removeByIds(cls, ids);
         } catch (Exception e) {
@@ -141,6 +142,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
             throw new BusinessException("删除" + this.name + "失败");
         }
     }
+
 
     /**
      * 查询全部数据

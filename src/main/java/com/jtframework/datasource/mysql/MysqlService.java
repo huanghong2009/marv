@@ -484,7 +484,7 @@ public class MysqlService {
     }
 
 
-    public int delete(Class resultClass, List<String> ids) throws SQLException {
+    public int delete(Class resultClass, Collection ids) throws SQLException {
         String sql = "DELETE FROM " + table + " WHERE ID IN (:IDS) ";
 
         Map<String,Object> params = new HashMap<>();

@@ -17,6 +17,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -376,7 +377,7 @@ public class MongodbService {
         return remove(Query.query(Criteria.where("_id").is(id)), resultClass);
     }
 
-    public long removeByIds(Class<?> resultClass, List<String> ids) {
+    public long removeByIds(Class<?> resultClass, Collection<String> ids) {
         return remove(Query.query(Criteria.where("_id").in(ids)), resultClass);
     }
 

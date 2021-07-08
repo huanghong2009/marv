@@ -5,6 +5,7 @@ import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
 
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ public interface ModelDaoService<T extends BaseModel> {
 
     public int delete(String id) throws BusinessException;
 
-    public int delete(List<String> id) throws BusinessException;
+    public int delete(Collection<String> id) throws BusinessException;
 
     public List<T> selectAll() throws BusinessException;
 

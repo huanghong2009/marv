@@ -146,10 +146,9 @@ public class ClassUtils {
      * @return
      */
     private static Map<String, Object> getObjectFiledValue(String objName, Object obj, Map<String, Object> result, int num) {
-        if (num >= 2) {
+        if (num >= 2 || obj == null) {
             return result;
         }
-
 
         Field[] fields = ReflectUtil.getFields(obj.getClass());
 
@@ -172,7 +171,13 @@ public class ClassUtils {
                     } else {
                         result.put(objName + "." + ReflectUtil.getFieldName(field), value);
                     }
-                } else if (List.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type) || Set.class.isAssignableFrom(type)) {
+                } else if (Collection.class.isAssignableFrom(type)) {
+                    if (BaseUtils.isBlank(objName)) {
+                        result.put(ReflectUtil.getFieldName(field), value);
+                    } else {
+                        result.put(objName + "." + ReflectUtil.getFieldName(field), value);
+                    }
+                } else if (Map.class.isAssignableFrom(type)) {
                     continue;
                 } else {
                     getObjectFiledValue(ReflectUtil.getFieldName(field), value, result, num + 1);

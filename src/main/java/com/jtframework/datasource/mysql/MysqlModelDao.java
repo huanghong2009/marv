@@ -11,9 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Data
 @Slf4j
@@ -94,15 +92,16 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
     @Override
-    public int delete(List ids) throws BusinessException {
+    public int delete(Collection id) throws BusinessException {
         try {
-            return getDao().delete(cls, ids);
+            return getDao().delete(cls, id);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("删除" + this.name + "失败");
         }
     }
+
 
     @Override
     @CheckParam(checkType = CheckParam.Type.ONLY,value = "model.id")
