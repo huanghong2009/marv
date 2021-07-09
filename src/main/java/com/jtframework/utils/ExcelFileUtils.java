@@ -112,7 +112,7 @@ public class ExcelFileUtils {
         int num = 0 ;
         for (String key : datas.keySet()) {
             //获取sheet0对象
-            WriteSheet mainSheet = EasyExcel.writerSheet(0, key).head(resultClass).build();
+            WriteSheet mainSheet = EasyExcel.writerSheet(num, key).head(resultClass).build();
             //向sheet0写入数据 传入空list这样只导出表头
             excelWriter.write(datas.get(key),mainSheet);
             num ++;
