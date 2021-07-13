@@ -13,7 +13,7 @@
 
     <groupId>com.jtframework</groupId>
     <artifactId>marv</artifactId>
-    <version>9.3</version>
+    <version>9.5</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -142,7 +142,7 @@
         <dependency>
             <groupId>com.mll</groupId>
             <artifactId>easyexcel</artifactId>
-            <version>2.2.10</version>
+            <version>2.2.11</version>
         </dependency>
 
 
