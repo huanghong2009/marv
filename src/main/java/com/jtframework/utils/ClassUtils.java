@@ -10,7 +10,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ClassUtils {
 
@@ -258,10 +261,8 @@ public class ClassUtils {
      * @throws IllegalAccessException
      * @throws NoSuchFieldException
      */
-    public static Object getPrivateProperty(Object object, String propertyName) throws IllegalAccessException, NoSuchFieldException {
-        Field field = object.getClass().getDeclaredField(propertyName);
-        field.setAccessible(true);
-        return field.get(object);
+    public static Object getPrivateProperty(Object object, String propertyName) {
+        return ReflectUtil.getFieldValue(object,propertyName);
     }
 
     /**
