@@ -29,7 +29,7 @@ import java.util.Map;
 public class HttpClientUtils {
 
     //封装POST方法
-    public JSONObject post(String POST_URL, ArrayList<NameValuePair> list) {
+    public static JSONObject post(String POST_URL, ArrayList<NameValuePair> list) {
         String entityStr = null;
         try {
             //把参数放入请求体中
@@ -64,7 +64,7 @@ public class HttpClientUtils {
         return null;
     }
 
-    public JSONObject get(String url, Map<String, String> params) throws URISyntaxException {
+    public static JSONObject get(String url, Map<String, String> params) throws URISyntaxException {
         CloseableHttpResponse response = null;
         String entityStr = null;
         try {
