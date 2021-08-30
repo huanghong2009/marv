@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator
 import com.jtframework.utils.BaseUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
@@ -90,7 +91,7 @@ public class RedisService {
      */
 
 
-    public static RedisTemplate<?, ?> getRedisTemplate(LettuceConnectionFactory lettuceConnectionFactory) {
+    public static RedisTemplate<?, ?> getRedisTemplate(RedisConnectionFactory lettuceConnectionFactory) {
         RedisTemplate template = new StringRedisTemplate();
         template.setConnectionFactory(lettuceConnectionFactory);
 

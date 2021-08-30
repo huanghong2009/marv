@@ -4,20 +4,18 @@ import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -29,14 +27,15 @@ import java.util.Map;
 public class HttpClientUtils {
 
     //封装POST方法
-    public static JSONObject post(String POST_URL, ArrayList<NameValuePair> list) {
+    public static JSONObject post(String POST_URL, JSONObject params) throws Exception{
         String entityStr = null;
         try {
             //把参数放入请求体中
-            UrlEncodedFormEntity entityParam = new UrlEncodedFormEntity(list, "UTF-8");
+            StringEntity se = new StringEntity(params.toJSONString(), "UTF-8");
             CloseableHttpClient httpClient = HttpClientBuilder.create().build();
             HttpPost httpPost = new HttpPost(POST_URL);
-            httpPost.setEntity(entityParam);
+
+            httpPost.setEntity(se);
             //发起请求
             CloseableHttpResponse response = httpClient.execute(httpPost);
             //获取返回状态，并判断是否连接成功。
@@ -54,17 +53,15 @@ public class HttpClientUtils {
             httpClient.close();
 
             return JSONObject.parseObject(entityStr);
-        } catch (ClientProtocolException e) {
-            log.error("Http协议异常");
+        } catch (Exception e) {
+            log.error("Http协议异常:{}",e.getMessage());
             e.printStackTrace();
-        } catch (IOException e) {
-            log.error("IO异常");
-            e.printStackTrace();
+            throw new Exception("Http协议调用异常:"+e.getMessage());
         }
-        return null;
+
     }
 
-    public static JSONObject get(String url, Map<String, String> params) throws URISyntaxException {
+    public static JSONObject get(String url, Map<String, String> params) throws Exception {
         CloseableHttpResponse response = null;
         String entityStr = null;
         try {
@@ -95,14 +92,10 @@ public class HttpClientUtils {
             httpClient.close();
 
             return JSONObject.parseObject(entityStr);
-        } catch (ClientProtocolException e) {
-            log.error("Http协议异常");
+        } catch (Exception e) {
+            log.error("Http协议调用异常:{}",e.getMessage());
             e.printStackTrace();
-        } catch (IOException e) {
-            log.error("IO异常");
-            e.printStackTrace();
+            throw new Exception("Http协议调用异常:"+e.getMessage());
         }
-
-        return null;
     }
 }

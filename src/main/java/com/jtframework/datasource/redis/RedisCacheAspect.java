@@ -262,7 +262,7 @@ public class RedisCacheAspect {
      * @within: 匹配使用指定注解的类
      * @annotation:指定方法所应用的注解
      */
-    @Pointcut("@annotation(com.jtframework.datasource.redis.ResdisQuery)")
+    @Pointcut("@annotation(com.jtframework.datasource.redis.RedisQuery)")
     public void asRedisQuery() {
     }
 
@@ -276,17 +276,17 @@ public class RedisCacheAspect {
      * 操作步骤: TODO<br/>
      * ${tags}
      */
-    @Around("asRedisQuery() && @annotation(resdisQuery)")
-    public Object asRedisQueryAround(ProceedingJoinPoint joinPoint, ResdisQuery resdisQuery) throws Throwable {
+    @Around("asRedisQuery() && @annotation(redisQuery)")
+    public Object asRedisQueryAround(ProceedingJoinPoint joinPoint, RedisQuery redisQuery) throws Throwable {
 
         try {
             MethodSignature signature = ((MethodSignature) joinPoint.getSignature());
             Object[] args = joinPoint.getArgs();
             String[] argNames = signature.getParameterNames();
-            String group = resdisQuery.group();
-            Long timeOut = resdisQuery.timeOut();
+            String group = redisQuery.group();
+            Long timeOut = redisQuery.timeOut();
 
-            String keyParame = resdisQuery.key();
+            String keyParame = redisQuery.key();
 
             if (BaseUtils.isBlank(keyParame)) {
                 log.error("{} 方法注解key为空,redis 缓存不生效...", signature.getName());
@@ -332,7 +332,7 @@ public class RedisCacheAspect {
                 return joinPoint.proceed(args);
             }
 
-            if (resdisQuery.isEnadbleL2Cache() && !cache.containsKey(group)) {
+            if (redisQuery.isEnadbleL2Cache() && !cache.containsKey(group)) {
                 cache.put(group, new HashMap<String, Object>());
             }
 
@@ -341,7 +341,7 @@ public class RedisCacheAspect {
                 /**
                  * 开启二级缓存
                  */
-                if (resdisQuery.isEnadbleL2Cache()) {
+                if (redisQuery.isEnadbleL2Cache()) {
                     if (cache.get(group).containsKey(redisKey)) {
                         return cache.get(group).get(redisKey);
                     }
@@ -363,7 +363,7 @@ public class RedisCacheAspect {
             /**
              * 更新二级缓存
              */
-            if (resdisQuery.isEnadbleL2Cache()){
+            if (redisQuery.isEnadbleL2Cache()){
                 cache.get(group).put(redisKey, result);
             }
 
