@@ -4,6 +4,7 @@ import com.jtframework.base.system.ApplicationContextProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +14,7 @@ public class MongoServiceInit implements InitializingBean {
 
     @Autowired
     private ApplicationContextProvider applicationContextProvider;
+
 
     private MongoTemplate mongoTemplate;
 
@@ -25,6 +27,7 @@ public class MongoServiceInit implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
+
         if (applicationContextProvider.containsBean("mongoTemplate")) {
             this.mongoTemplate = applicationContextProvider.getBean("mongoTemplate", MongoTemplate.class);
             log.info(" ----- 默认 mongo数据源 bean 加载 -------");
