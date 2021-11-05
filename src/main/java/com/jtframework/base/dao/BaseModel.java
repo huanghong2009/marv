@@ -1,6 +1,7 @@
 package com.jtframework.base.dao;
 
 import com.alibaba.fastjson.JSONObject;
+import com.jtframework.utils.BaseUtils;
 import com.jtframework.utils.DocletUtils;
 import lombok.Data;
 
@@ -16,9 +17,11 @@ import static com.jtframework.utils.BaseUtils.isNotBlank;
  * @version 创建时间：2017/12/19
  */
 @Data
-public  class BaseModel implements Serializable, Cloneable {
+public class BaseModel implements Serializable, Cloneable {
 
     private String id;
+
+    private String _id;
 
     /**
      * 生成model的sql
@@ -36,7 +39,7 @@ public  class BaseModel implements Serializable, Cloneable {
         for (Field field : fields) {
             ServerField serverField = field.getAnnotation(ServerField.class);
 
-            if (serverField.isColumn().equals("false")){
+            if (serverField.isColumn().equals("false")) {
                 continue;
             }
 
@@ -58,10 +61,22 @@ public  class BaseModel implements Serializable, Cloneable {
             } else {
                 sql += " varchar(20) COLLATE utf8mb4_general_ci ";
             }
-            sql += "DEFAULT NULL COMMENT '" +  serverField.name() + "',\r\n";
+            sql += "DEFAULT NULL COMMENT '" + serverField.name() + "',\r\n";
         }
-        sql = sql.substring(0,sql.length()-1);
+        sql = sql.substring(0, sql.length() - 1);
         sql += " )ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='" + serverModel.desc() + "表';";
         System.out.println(sql);
+    }
+
+    public String getId() {
+        if (BaseUtils.isBlank(id) && BaseUtils.isNotBlank(_id)) {
+            return _id;
+        }
+
+        return id;
+    }
+
+    public String toJson() {
+        return JSONObject.toJSONString(this);
     }
 }

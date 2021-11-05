@@ -20,13 +20,13 @@ public interface ModelDaoService<T extends BaseModel> {
      * @param model
      * @throws BusinessException
      */
-    public int update(T model) throws BusinessException;
+    public long update(T model) throws BusinessException;
 
     public <T> T load(String id) throws BusinessException;
 
-    public int delete(String id) throws BusinessException;
+    public long delete(String id) throws BusinessException;
 
-    public int delete(Collection<String> id) throws BusinessException;
+    public long delete(Collection<String> id) throws BusinessException;
 
     public List<T> selectAll() throws BusinessException;
 
@@ -81,19 +81,19 @@ public interface ModelDaoService<T extends BaseModel> {
      *
      * @throws SQLException
      */
-    int updateKVById(String id, String key, Object value) throws SQLException;
+    long updateKVById(String id, String key, Object value) throws SQLException;
 
     /**
      * 根据id 修改一个key value
      *
      * @throws SQLException
      */
-    int updateMapById(String id, Map<String,Object> updateParmas) throws  Exception;
+    long updateMapById(String id, Map<String,Object> updateParmas) throws  Exception;
 
     /**
      * 根据map 修改一个mao
      *
      * @throws SQLException
      */
-    int updateMapByMap(Map<String,Object> whereParmas,Map<String,Object> updateParmas) throws  Exception;
+    long updateMapByMap(Map<String,Object> whereParmas,Map<String,Object> updateParmas) throws  Exception;
 }

@@ -81,7 +81,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
 
     @Override
     @CheckParam
-    public int delete(String id) throws BusinessException {
+    public long delete(String id) throws BusinessException {
         try {
             return getDao().delete(cls, id);
         } catch (Exception e) {
@@ -92,7 +92,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
     @Override
-    public int delete(Collection id) throws BusinessException {
+    public long delete(Collection id) throws BusinessException {
         try {
             return getDao().delete(cls, id);
         } catch (Exception e) {
@@ -105,7 +105,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
 
     @Override
     @CheckParam(checkType = CheckParam.Type.ONLY,value = "model.id")
-    public int update(BaseModel model) throws BusinessException {
+    public long update(BaseModel model) throws BusinessException {
         try {
             return getDao().update(model);
         } catch (Exception e) {
@@ -235,7 +235,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
      * @throws SQLException
      */
     @Override
-    public int updateKVById(String id, String key, Object value) throws SQLException {
+    public long updateKVById(String id, String key, Object value) throws SQLException {
 
         try {
             return getDao().updateKVById(this.cls,id,key,value);
@@ -254,7 +254,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
      * @throws SQLException
      */
     @Override
-    public int updateMapByMap(Map whereParmas, Map updateParmas) throws Exception {
+    public long updateMapByMap(Map whereParmas, Map updateParmas) throws Exception {
         try {
             return getDao().update(this.cls,whereParmas,updateParmas);
         } catch (Exception e) {
@@ -272,7 +272,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
      * @throws SQLException
      */
     @Override
-    public int updateMapById(String id, Map updateParmas) throws Exception {
+    public long updateMapById(String id, Map updateParmas) throws Exception {
         try {
             Map<String,Object> whereParmas = new HashMap<>();
             whereParmas.put("id",id);

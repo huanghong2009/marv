@@ -13,12 +13,12 @@ import java.util.List;
 @Data
 public final class PageVO<T> implements Serializable {
     private static final long serialVersionUID = -4106030982324955419L;
-    private int start;
-    private int pageSize;
+    private long start;
+    private long pageSize;
     private List<T> data;
-    private int totalCount;
-    private int totalPageCount;
-    private int currentPageNo;
+    private long totalCount;
+    private long totalPageCount;
+    private long currentPageNo;
     private boolean hasNextPage;
     private boolean hasPreviousPage;
     private boolean isStartPage;
@@ -28,7 +28,7 @@ public final class PageVO<T> implements Serializable {
         this(0, 0, 20, new ArrayList());
     }
 
-    public PageVO(int start, int totalSize, int pageSize, List<T> data) {
+    public PageVO(long start, long totalSize, long pageSize, List<T> data) {
         this.pageSize = 20;
         this.data = new ArrayList(0);
         this.pageSize = pageSize;

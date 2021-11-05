@@ -108,7 +108,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      */
     @Override
     @CheckParam(checkType = CheckParam.Type.ONLY, value = "model.id")
-    public int update(BaseModel model) throws BusinessException {
+    public long update(BaseModel model) throws BusinessException {
 
         try {
             getDao().save(model);
@@ -122,7 +122,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
 
     @Override
     @CheckParam
-    public int delete(String id) throws BusinessException {
+    public long delete(String id) throws BusinessException {
         try {
             return (int) getDao().removeById(cls, id);
         } catch (Exception e) {
@@ -133,7 +133,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     }
 
     @Override
-    public int delete(Collection ids) throws BusinessException {
+    public long delete(Collection ids) throws BusinessException {
         try {
             return (int) getDao().removeByIds(cls, ids);
         } catch (Exception e) {
@@ -244,6 +244,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      */
     @Override
     public PageVO<T> defalutPageQuery() throws SQLException {
+
         try {
             return getDao().pageQuery(this.cls, getDao().createQuery(), 1, 10);
         } catch (Exception e) {
@@ -262,7 +263,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      * @throws SQLException
      */
     @Override
-    public int updateKVById(String id, String key, Object value) throws SQLException {
+    public long updateKVById(String id, String key, Object value) throws SQLException {
         try {
             Update update = new Update();
             update.set(key, value);
@@ -282,7 +283,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      * @throws SQLException
      */
     @Override
-    public int updateMapByMap(Map whereParmas, Map updateParmas) throws Exception {
+    public long updateMapByMap(Map whereParmas, Map updateParmas) throws Exception {
         try {
             Update update = new Update();
             for (Object pk : updateParmas.keySet()) {
@@ -313,7 +314,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      * @throws SQLException
      */
     @Override
-    public int updateMapById(String id, Map updateParmas) throws Exception {
+    public long updateMapById(String id, Map updateParmas) throws Exception {
         try {
             Update update = new Update();
             for (Object pk  : updateParmas.keySet()) {
