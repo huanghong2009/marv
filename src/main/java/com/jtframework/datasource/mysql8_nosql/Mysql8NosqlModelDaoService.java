@@ -6,6 +6,7 @@ import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoService;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 public interface Mysql8NosqlModelDaoService extends ModelDaoService {
     /**
@@ -23,4 +24,7 @@ public interface Mysql8NosqlModelDaoService extends ModelDaoService {
      * @throws SQLException
      */
     PageVO pageQuery(int pageNo,int pageSize) throws SQLException;
+
+
+    PageVO pageQuery(int pageNo, int pageSize, Map<String,Object> params) throws SQLException;
 }

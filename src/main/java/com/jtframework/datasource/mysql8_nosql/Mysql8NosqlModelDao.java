@@ -114,15 +114,51 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public PageVO<T> pageQuery(int pageNo, int pageSize) throws SQLException {
+        return this.pageQuery(pageNo, pageSize, null);
+    }
+
+    @Override
+    public PageVO pageQuery(int pageNo, int pageSize, Map params) throws SQLException {
+
         try {
-            DocResult dbDocs = getCollection().find().offset((pageNo - 1) * pageSize).limit(pageSize).execute();
+            FindStatement findStatement = null;
+            if (params != null && params.size() > 0) {
+                String paramsSql = "";
+
+                for (Object kb : params.keySet()) {
+
+                    String key = kb.toString();
+                    if (null != params.get(key)) {
+                        if (BaseUtils.isNotBlank(paramsSql)) {
+                            paramsSql += " AND ";
+                        }
+                        paramsSql += (key + "=:" + key);
+                    }
+                }
+
+                findStatement = getCollection().find(paramsSql);
+
+                for (Object kb : params.keySet()) {
+                    String key = kb.toString();
+                    if (null != params.get(key)) {
+                        findStatement.bind(key, params.get(key));
+                    }
+                }
+
+            } else {
+                findStatement = getCollection().find();
+            }
+
+            DocResult dbDocs = findStatement.offset((pageNo - 1) * pageSize).limit(pageSize).execute();
             List result = coverDocToModel(dbDocs.fetchAll());
             return new PageVO(PageVO.getStartOfPage(pageNo, pageSize), dbDocs.count(), pageSize, result);
+
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("分页查询" + this.name + "失败");
         }
+
     }
 
     @Override
