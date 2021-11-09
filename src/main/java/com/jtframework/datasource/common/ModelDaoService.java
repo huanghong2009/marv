@@ -74,7 +74,7 @@ public interface ModelDaoService<T extends BaseModel> {
      * @return
      * @throws SQLException
      */
-    PageVO<T> defalutPageQuery() throws SQLException;
+    PageVO<T> defalutPageQuery() throws SQLException, Exception;
 
     /**
      * 根据id 修改一个key value

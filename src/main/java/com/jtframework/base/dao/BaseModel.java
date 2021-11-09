@@ -76,6 +76,11 @@ public class BaseModel implements Serializable, Cloneable {
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+        this._id = id;
+    }
+
     public String toJson() {
         return JSONObject.toJSONString(this);
     }

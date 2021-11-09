@@ -61,7 +61,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @return
      * @throws Exception
      */
-    private Collection getCollection() throws Exception {
+    public Collection getCollection() throws Exception {
         Collection myColl = getSchema().createCollection(BaseUtils.getServeModelValue(cls), true);
         return myColl;
     }
@@ -75,7 +75,10 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
     @Override
     public void insert(BaseModel model) throws BusinessException {
         try {
-            getCollection().add(model.toJson()).execute();
+            AddResult addResult = getCollection().add(model.toJson()).execute();
+            if (addResult.getGeneratedIds().size() > 0) {
+                model.setId(addResult.getGeneratedIds().get(0));
+            }
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -113,12 +116,74 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @throws SQLException
      */
     @Override
-    public PageVO<T> pageQuery(int pageNo, int pageSize) throws SQLException {
-        return this.pageQuery(pageNo, pageSize, null);
+    public PageVO<T> pageQuery(int pageNo, int pageSize) throws Exception {
+        return this.pageQuery(pageNo, pageSize, "", null);
     }
 
     @Override
-    public PageVO pageQuery(int pageNo, int pageSize, Map params) throws SQLException {
+    public PageVO pageQuery(int pageNo, int pageSize, String findStr) throws Exception {
+        return pageQuery(pageNo, pageSize, findStr, null);
+    }
+
+    /**
+     * 分页查询
+     *
+     * @param pageNo
+     * @param pageSize
+     * @param findStr    查询sql
+     * @param bindParams 参数列表
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public PageVO pageQuery(int pageNo, int pageSize, String findStr, Map<String, Object> bindParams) throws Exception {
+
+        FindStatement findStatement = BaseUtils.isBlank(findStr) ? getCollection().find() : getCollection().find(findStr);
+
+        if (bindParams != null) {
+            for (Object kb : bindParams.keySet()) {
+                String key = kb.toString();
+                if (null != bindParams.get(key)) {
+                    findStatement.bind(key, bindParams.get(key));
+                }
+            }
+        }
+
+        DocResult dbDocs = findStatement.offset((pageNo - 1) * pageSize).limit(pageSize).execute();
+        List result = coverDocToModel(dbDocs.fetchAll());
+        return new PageVO(PageVO.getStartOfPage(pageNo, pageSize), dbDocs.count(), pageSize, result);
+    }
+
+    /**
+     * 根据 多个查询sql分页 ，这里 会把每一个 查询sql and 拼接起来，占位符参数，是传递过来的 参数
+     *
+     * @param pageNo
+     * @param pageSize
+     * @param findStr
+     * @param bindParams
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public PageVO pageQuery(int pageNo, int pageSize, List<String> findStr, Map<String, Object> bindParams) throws Exception {
+        if (findStr == null || findStr.size() == 0) {
+            this.pageQuery(pageNo, pageSize);
+        }
+        String paramsSql = "";
+
+        for (int i = 0; i < findStr.size(); i++) {
+            if (i == 0) {
+                paramsSql += findStr;
+            } else {
+                paramsSql += " AND " + findStr;
+            }
+        }
+
+        return this.pageQuery(pageNo,pageSize,paramsSql,bindParams);
+    }
+
+    @Override
+    public PageVO pageQuery(int pageNo, int pageSize, Map params) throws Exception {
 
         try {
             FindStatement findStatement = null;
@@ -135,23 +200,10 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
                         paramsSql += (key + "=:" + key);
                     }
                 }
-
-                findStatement = getCollection().find(paramsSql);
-
-                for (Object kb : params.keySet()) {
-                    String key = kb.toString();
-                    if (null != params.get(key)) {
-                        findStatement.bind(key, params.get(key));
-                    }
-                }
-
+                return this.pageQuery(pageNo, pageSize, paramsSql, params);
             } else {
-                findStatement = getCollection().find();
+                return this.pageQuery(pageNo, pageSize, "", null);
             }
-
-            DocResult dbDocs = findStatement.offset((pageNo - 1) * pageSize).limit(pageSize).execute();
-            List result = coverDocToModel(dbDocs.fetchAll());
-            return new PageVO(PageVO.getStartOfPage(pageNo, pageSize), dbDocs.count(), pageSize, result);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -389,8 +441,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @throws SQLException
      */
     @Override
-    public PageVO<T> defalutPageQuery() throws SQLException {
-        return this.pageQuery(1, 10);
+    public PageVO<T> defalutPageQuery() throws Exception {
+        return this.pageQuery(1, 10, "", null);
     }
 
     /**
