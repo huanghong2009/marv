@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -286,6 +287,9 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
     private List<T> coverDocToModel(List<DbDoc> datas) {
         JSONArray jsonArray = JSONArray.parseArray(JSONArray.toJSONString(datas));
         List result = new ArrayList<>();
+        if (datas==null){
+            return result;
+        }
         for (int i = 0; i < jsonArray.size(); i++) {
             result.add(JSONObject.toJavaObject(jsonArray.getJSONObject(i), cls));
         }
@@ -300,7 +304,11 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @return
      */
     private T coverDocToModel(DbDoc data) {
-        return (T) JSONObject.toJavaObject(JSONObject.parseObject(JSONObject.toJSONString(data)), cls);
+        if (data == null || BaseUtils.isBlank(data.toString())){
+            return null;
+        }
+
+        return (T) JSONObject.toJavaObject(JSONObject.parseObject(data.toString()), cls);
     }
 
     /**
