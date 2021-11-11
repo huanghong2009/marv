@@ -1,6 +1,5 @@
 package com.jtframework.datasource.mysql8_nosql;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
@@ -14,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,43 +27,10 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
     private Schema schema;
 
 
-    /**
-     * 获取数据源
-     *
-     * @return
-     */
-    public Schema getSchema() throws Exception {
-
-        if (schema == null) {
-            throw new Exception("未注入mysql xdevapi 数据源 且 未能成功初始化 默认数据源，请检查配置 ....");
-        }
-        return this.schema;
+    public Collection getCollection(){
+        return this.schema.createCollection(BaseUtils.getServeModelValue(this.cls),true);
     }
 
-    /**
-     * 获取集合
-     *
-     * @param collectioNname
-     * @return
-     * @throws Exception
-     */
-    private Collection getCollection(String collectioNname) throws Exception {
-        Collection myColl = getSchema().createCollection(collectioNname, true);
-        return myColl;
-    }
-
-
-    /**
-     * 获取集合
-     *
-     * @param
-     * @return
-     * @throws Exception
-     */
-    public Collection getCollection() throws Exception {
-        Collection myColl = getSchema().createCollection(BaseUtils.getServeModelValue(cls), true);
-        return myColl;
-    }
 
     /**
      * 新增
@@ -74,9 +39,9 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @throws BusinessException
      */
     @Override
-    public void insert(BaseModel model) throws BusinessException {
+    public void insert(BaseModel model) throws Exception {
         try {
-            AddResult addResult = getCollection().add(model.toJson()).execute();
+            AddResult addResult = this.getCollection().add(model.toJson()).execute();
             if (addResult.getGeneratedIds().size() > 0) {
                 model.setId(addResult.getGeneratedIds().get(0));
             }
@@ -96,7 +61,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     @CheckParam(checkType = CheckParam.Type.ONLY, value = "model.id")
-    public void save(BaseModel model) throws BusinessException {
+    public void save(BaseModel model) throws Exception {
         try {
             if (BaseUtils.isNotBlank(model.getId())) {
                 getCollection().addOrReplaceOne(model.getId(), model.toJson());
@@ -138,21 +103,26 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public PageVO pageQuery(int pageNo, int pageSize, String findStr, Map<String, Object> bindParams) throws Exception {
+        try {
+            FindStatement findStatement = BaseUtils.isBlank(findStr) ? getCollection().find() : getCollection().find(findStr);
 
-        FindStatement findStatement = BaseUtils.isBlank(findStr) ? getCollection().find() : getCollection().find(findStr);
-
-        if (bindParams != null) {
-            for (Object kb : bindParams.keySet()) {
-                String key = kb.toString();
-                if (null != bindParams.get(key)) {
-                    findStatement.bind(key, bindParams.get(key));
+            if (bindParams != null) {
+                for (Object kb : bindParams.keySet()) {
+                    String key = kb.toString();
+                    if (null != bindParams.get(key)) {
+                        findStatement.bind(key, bindParams.get(key));
+                    }
                 }
             }
-        }
 
-        DocResult dbDocs = findStatement.offset((pageNo - 1) * pageSize).limit(pageSize).execute();
-        List result = coverDocToModel(dbDocs.fetchAll());
-        return new PageVO(PageVO.getStartOfPage(pageNo, pageSize), dbDocs.count(), pageSize, result);
+            DocResult dbDocs = findStatement.offset((pageNo - 1) * pageSize).limit(pageSize).execute();
+            List result = coverDocToModel(dbDocs.fetchAll());
+            return new PageVO(PageVO.getStartOfPage(pageNo, pageSize), dbDocs.count(), pageSize, result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("保存 " + this.name + " 失败");
+        }
     }
 
     /**
@@ -180,7 +150,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             }
         }
 
-        return this.pageQuery(pageNo,pageSize,paramsSql,bindParams);
+        return this.pageQuery(pageNo, pageSize, paramsSql, bindParams);
     }
 
     @Override
@@ -216,7 +186,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
 
     @Override
     @CheckParam("id")
-    public T load(String id) throws BusinessException {
+    public T load(String id) throws Exception {
         try {
             return coverDocToModel(getCollection().getOne(id));
         } catch (Exception e) {
@@ -235,7 +205,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     @CheckParam(checkType = CheckParam.Type.ONLY, value = "model.id")
-    public long update(BaseModel model) throws BusinessException {
+    public long update(BaseModel model) throws Exception {
+
         JSONObject data = JSONObject.parseObject(model.toJson());
 
         try {
@@ -251,11 +222,12 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             log.error(e.getMessage());
             throw new BusinessException("保存 " + this.name + " 失败");
         }
+
     }
 
     @Override
     @CheckParam()
-    public long delete(String id) throws BusinessException {
+    public long delete(String id) throws Exception {
         try {
             Result result = getCollection().removeOne(id);
             return result.getAffectedItemsCount();
@@ -264,10 +236,12 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             log.error(e.getMessage());
             throw new BusinessException("删除" + this.name + "失败");
         }
+
+
     }
 
     @Override
-    public long delete(java.util.Collection id) throws BusinessException {
+    public long delete(java.util.Collection id) throws Exception {
         try {
             Result result = getCollection().remove("_id in (:ids) ").bind(id).execute();
             return result.getAffectedItemsCount();
@@ -276,6 +250,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             log.error(e.getMessage());
             throw new BusinessException("删除" + this.name + "失败");
         }
+
     }
 
     /**
@@ -285,14 +260,16 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @return
      */
     private List<T> coverDocToModel(List<DbDoc> datas) {
-        JSONArray jsonArray = JSONArray.parseArray(JSONArray.toJSONString(datas));
         List result = new ArrayList<>();
-        if (datas==null){
+
+        if (datas == null) {
             return result;
         }
-        for (int i = 0; i < jsonArray.size(); i++) {
-            result.add(JSONObject.toJavaObject(jsonArray.getJSONObject(i), cls));
+
+        for (DbDoc data : datas) {
+            result.add(coverDocToModel(data));
         }
+
         return result;
     }
 
@@ -304,7 +281,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @return
      */
     private T coverDocToModel(DbDoc data) {
-        if (data == null || BaseUtils.isBlank(data.toString())){
+        if (data == null || BaseUtils.isBlank(data.toString())) {
             return null;
         }
 
@@ -318,7 +295,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @throws BusinessException
      */
     @Override
-    public List<T> selectAll() throws BusinessException {
+    public List<T> selectAll() throws Exception {
         try {
             DocResult result = getCollection().find().execute();
             return coverDocToModel(result.fetchAll());
@@ -327,6 +304,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             log.error(e.getMessage());
             throw new BusinessException("查询全部" + this.name + "失败");
         }
+
     }
 
     /**
@@ -338,7 +316,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @throws BusinessException
      */
     @Override
-    public List<T> selectListByKV(String key, String value) throws BusinessException {
+    public List<T> selectListByKV(String key, String value) throws Exception {
         try {
             DocResult result = getCollection().find(key + "=:data").bind("data", value).execute();
             return coverDocToModel(result.fetchAll());
@@ -347,6 +325,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             log.error(e.getMessage());
             throw new BusinessException("查询全部" + this.name + "失败");
         }
+
     }
 
     /**
@@ -357,7 +336,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @throws BusinessException
      */
     @Override
-    public List selectListForMap(Map params) throws BusinessException {
+    public List selectListForMap(Map params) throws Exception {
 
         try {
             String paramsSql = "";
@@ -384,6 +363,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             log.error(e.getMessage());
             throw new BusinessException("查询全部" + this.name + "失败");
         }
+
+
     }
 
     /**
@@ -395,7 +376,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @throws BusinessException
      */
     @Override
-    public T selectOneByKV(String key, String value) throws BusinessException {
+    public T selectOneByKV(String key, String value) throws Exception {
+
         try {
             return coverDocToModel(getCollection().find(key + "=:" + key).bind(key, value).execute().fetchOne());
         } catch (Exception e) {
@@ -403,6 +385,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             log.error(e.getMessage());
             throw new BusinessException("查询全部" + this.name + "失败");
         }
+
     }
 
     /**
@@ -413,7 +396,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @throws BusinessException
      */
     @Override
-    public Object selectOneByMap(Map params) throws BusinessException {
+    public Object selectOneByMap(Map params) throws Exception {
+
         try {
             String paramsSql = "";
 
@@ -439,6 +423,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             log.error(e.getMessage());
             throw new BusinessException("查询全部" + this.name + "失败");
         }
+
     }
 
 
@@ -462,7 +447,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @throws SQLException
      */
     @Override
-    public long updateKVById(String id, String key, Object value) throws SQLException {
+    public long updateKVById(String id, String key, Object value) throws Exception {
         try {
             Result result = this.getCollection().modify("_id=:id").set(key, value).bind("id", id).execute();
             return result.getAffectedItemsCount();
@@ -471,6 +456,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             log.error(e.getMessage());
             throw new BusinessException("修改" + this.name + "失败");
         }
+
     }
 
     /**
@@ -482,7 +468,6 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public long updateMapByMap(Map whereParmas, Map updateParmas) throws Exception {
-
         try {
             String paramsSql = "";
 
@@ -513,6 +498,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             log.error(e.getMessage());
             throw new BusinessException("修改" + this.name + "失败");
         }
+
     }
 
     /**
@@ -524,6 +510,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public long updateMapById(String id, Map updateParmas) throws Exception {
+
         try {
             ModifyStatement modifyStatement = getCollection().modify("_id=:id");
 
@@ -539,6 +526,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             log.error(e.getMessage());
             throw new BusinessException("修改" + this.name + "失败");
         }
+
     }
 
 }

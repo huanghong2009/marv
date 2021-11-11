@@ -16,7 +16,7 @@ public interface Mysql8NosqlModelDaoService extends ModelDaoService {
      * @param model
      * @throws BusinessException
      */
-    public void save(BaseModel model) throws BusinessException;
+    public void save(BaseModel model) throws Exception;
 
     /**
      * 分页查询，默认查询前10条
