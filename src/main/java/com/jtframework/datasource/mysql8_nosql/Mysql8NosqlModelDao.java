@@ -7,6 +7,7 @@ import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import com.jtframework.utils.BaseUtils;
+
 import com.mysql.cj.xdevapi.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +25,27 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * 注入默认数据源
      */
     @Autowired
-    private Schema schema;
+    private Mysql8NoSqlFactoryConfig mysql8NoSqlFactoryConfig;
 
 
-    public Collection getCollection(){
-        return this.schema.createCollection(BaseUtils.getServeModelValue(this.cls),true);
+    /**
+     * 获取session
+     *
+     * @return
+     */
+    public Session getSession() throws Exception {
+        return  mysql8NoSqlFactoryConfig.getSession();
+    }
+
+
+    /**
+     * 获取连接
+     *
+     * @param session
+     * @return
+     */
+    public Collection getCollection(Session session) {
+        return session.getDefaultSchema().createCollection(BaseUtils.getServeModelValue(this.cls), true);
     }
 
 
@@ -40,8 +57,9 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public void insert(BaseModel model) throws Exception {
+        Session session = getSession();
         try {
-            AddResult addResult = this.getCollection().add(model.toJson()).execute();
+            AddResult addResult = this.getCollection(session).add(model.toJson()).execute();
             if (addResult.getGeneratedIds().size() > 0) {
                 model.setId(addResult.getGeneratedIds().get(0));
             }
@@ -49,6 +67,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("保存 " + this.name + " 失败");
+        } finally {
+            session.close();
         }
     }
 
@@ -62,9 +82,10 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
     @Override
     @CheckParam(checkType = CheckParam.Type.ONLY, value = "model.id")
     public void save(BaseModel model) throws Exception {
+        Session session = getSession();
         try {
             if (BaseUtils.isNotBlank(model.getId())) {
-                getCollection().addOrReplaceOne(model.getId(), model.toJson());
+                getCollection(session).addOrReplaceOne(model.getId(), model.toJson());
             } else {
                 insert(model);
             }
@@ -72,6 +93,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("保存 " + this.name + " 失败");
+        } finally {
+            session.close();
         }
     }
 
@@ -103,8 +126,9 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public PageVO pageQuery(int pageNo, int pageSize, String findStr, Map<String, Object> bindParams) throws Exception {
+        Session session = getSession();
         try {
-            FindStatement findStatement = BaseUtils.isBlank(findStr) ? getCollection().find() : getCollection().find(findStr);
+            FindStatement findStatement = BaseUtils.isBlank(findStr) ? getCollection(session).find() : getCollection(session).find(findStr);
 
             if (bindParams != null) {
                 for (Object kb : bindParams.keySet()) {
@@ -122,6 +146,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("保存 " + this.name + " 失败");
+        } finally {
+            session.close();
         }
     }
 
@@ -187,12 +213,15 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
     @Override
     @CheckParam("id")
     public T load(String id) throws Exception {
+        Session session = getSession();
         try {
-            return coverDocToModel(getCollection().getOne(id));
+            return coverDocToModel(getCollection(session).getOne(id));
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("获取" + this.name + "失败");
+        } finally {
+            session.close();
         }
     }
 
@@ -206,21 +235,16 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
     @Override
     @CheckParam(checkType = CheckParam.Type.ONLY, value = "model.id")
     public long update(BaseModel model) throws Exception {
-
-        JSONObject data = JSONObject.parseObject(model.toJson());
-
+        Session session = getSession();
         try {
-            ModifyStatement modifyStatement = getCollection().modify("_id=:id");
-            for (String key : data.keySet()) {
-                modifyStatement.set("key", data.get(key));
-            }
-            modifyStatement.bind("id", model.getId());
-            Result result = modifyStatement.execute();
+            Result result = getCollection(session).addOrReplaceOne(model.getId(), model.toJson());
             return result.getAffectedItemsCount();
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("保存 " + this.name + " 失败");
+        } finally {
+            session.close();
         }
 
     }
@@ -228,13 +252,16 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
     @Override
     @CheckParam()
     public long delete(String id) throws Exception {
+        Session session = getSession();
         try {
-            Result result = getCollection().removeOne(id);
+            Result result = getCollection(session).removeOne(id);
             return result.getAffectedItemsCount();
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("删除" + this.name + "失败");
+        } finally {
+            session.close();
         }
 
 
@@ -242,13 +269,16 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
 
     @Override
     public long delete(java.util.Collection id) throws Exception {
+        Session session = getSession();
         try {
-            Result result = getCollection().remove("_id in (:ids) ").bind(id).execute();
+            Result result = getCollection(session).remove("_id in (:ids) ").bind(id).execute();
             return result.getAffectedItemsCount();
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("删除" + this.name + "失败");
+        } finally {
+            session.close();
         }
 
     }
@@ -259,7 +289,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @param datas
      * @return
      */
-    private List<T> coverDocToModel(List<DbDoc> datas) {
+    public List<T> coverDocToModel(List<DbDoc> datas) {
         List result = new ArrayList<>();
 
         if (datas == null) {
@@ -280,7 +310,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @param data
      * @return
      */
-    private T coverDocToModel(DbDoc data) {
+    public T coverDocToModel(DbDoc data) {
         if (data == null || BaseUtils.isBlank(data.toString())) {
             return null;
         }
@@ -296,13 +326,16 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public List<T> selectAll() throws Exception {
+        Session session = getSession();
         try {
-            DocResult result = getCollection().find().execute();
+            DocResult result = getCollection(session).find().execute();
             return coverDocToModel(result.fetchAll());
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("查询全部" + this.name + "失败");
+        } finally {
+            session.close();
         }
 
     }
@@ -317,13 +350,16 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public List<T> selectListByKV(String key, String value) throws Exception {
+        Session session = getSession();
         try {
-            DocResult result = getCollection().find(key + "=:data").bind("data", value).execute();
+            DocResult result = getCollection(session).find(key + "=:data").bind("data", value).execute();
             return coverDocToModel(result.fetchAll());
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("查询全部" + this.name + "失败");
+        } finally {
+            session.close();
         }
 
     }
@@ -337,7 +373,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public List selectListForMap(Map params) throws Exception {
-
+        Session session = getSession();
         try {
             String paramsSql = "";
 
@@ -349,7 +385,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
                 paramsSql += (key + "=:" + key);
             }
 
-            FindStatement findStatement = getCollection().find(paramsSql);
+            FindStatement findStatement = getCollection(session).find(paramsSql);
 
             for (Object kb : params.keySet()) {
                 String key = kb.toString();
@@ -362,6 +398,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("查询全部" + this.name + "失败");
+        } finally {
+            session.close();
         }
 
 
@@ -377,13 +415,15 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public T selectOneByKV(String key, String value) throws Exception {
-
+        Session session = getSession();
         try {
-            return coverDocToModel(getCollection().find(key + "=:" + key).bind(key, value).execute().fetchOne());
+            return coverDocToModel(getCollection(session).find(key + "=:" + key).bind(key, value).execute().fetchOne());
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("查询全部" + this.name + "失败");
+        } finally {
+            session.close();
         }
 
     }
@@ -397,7 +437,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public Object selectOneByMap(Map params) throws Exception {
-
+        Session session = getSession();
         try {
             String paramsSql = "";
 
@@ -409,7 +449,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
                 paramsSql += (key + "=:" + key);
             }
 
-            FindStatement findStatement = getCollection().find(paramsSql);
+            FindStatement findStatement = getCollection(session).find(paramsSql);
 
             for (Object kb : params.keySet()) {
                 String key = kb.toString();
@@ -422,6 +462,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("查询全部" + this.name + "失败");
+        } finally {
+            session.close();
         }
 
     }
@@ -448,13 +490,16 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public long updateKVById(String id, String key, Object value) throws Exception {
+        Session session = getSession();
         try {
-            Result result = this.getCollection().modify("_id=:id").set(key, value).bind("id", id).execute();
+            Result result = this.getCollection(session).modify("_id=:id").set(key, value).bind("id", id).execute();
             return result.getAffectedItemsCount();
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("修改" + this.name + "失败");
+        } finally {
+            session.close();
         }
 
     }
@@ -468,6 +513,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public long updateMapByMap(Map whereParmas, Map updateParmas) throws Exception {
+        Session session = getSession();
         try {
             String paramsSql = "";
 
@@ -479,7 +525,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
                 paramsSql += (key + "=:" + key);
             }
 
-            ModifyStatement modifyStatement = getCollection().modify(paramsSql);
+            ModifyStatement modifyStatement = getCollection(session).modify(paramsSql);
 
             for (Object kb : updateParmas.keySet()) {
                 String key = kb.toString();
@@ -497,6 +543,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("修改" + this.name + "失败");
+        } finally {
+            session.close();
         }
 
     }
@@ -510,9 +558,9 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      */
     @Override
     public long updateMapById(String id, Map updateParmas) throws Exception {
-
+        Session session = getSession();
         try {
-            ModifyStatement modifyStatement = getCollection().modify("_id=:id");
+            ModifyStatement modifyStatement = getCollection(session).modify("_id=:id");
 
             for (Object kb : updateParmas.keySet()) {
                 String key = kb.toString();
@@ -525,6 +573,8 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("修改" + this.name + "失败");
+        } finally {
+            session.close();
         }
 
     }

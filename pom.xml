@@ -13,7 +13,7 @@
 
     <groupId>com.jtframework</groupId>
     <artifactId>marv</artifactId>
-    <version>13.9</version>
+    <version>14.6</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -36,7 +36,11 @@
             <scope>system</scope>
             <systemPath>${java.home}/../lib/tools.jar</systemPath>
         </dependency>
-
+        <dependency>
+            <groupId>com.github.luben</groupId>
+            <artifactId>zstd-jni</artifactId>
+            <version>1.5.0-4</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
         <dependency>
             <groupId>commons-io</groupId>
