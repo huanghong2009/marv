@@ -4,15 +4,17 @@ import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
+import com.jtframework.base.query.ParamsDTO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
+import com.jtframework.utils.BaseUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -87,6 +89,70 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
         }
     }
 
+    /**
+     * 分页查询
+     *
+     * @param mongodbParamsDTO
+     * @throws BusinessException
+     */
+    @Override
+    public PageVO<T> pageQuery(MongodbParamsDTO mongodbParamsDTO) throws BusinessException {
+        try {
+            if (BaseUtils.isNotBlank(mongodbParamsDTO.getSortFiled())) {
+                if (mongodbParamsDTO.isDesc()) {
+                    mongodbParamsDTO.getQuery().with(Sort.by(Sort.Order.asc(mongodbParamsDTO.getSortFiled())));
+                } else {
+                    mongodbParamsDTO.getQuery().with(Sort.by(Sort.Order.desc(mongodbParamsDTO.getSortFiled())));
+                }
+            }
+
+            return this.getDao().pageQuery(this.cls, mongodbParamsDTO.getQuery(), mongodbParamsDTO.getToPage(), mongodbParamsDTO.getPageSize());
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("分页查询" + this.name + " 失败");
+        }
+    }
+
+
+
+    /**
+     * 根据query 查询
+     *
+     * @param query
+     * @return
+     * @throws BusinessException
+     */
+    @Override
+    public List findByQuery(Query query) throws BusinessException {
+        try {
+            return this.getDao().findByQuery(this.cls,query);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("查询" + this.name + " 失败");
+        }
+    }
+
+    /**
+     * 根据dto 查询
+     *
+     * @param mongodbParamsDTO
+     * @return
+     * @throws BusinessException
+     */
+    @Override
+    public List<T> findByDto(MongodbParamsDTO mongodbParamsDTO) throws BusinessException {
+        if (BaseUtils.isNotBlank(mongodbParamsDTO.getSortFiled())) {
+            if (mongodbParamsDTO.isDesc()) {
+                mongodbParamsDTO.getQuery().with(Sort.by(Sort.Order.desc(mongodbParamsDTO.getSortFiled())));
+            } else {
+                mongodbParamsDTO.getQuery().with(Sort.by(Sort.Order.asc(mongodbParamsDTO.getSortFiled())));
+            }
+        }
+        return findByQuery(mongodbParamsDTO.getQuery());
+    }
+
     @Override
     @CheckParam("id")
     public T load(String id) throws BusinessException {
@@ -133,7 +199,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     }
 
     @Override
-    public long delete(Collection ids) throws BusinessException {
+    public long delete(List ids) throws Exception {
         try {
             return (int) getDao().removeByIds(cls, ids);
         } catch (Exception e) {
@@ -170,7 +236,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      * @throws BusinessException
      */
     @Override
-    public List<T> selectListByKV(String key, String value) throws BusinessException {
+    public List<T> selectListByKV(String key, Object value) throws BusinessException {
         try {
             return getDao().findByKV(this.cls, key, value);
         } catch (Exception e) {
@@ -237,24 +303,6 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
 
 
     /**
-     * 分页查询，默认查询前10条
-     *
-     * @return
-     * @throws SQLException
-     */
-    @Override
-    public PageVO<T> defalutPageQuery() throws SQLException {
-
-        try {
-            return getDao().pageQuery(this.cls, getDao().createQuery(), 1, 10);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            throw new BusinessException("分页查询" + this.name + "失败");
-        }
-    }
-
-    /**
      * 根据id 修改一个key value
      *
      * @param id
@@ -317,7 +365,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     public long updateMapById(String id, Map updateParmas) throws Exception {
         try {
             Update update = new Update();
-            for (Object pk  : updateParmas.keySet()) {
+            for (Object pk : updateParmas.keySet()) {
                 String key = pk.toString();
                 update.set(key, updateParmas.get(key));
             }

@@ -4,6 +4,7 @@ import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
+import com.jtframework.base.query.ParamsDTO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import com.jtframework.utils.BaseUtils;
 import lombok.Data;
@@ -92,7 +93,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
     @Override
-    public long delete(Collection id) throws BusinessException {
+    public long delete(List id) throws BusinessException {
         try {
             return getDao().delete(cls, id);
         } catch (Exception e) {
@@ -142,7 +143,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
      */
     @Override
     @CheckParam
-    public List<T> selectListByKV(String key, String value) throws BusinessException {
+    public List<T> selectListByKV(String key, Object value) throws BusinessException {
         try {
             return getDao().selectListFromKV(this.cls, key, value);
         } catch (Exception e) {
@@ -209,22 +210,6 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
 
-    /**
-     * 分页查询，默认查询前10条
-     *
-     * @return
-     * @throws SQLException
-     */
-    @Override
-    public PageVO<T> defalutPageQuery() throws SQLException {
-        try {
-            return getDao().pageQuery(this.cls);
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-            throw new BusinessException("分页查询" + this.name + "失败");
-        }
-    }
 
     /**
      * 根据id 修改一个key value

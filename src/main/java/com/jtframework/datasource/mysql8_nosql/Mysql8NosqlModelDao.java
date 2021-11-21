@@ -7,7 +7,6 @@ import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import com.jtframework.utils.BaseUtils;
-
 import com.mysql.cj.xdevapi.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +33,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @return
      */
     public Session getSession() throws Exception {
-        return  mysql8NoSqlFactoryConfig.getSession();
+        return mysql8NoSqlFactoryConfig.getSession();
     }
 
 
@@ -80,7 +79,6 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @throws BusinessException
      */
     @Override
-    @CheckParam(checkType = CheckParam.Type.ONLY, value = "model.id")
     public void save(BaseModel model) throws Exception {
         Session session = getSession();
         try {
@@ -98,117 +96,178 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
         }
     }
 
-    /**
-     * 分页查询，默认查询前10条
-     *
-     * @return
-     * @throws SQLException
-     */
-    @Override
-    public PageVO<T> pageQuery(int pageNo, int pageSize) throws Exception {
-        return this.pageQuery(pageNo, pageSize, "", null);
-    }
-
-    @Override
-    public PageVO pageQuery(int pageNo, int pageSize, String findStr) throws Exception {
-        return pageQuery(pageNo, pageSize, findStr, null);
-    }
 
     /**
-     * 分页查询
+     * 根据sql修改
      *
-     * @param pageNo
-     * @param pageSize
-     * @param findStr    查询sql
-     * @param bindParams 参数列表
+     * @param queryStrs 查询sql
+     * @param setMap    修改map
+     * @param params    参数
      * @return
-     * @throws Exception
      */
     @Override
-    public PageVO pageQuery(int pageNo, int pageSize, String findStr, Map<String, Object> bindParams) throws Exception {
+    public Long updateFromSqlStrsBySqlStrs(List<String> queryStrs, Map<String, Object> setMap, Map<String, Object> params) throws Exception {
         Session session = getSession();
         try {
-            FindStatement findStatement = BaseUtils.isBlank(findStr) ? getCollection(session).find() : getCollection(session).find(findStr);
+            String paramsSql = "";
 
-            if (bindParams != null) {
-                for (Object kb : bindParams.keySet()) {
-                    String key = kb.toString();
-                    if (null != bindParams.get(key)) {
-                        findStatement.bind(key, bindParams.get(key));
-                    }
+            for (String kb : queryStrs) {
+
+                if (BaseUtils.isNotBlank(paramsSql)) {
+                    paramsSql += " AND ";
                 }
+
+                paramsSql += kb;
             }
 
-            DocResult dbDocs = findStatement.offset((pageNo - 1) * pageSize).limit(pageSize).execute();
-            List result = coverDocToModel(dbDocs.fetchAll());
-            return new PageVO(PageVO.getStartOfPage(pageNo, pageSize), dbDocs.count(), pageSize, result);
+            ModifyStatement modifyStatement = getCollection(session).modify(paramsSql);
+
+            for (String kb : setMap.keySet()) {
+                modifyStatement.set(kb, setMap.get(kb));
+            }
+
+            for (String kb : params.keySet()) {
+                modifyStatement.bind(kb, params.get(kb));
+            }
+
+            return modifyStatement.execute().getAffectedItemsCount();
+
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("保存 " + this.name + " 失败");
+            throw new BusinessException("修改" + this.name + "失败");
         } finally {
             session.close();
         }
     }
 
     /**
-     * 根据 多个查询sql分页 ，这里 会把每一个 查询sql and 拼接起来，占位符参数，是传递过来的 参数
+     * 分页查询
      *
-     * @param pageNo
-     * @param pageSize
-     * @param findStr
-     * @param bindParams
+     * @param paramsDTO 查询sql
      * @return
      * @throws Exception
      */
     @Override
-    public PageVO pageQuery(int pageNo, int pageSize, List<String> findStr, Map<String, Object> bindParams) throws Exception {
-        if (findStr == null || findStr.size() == 0) {
-            this.pageQuery(pageNo, pageSize);
-        }
+    public PageVO pageQuery(Mysql8NosqlParamsDTO paramsDTO) throws Exception {
+        Session session = getSession();
         String paramsSql = "";
-
-        for (int i = 0; i < findStr.size(); i++) {
-            if (i == 0) {
-                paramsSql += findStr;
-            } else {
-                paramsSql += " AND " + findStr;
-            }
-        }
-
-        return this.pageQuery(pageNo, pageSize, paramsSql, bindParams);
-    }
-
-    @Override
-    public PageVO pageQuery(int pageNo, int pageSize, Map params) throws Exception {
-
         try {
-            FindStatement findStatement = null;
-            if (params != null && params.size() > 0) {
-                String paramsSql = "";
+            if (paramsDTO.getFindStrs().size() == 0 && paramsDTO.getParams().size() > 0){
+                paramsSql = getFindSqlByMapParams(paramsDTO.getParams());
+            }else {
+                paramsSql = getFindSqlByFindStrs(paramsDTO.getFindStrs());
+            }
 
-                for (Object kb : params.keySet()) {
 
+            FindStatement findStatement = BaseUtils.isBlank(paramsSql) ? getCollection(session).find() : getCollection(session).find(paramsSql);
+
+            if (paramsDTO.getParams().size() > 0) {
+                for (Object kb : paramsDTO.getParams().keySet()) {
                     String key = kb.toString();
-                    if (null != params.get(key)) {
-                        if (BaseUtils.isNotBlank(paramsSql)) {
-                            paramsSql += " AND ";
-                        }
-                        paramsSql += (key + "=:" + key);
+                    if (null != paramsDTO.getParams().get(key)) {
+                        findStatement.bind(key, paramsDTO.getParams().get(key));
                     }
                 }
-                return this.pageQuery(pageNo, pageSize, paramsSql, params);
-            } else {
-                return this.pageQuery(pageNo, pageSize, "", null);
             }
 
+            findStatement.offset((paramsDTO.getToPage() - 1) * paramsDTO.getPageSize()).limit(paramsDTO.getPageSize());
+
+            if (BaseUtils.isNotBlank(paramsDTO.getSortFiled())) {
+                String sortStr = paramsDTO.getSortFiled() + " " + (paramsDTO.isDesc() ? "desc" : "asc");
+                findStatement.sort(sortStr);
+            }
+
+
+            DocResult dbDocs = findStatement.execute();
+
+            List result = coverDocToModel(dbDocs.fetchAll());
+            return new PageVO(PageVO.getStartOfPage(paramsDTO.getToPage(), paramsDTO.getPageSize()), dbDocs.count(), paramsDTO.getPageSize(), result);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("分页查询" + this.name + "失败");
+            throw new BusinessException("分页查询 " + this.name + " 失败");
+        } finally {
+            session.close();
         }
-
     }
+
+    /**
+     * 根据find 拼接sql
+     * @param findStrs
+     * @return
+     */
+    private String getFindSqlByFindStrs(List<String> findStrs) {
+        String paramsSql = "";
+
+        for (int i = 0; i < findStrs.size(); i++) {
+            if (i == 0) {
+                paramsSql += findStrs.get(i);
+            } else {
+                paramsSql += " AND " + findStrs.get(i);
+            }
+        }
+        return paramsSql;
+    }
+
+    /**
+     * 根据map key 拼接sql，默认 = 连接符
+     * @param params
+     * @return
+     */
+    private String getFindSqlByMapParams(Map<String,Object> params) {
+        String paramsSql = "";
+
+        if (params != null && params.size() > 0) {
+
+
+            for (Object kb : params.keySet()) {
+
+                String key = kb.toString();
+                if (null != params.get(key)) {
+                    if (BaseUtils.isNotBlank(paramsSql)) {
+                        paramsSql += " AND ";
+                    }
+                    paramsSql += (key + "=:" + key);
+                }
+            }
+        }
+        return paramsSql;
+    }
+
+    /**
+     * 根据 map kv查询多条数据
+     *
+     * @param findStrs sql语句
+     * @param params   bind参数
+     * @return
+     * @throws BusinessException
+     */
+    @Override
+    public List selectListForFindStrs(List<String> findStrs, Map<String, Object> params) throws Exception {
+
+        Session session = getSession();
+        try {
+            String paramsSql = getFindSqlByFindStrs(findStrs);
+
+            FindStatement findStatement = getCollection(session).find(paramsSql);
+
+            for (Object kb : params.keySet()) {
+                String key = kb.toString();
+                findStatement.bind(key, params.get(key));
+            }
+
+            DocResult result = findStatement.execute();
+            return coverDocToModel(result.fetchAll());
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("查询全部" + this.name + "失败");
+        } finally {
+            session.close();
+        }
+    }
+
 
     @Override
     @CheckParam("id")
@@ -268,10 +327,12 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
     }
 
     @Override
-    public long delete(java.util.Collection id) throws Exception {
+    public long delete(List id) throws Exception {
         Session session = getSession();
         try {
-            Result result = getCollection(session).remove("_id in (:ids) ").bind(id).execute();
+
+            String str = "(" + BaseUtils.convertListToString(id) + ")";
+            Result result = getCollection(session).remove("_id in " + str).execute();
             return result.getAffectedItemsCount();
         } catch (Exception e) {
             e.printStackTrace();
@@ -349,7 +410,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
      * @throws BusinessException
      */
     @Override
-    public List<T> selectListByKV(String key, String value) throws Exception {
+    public List<T> selectListByKV(String key, Object value) throws Exception {
         Session session = getSession();
         try {
             DocResult result = getCollection(session).find(key + "=:data").bind("data", value).execute();
@@ -469,16 +530,7 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
     }
 
 
-    /**
-     * 分页查询，默认查询前10条
-     *
-     * @return
-     * @throws SQLException
-     */
-    @Override
-    public PageVO<T> defalutPageQuery() throws Exception {
-        return this.pageQuery(1, 10, "", null);
-    }
+
 
     /**
      * 根据id 修改一个key value

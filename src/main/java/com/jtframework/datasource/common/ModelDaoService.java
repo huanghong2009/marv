@@ -3,9 +3,9 @@ package com.jtframework.datasource.common;
 import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
+import com.jtframework.base.query.ParamsDTO;
 
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +26,8 @@ public interface ModelDaoService<T extends BaseModel> {
 
     public long delete(String id) throws Exception;
 
-    public long delete(Collection<String> id) throws Exception;
+
+    public long delete(List<String> id) throws Exception;
 
     public List<T> selectAll() throws Exception;
 
@@ -38,7 +39,7 @@ public interface ModelDaoService<T extends BaseModel> {
      * @return
      * @throws BusinessException
      */
-    public List<T> selectListByKV(String key, String value) throws Exception;
+    public List<T> selectListByKV(String key, Object value) throws Exception;
 
     /**
      * 根据kv查询单条数据
@@ -68,13 +69,6 @@ public interface ModelDaoService<T extends BaseModel> {
      */
     public <T> T selectOneByMap(Map<String, Object> params) throws Exception;
 
-    /**
-     * 分页查询，默认查询前10条
-     *
-     * @return
-     * @throws SQLException
-     */
-    PageVO<T> defalutPageQuery() throws SQLException, Exception;
 
     /**
      * 根据id 修改一个key value

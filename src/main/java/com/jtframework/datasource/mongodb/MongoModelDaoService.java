@@ -1,7 +1,12 @@
 package com.jtframework.datasource.mongodb;
 
 import com.jtframework.base.exception.BusinessException;
+import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoService;
+import org.springframework.data.mongodb.core.query.Query;
+
+
+import java.util.List;
 
 public interface MongoModelDaoService  extends ModelDaoService {
     /**
@@ -10,5 +15,31 @@ public interface MongoModelDaoService  extends ModelDaoService {
      * @param model
      * @throws BusinessException
      */
-    public void save(Object model) throws BusinessException;
+     void save(Object model) throws BusinessException;
+
+    /**
+     * 分页查询
+     *
+     * @param mongodbParamsDTO
+     * @throws BusinessException
+     */
+     PageVO pageQuery(MongodbParamsDTO mongodbParamsDTO) throws BusinessException;
+
+    /**
+     * 根据dto 查询
+     * @param mongodbParamsDTO
+     * @return
+     * @throws BusinessException
+     */
+     List findByDto(MongodbParamsDTO mongodbParamsDTO) throws BusinessException;
+
+
+    /**
+     * 根据query 查询
+     * @param query
+     * @return
+     * @throws BusinessException
+     */
+    List findByQuery(Query query) throws BusinessException;
+
 }

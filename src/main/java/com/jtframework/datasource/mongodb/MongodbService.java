@@ -231,6 +231,19 @@ public class MongodbService {
         return this.mongoTemplate.find(query, resultClass, getCollectionName(resultClass));
     }
 
+
+    /**
+     * 根据query查询
+     *
+     * @param resultClass
+
+     * @param <T>
+     * @return
+     */
+    public <T> List<T> findByQuery(Class<T> resultClass,Query query) {
+        return this.mongoTemplate.find(query, resultClass, getCollectionName(resultClass));
+    }
+
     /**
      * 根据kv简单查询
      *
@@ -240,7 +253,7 @@ public class MongodbService {
      * @param <T>
      * @return
      */
-    public <T> List<T> findByKV(Class<T> resultClass, String key, String value) {
+    public <T> List<T> findByKV(Class<T> resultClass, String key, Object value) {
         return this.mongoTemplate.find(createQuery().addCriteria(Criteria.where(key).is(value)), resultClass, getCollectionName(resultClass));
     }
 

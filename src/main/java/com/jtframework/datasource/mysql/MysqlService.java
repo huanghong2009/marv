@@ -91,11 +91,7 @@ public class MysqlService {
         }
     }
 
-    public <T> PageVO<T> pageQuery(Class<T> resultClass) throws SQLException {
-        MysqlQueryParams mysqlQueryParams = new MysqlQueryParams(resultClass);
-        mysqlQueryParams.limit(1, 10);
-        return pageQuery(resultClass, mysqlQueryParams);
-    }
+
 
     public <T> List<T> selectListAll(Class<T> resultClass) throws SQLException {
         String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass) + "`";
@@ -192,9 +188,9 @@ public class MysqlService {
      * @return
      * @throws SQLException
      */
-    public <T> List<T> selectListFromKV(Class<T> resultClass, String key, String value) throws SQLException {
+    public <T> List<T> selectListFromKV(Class<T> resultClass, String key, Object value) throws SQLException {
         String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass) + "` WHERE  `" + key + "` = ? ";
-        return selectList(resultClass, sql, new String[]{value});
+        return selectList(resultClass, sql, new Object[]{value});
     }
 
     /**
