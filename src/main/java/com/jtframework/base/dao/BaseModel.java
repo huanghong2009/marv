@@ -21,9 +21,8 @@ public class BaseModel implements Serializable, Cloneable {
 
     private String id;
 
-    private String _id;
 
-    /**
+    /*
      * 生成model的sql
      * :todo 后续配置mysql dataBase 扫描路径，判断有没有表，没有表执行建表语句
      */
@@ -66,19 +65,6 @@ public class BaseModel implements Serializable, Cloneable {
         sql = sql.substring(0, sql.length() - 1);
         sql += " )ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='" + serverModel.desc() + "表';";
         System.out.println(sql);
-    }
-
-    public String getId() {
-        if (BaseUtils.isBlank(id) && BaseUtils.isNotBlank(_id)) {
-            return _id;
-        }
-
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-        this._id = id;
     }
 
     public String toJson() {
