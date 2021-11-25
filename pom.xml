@@ -13,7 +13,7 @@
 
     <groupId>com.jtframework</groupId>
     <artifactId>marv</artifactId>
-    <version>16.6</version>
+    <version>17.3</version>
     <packaging>jar</packaging>
 
     <properties>

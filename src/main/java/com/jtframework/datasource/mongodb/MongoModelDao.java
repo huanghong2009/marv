@@ -28,6 +28,13 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     @Autowired
     MongoServiceInit mongoServiceInit;
 
+    private String collectionName;
+
+
+    public MongoModelDao(){
+        this.collectionName = BaseUtils.getServeModelValue(cls);
+    }
+
     public MongodbService getMongoService() {
         return null;
     }
@@ -100,9 +107,9 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
         try {
             if (BaseUtils.isNotBlank(mongodbParamsDTO.getSortFiled())) {
                 if (mongodbParamsDTO.isDesc()) {
-                    mongodbParamsDTO.getQuery().with(Sort.by(Sort.Order.asc(mongodbParamsDTO.getSortFiled())));
-                } else {
                     mongodbParamsDTO.getQuery().with(Sort.by(Sort.Order.desc(mongodbParamsDTO.getSortFiled())));
+                } else {
+                    mongodbParamsDTO.getQuery().with(Sort.by(Sort.Order.asc(mongodbParamsDTO.getSortFiled())));
                 }
             }
 
