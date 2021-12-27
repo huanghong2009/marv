@@ -12,14 +12,14 @@ import ${package}.service.dto.${name}Dto;
 * @date ${date}
 **/
 
-public interface ${name}MysqlService extends ModelDaoService {
+public interface ${name}Service extends ModelDaoService {
 
    /**
    * ${moduleName}分页查询
-   * @param ${changeClassName}DTO
+   * @param ${changeClassName}Dto
    * @return
    * @throws Exception
    */
-  PageVO<${name}Model> queryPage(${name}DTO ${changeClassName}DTO) throws Exception;
+  PageVO<${name}Model> queryPage(${name}Dto ${changeClassName}Dto) throws Exception;
 
 }

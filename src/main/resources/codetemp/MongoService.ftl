@@ -4,7 +4,7 @@ package ${package}.service;
 import com.jtframework.datasource.mongodb.MongoModelDaoService;
 import ${package}.model.${name}Model;
 import ${package}.service.dto.${name}Dto;
-
+import com.jtframework.base.query.PageVO;
 
 
 /**
@@ -13,15 +13,15 @@ import ${package}.service.dto.${name}Dto;
 **/
 
 
-public interface ${name}MongoService extends MongoModelDaoService {
+public interface ${name}Service extends MongoModelDaoService {
 
 
        /**
         * ${moduleName}分页查询
-        * @param ${changeClassName}DTO
+        * @param ${changeClassName}Dto
         * @return
         * @throws Exception
         */
-       PageVO<${name}Model> queryPage(${name}DTO ${changeClassName}DTO) throws Exception;
+       PageVO<${name}Model> queryPage(${name}Dto ${changeClassName}Dto) throws Exception;
 
 }

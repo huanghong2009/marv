@@ -9,6 +9,7 @@ import com.jtframework.datasource.mongodb.MongoModelDao;
 import com.jtframework.datasource.mongodb.MongodbService;
 import com.jtframework.utils.BaseUtils;
 import lombok.extern.slf4j.Slf4j;
+import com.jtframework.base.query.PageVO;
 
 /**
 * ${moduleName} 接口
@@ -18,26 +19,26 @@ import lombok.extern.slf4j.Slf4j;
 **/
 @Slf4j
 @Service
-public class ${name}MongoServiceImpl extends MongoModelDao<${name}Model>  implements ${name}Service {
+public class ${name}ServiceImpl extends MongoModelDao<${name}Model>  implements ${name}Service {
 
         /**
         * ${moduleName}分页查询
-        * @param ${changeClassName}DTO
+        * @param ${changeClassName}Dto
         * @return
         * @throws Exception
         */
         @Override
-         PageVO<${name}Model> queryPage(${name}DTO ${changeClassName}DTO) throws Exception {
+        public PageVO<${name}Model> queryPage(${name}Dto ${changeClassName}Dto) throws Exception {
 
 
 
-            if (BaseUtils.isBlank(${changeClassName}DTO.getSortFiled())) {
-                ${changeClassName}DTO.setSortFiled("createTime");
-                ${changeClassName}DTO.setDesc(true);
+            if (BaseUtils.isBlank(${changeClassName}Dto.getSortFiled())) {
+                ${changeClassName}Dto.setSortFiled("createTime");
+                ${changeClassName}Dto.setDesc(true);
             }
 
 
-            return pageQuery(empDTO);
+            return pageQuery(${changeClassName}Dto);
         }
 
 

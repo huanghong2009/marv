@@ -10,13 +10,14 @@ import com.jtframework.base.rest.BaseController;
 import com.jtframework.datasource.common.ModelDaoService;
 
 import com.jtframework.base.rest.ServerResponse;
-
+import lombok.extern.slf4j.Slf4j;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+import java.util.ArrayList;
 /**
 * ${moduleName}  接口
 * @author
@@ -40,14 +41,14 @@ public class ${name}Controller extends BaseController<${name}Model>{
      /**
      * 查询${moduleName}列表
      *
-     * @param ${changeClassName}DTO
+     * @param ${changeClassName}Dto
      * @return
      */
     @ApiOperation(value = "查询${moduleName}列表")
     @GetMapping("/query_page")
-    public ServerResponse queryPage(${name}DTO ${changeClassName}DTO) {
+    public ServerResponse queryPage(${name}Dto ${changeClassName}Dto) {
         try {
-            return ServerResponse.succeed("查询${moduleName}列表成功", ${changeClassName}Service.queryPage(${changeClassName}DTO) );
+            return ServerResponse.succeed("查询${moduleName}列表成功", ${changeClassName}Service.queryPage(${changeClassName}Dto) );
         } catch (Exception e) {
             e.printStackTrace();
             return ServerResponse.error("查询${moduleName}列表失败", e.getMessage());

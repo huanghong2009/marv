@@ -18,9 +18,8 @@ package com.jtframework.utils;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.extra.template.*;
 import com.jtframework.base.dao.BaseModel;
-import com.jtframework.utils.test.ProductModel;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.ObjectUtils;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -43,39 +42,41 @@ import java.util.Map;
 public class GenUtil {
 
 
-
     /**
      * 获取后端代码模板名称
      *
      * @return List
      */
-    private static List<String> getAdminTemplateNames() {
+    private static List<String> getAdminTemplateNames(Type type) {
         List<String> templateNames = new ArrayList<>();
         templateNames.add("Dto");
         templateNames.add("Controller");
-        templateNames.add("MysqlService");
-        templateNames.add("MysqlServiceImpl");
-        templateNames.add("MongoService");
-        templateNames.add("MongoServiceImpl");
+        if (type.equals(Type.MYSQL)) {
+            templateNames.add("MysqlService");
+            templateNames.add("MysqlServiceImpl");
+        } else {
+            templateNames.add("MongoService");
+            templateNames.add("MongoServiceImpl");
+        }
+
         return templateNames;
     }
 
 
-
-
     /**
      * 代码生成
+     *
      * @throws IOException
      */
-    public static void generatorCode(Class<? extends BaseModel> clazz) throws IOException {
-        Map<String, Object> genMap = getGenMap(clazz);
+    public static void generatorCode(Class<? extends BaseModel> clazz, Type type) throws IOException {
+        Map<String, Object> genMap = getGenMap(clazz, type);
         TemplateEngine engine = TemplateUtil.createEngine(new TemplateConfig("codetemp", TemplateConfig.ResourceMode.CLASSPATH));
         // 生成后端代码
-        List<String> templates = getAdminTemplateNames();
+        List<String> templates = getAdminTemplateNames(type);
         for (String templateName : templates) {
-            Template template = engine.getTemplate( templateName + ".ftl");
+            Template template = engine.getTemplate(templateName + ".ftl");
 
-            String filePath = getAdminFilePath(templateName,  genMap.get("name").toString(), genMap.get("package").toString());
+            String filePath = getAdminFilePath(templateName, genMap.get("name").toString(), genMap.get("package").toString());
             assert filePath != null;
             File file = new File(filePath);
 
@@ -87,12 +88,12 @@ public class GenUtil {
     }
 
     // 获取模版数据
-    private static Map<String, Object> getGenMap(Class<? extends BaseModel> clazz) {
+    private static Map<String, Object> getGenMap(Class<? extends BaseModel> clazz, Type type) {
         // 存储模版字段数据
         Map<String, Object> genMap = new HashMap<>();
 
         String classPackPath = clazz.getPackage().getName();
-        String upperStoryPackPath = classPackPath.substring(0,classPackPath.lastIndexOf("."));
+        String upperStoryPackPath = classPackPath.substring(0, classPackPath.lastIndexOf("."));
         genMap.put("moduleName", BaseUtils.getServeModelDesc(clazz));
 
         // 包名称
@@ -101,14 +102,12 @@ public class GenUtil {
         genMap.put("date", LocalDate.now().toString());
 
 
-
-
         String className = clazz.getSimpleName();
 
-        String name = className.indexOf("Model")== -1 ? className : className.substring(0,className.indexOf("Model"));
+        String name = className.indexOf("Model") == -1 ? className : className.substring(0, className.indexOf("Model"));
 
         // 保存类名
-        genMap.put("name",name);
+        genMap.put("name", name);
 
 
         // 小写开头的类名
@@ -117,31 +116,38 @@ public class GenUtil {
         // 保存小写开头的类名
         genMap.put("changeClassName", changeClassName);
 
+        if (type.equals(Type.MONGODB)) {
+            genMap.put("dtoType", "MongodbParamsDTO");
+        } else {
+            genMap.put("dtoType", "ParamsDTO");
+        }
+
         return genMap;
     }
 
     /**
      * 获取类的路径
+     *
      * @param clazz
      * @return
      */
     private static String getResourcePath(Class<? extends BaseModel> clazz) {
         String className = clazz.getName();
-        String classNamePath = className.replace(".","/") + ".class";
+        String classNamePath = className.replace(".", "/") + ".class";
         URL is = GenUtil.class.getClassLoader().getResource(classNamePath);
         String path = is.getFile();
-        path = StringUtils.replace(path,"%20"," ");
+        path = StringUtils.replace(path, "%20", " ");
 
-        return StringUtils.removeStart(path,"/");
+        return StringUtils.removeStart(path, "/");
     }
 
     /**
      * 定义后端文件路径以及名称
      */
-    private static String getAdminFilePath(String templateName,  String name, String packPath) {
+    private static String getAdminFilePath(String templateName, String name, String packPath) {
         String rootPath = System.getProperty("user.dir");
 
-        String packagePath = rootPath+ File.separator+"src"+File.separator+"main"+File.separator+packPath.replace(".", File.separator) + File.separator;
+        String packagePath = rootPath + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + packPath.replace(".", File.separator) + File.separator;
 
 
         if ("Controller".equals(templateName)) {
@@ -149,25 +155,24 @@ public class GenUtil {
         }
 
         if ("MysqlService".equals(templateName)) {
-            return packagePath + "service" + File.separator + name + "MysqlService.java";
+            return packagePath + "service" + File.separator + name + "Service.java";
         }
 
         if ("MysqlServiceImpl".equals(templateName)) {
-            return packagePath + "service" + File.separator + "impl" + File.separator + name + "MysqlServiceImpl.java";
+            return packagePath + "service" + File.separator + "impl" + File.separator + name + "ServiceImpl.java";
         }
 
         if ("MongoService".equals(templateName)) {
-            return packagePath + "service" + File.separator + name + "MongoService.java";
+            return packagePath + "service" + File.separator + name + "Service.java";
         }
 
         if ("MongoServiceImpl".equals(templateName)) {
-            return packagePath + "service" + File.separator + "impl" + File.separator + name + "MongoServiceImpl.java";
+            return packagePath + "service" + File.separator + "impl" + File.separator + name + "ServiceImpl.java";
         }
 
         if ("Dto".equals(templateName)) {
             return packagePath + "service" + File.separator + "dto" + File.separator + name + "Dto.java";
         }
-
 
 
         return null;
@@ -176,6 +181,7 @@ public class GenUtil {
 
     /**
      * 根据模板生成文件
+     *
      * @param file
      * @param template
      * @param map
@@ -197,7 +203,19 @@ public class GenUtil {
     }
 
 
-    public static void main(String[] args) throws IOException {
-        generatorCode(ProductModel.class);
+    public enum Type {
+        MYSQL("mysql"),
+
+        MONGODB("mongodb");
+
+        private String desc;
+
+        Type(String field) {
+            this.desc = field;
+        }
+
+        public String getState() {
+            return desc;
+        }
     }
 }

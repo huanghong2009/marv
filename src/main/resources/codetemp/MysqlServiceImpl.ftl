@@ -21,7 +21,7 @@ import com.jtframework.utils.BaseUtils;
 **/
 @Service
 @Slf4j
-public class ${name}MysqlServiceImpl extends MysqlModelDao<${name}Model>  implements ${name}Service {
+public class ${name}ServiceImpl extends MysqlModelDao<${name}Model>  implements ${name}Service {
 
 
     /**
