@@ -16,6 +16,7 @@
 package com.jtframework.utils;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.extra.template.*;
 import com.jtframework.base.dao.BaseModel;
 
@@ -25,6 +26,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -120,6 +122,24 @@ public class GenUtil {
             genMap.put("dtoType", "MongodbParamsDTO");
         } else {
             genMap.put("dtoType", "ParamsDTO");
+        }
+
+        genMap.put("hasName", "N");
+        genMap.put("hasType", "N");
+        genMap.put("hasState", "N");
+        genMap.put("hasStatus", "N");
+
+        for (Field field : ReflectUtil.getFields(clazz)) {
+            String filedName = ReflectUtil.getFieldName(field);
+            if (filedName.equals("name")) {
+                genMap.put("hasName", "Y");
+            } else if (filedName.equals("type")) {
+                genMap.put("hasType", "Y");
+            } else if (filedName.equals("state")) {
+                genMap.put("hasState", "Y");
+            } else if (filedName.equals("status")) {
+                genMap.put("hasStatus", "Y");
+            }
         }
 
         return genMap;
