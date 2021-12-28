@@ -2,7 +2,6 @@ package com.jtframework.datasource.mysql8_nosql;
 
 
 import com.jtframework.utils.BaseUtils;
-import com.mysql.cj.xdevapi.ClientFactory;
 import com.mysql.cj.xdevapi.Session;
 import com.mysql.cj.xdevapi.SessionFactory;
 import lombok.extern.slf4j.Slf4j;

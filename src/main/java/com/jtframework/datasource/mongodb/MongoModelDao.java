@@ -17,6 +17,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 @Slf4j
@@ -198,6 +199,17 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     public long delete(String id) throws BusinessException {
         try {
             return (int) getDao().removeById(cls, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("删除" + this.name + "失败");
+        }
+    }
+
+    @Override
+    public long delete(Set id) throws Exception {
+        try {
+            return (int) getDao().removeByIds(cls, id);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());

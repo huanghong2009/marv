@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 @Slf4j
@@ -324,6 +325,23 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
         }
 
 
+    }
+
+    @Override
+    public long delete(Set id) throws Exception {
+        Session session = getSession();
+        try {
+
+            String str = "(" + id + ")";
+            Result result = getCollection(session).remove("_id in " + str).execute();
+            return result.getAffectedItemsCount();
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("删除" + this.name + "失败");
+        } finally {
+            session.close();
+        }
     }
 
     @Override

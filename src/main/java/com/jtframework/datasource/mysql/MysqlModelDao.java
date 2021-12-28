@@ -93,6 +93,17 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
     @Override
+    public long delete(Set id) throws Exception {
+        try {
+            return getDao().delete(cls, id);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("删除" + this.name + "失败");
+        }
+    }
+
+    @Override
     public long delete(List id) throws BusinessException {
         try {
             return getDao().delete(cls, id);

@@ -8,6 +8,7 @@ import com.jtframework.base.query.ParamsDTO;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface ModelDaoService<T extends BaseModel> {
 
@@ -28,6 +29,8 @@ public interface ModelDaoService<T extends BaseModel> {
 
 
     public long delete(List<String> id) throws Exception;
+
+    public long delete(Set<String> id) throws Exception;
 
     public List<T> selectAll() throws Exception;
 
