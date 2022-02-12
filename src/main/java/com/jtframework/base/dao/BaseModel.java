@@ -2,7 +2,7 @@ package com.jtframework.base.dao;
 
 import com.alibaba.fastjson.JSONObject;
 import com.jtframework.utils.BaseUtils;
-import com.jtframework.utils.DocletUtils;
+
 import lombok.Data;
 
 import java.io.Serializable;
@@ -28,6 +28,7 @@ public class BaseModel implements Serializable, Cloneable {
      */
     public static void generateMysqlCreateTableSql(Class<? extends BaseModel> cls) throws NoSuchFieldException, IllegalAccessException {
         System.out.println("正在生成建表语句");
+
 
         ServerModel serverModel = (ServerModel) cls.getAnnotation(ServerModel.class);
         String sql = "CREATE TABLE `" + serverModel.value() + "` (  \r\n";
@@ -62,7 +63,9 @@ public class BaseModel implements Serializable, Cloneable {
             }
             sql += "DEFAULT NULL COMMENT '" + serverField.name() + "',\r\n";
         }
+
         sql = sql.substring(0, sql.length() - 1);
+
         sql += " )ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='" + serverModel.desc() + "表';";
         System.out.println(sql);
     }
