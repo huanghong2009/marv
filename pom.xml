@@ -22,8 +22,11 @@
         <swaager2.version>3.0.0</swaager2.version>
         <log4j.version>1.2.17</log4j.version>
 
+
+        <fastjson.version>1.2.78</fastjson.version>
+
         <lombok.version>1.18.22</lombok.version>
-        <fastjson.version>1.2.62</fastjson.version>
+
 
         <cglib.version>3.3.0</cglib.version>
         <myspingboot.version>2.2.10.RELEASE</myspingboot.version>
@@ -32,7 +35,6 @@
 
 
     <dependencies>
-
 
 
         <dependency>

@@ -1,6 +1,7 @@
 package com.jtframework.base.dao;
 
 import com.alibaba.fastjson.JSONObject;
+import com.jtframework.utils.BaseUtils;
 
 import lombok.Data;
 
@@ -63,7 +64,7 @@ public class BaseModel implements Serializable, Cloneable {
             sql += "DEFAULT NULL COMMENT '" + serverField.name() + "',\r\n";
         }
 
-        sql = sql.substring(0,sql.length()-1);
+        sql = sql.substring(0, sql.length() - 1);
 
         sql += " )ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='" + serverModel.desc() + "表';";
         System.out.println(sql);
