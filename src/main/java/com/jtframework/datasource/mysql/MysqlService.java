@@ -627,6 +627,23 @@ public class MysqlService {
         return selectOne(resultClass, "SELECT * FROM " + (serverModel != null ? serverModel.value() : resultClass.getName()) + " WHERE ID=?", (Object[]) (new String[]{id}));
     }
 
+
+    /**
+     * 批量根据id查询
+     * @param resultClass
+     * @param ids
+     * @param <T>
+     * @return
+     * @throws SQLException
+     */
+    public <T> List<T>  load(Class<T> resultClass, Set<String> ids) throws SQLException {
+        ServerModel serverModel = resultClass.getAnnotation(ServerModel.class);
+        String sql = "SELECT * FROM " + (serverModel != null ? serverModel.value() : resultClass.getName()) + " WHERE ID IN (:IDS)";
+        return selectList(resultClass,sql,new HashMap<String, Object>(){{
+            put("IDS",ids);
+        }});
+    }
+
     public <T> T selectOne(Class<T> resultClass, String sql) throws SQLException {
         return selectOne(resultClass, sql, (Object[]) null);
     }

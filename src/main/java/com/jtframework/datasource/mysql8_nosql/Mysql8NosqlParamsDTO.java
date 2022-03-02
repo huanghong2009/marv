@@ -1,6 +1,7 @@
 package com.jtframework.datasource.mysql8_nosql;
 
 import com.jtframework.base.query.ParamsDTO;
+import io.swagger.annotations.ApiModel;
 import lombok.Data;
 
 import java.util.ArrayList;

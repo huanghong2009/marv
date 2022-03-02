@@ -1,8 +1,7 @@
 package com.jtframework.datasource.mongodb;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jtframework.base.query.ParamsDTO;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -14,8 +13,7 @@ public class MongodbParamsDTO extends ParamsDTO {
     /**
      * 查询sql
      */
-    @JsonIgnore
-    @ApiModelProperty(hidden=true)
+    @Schema(hidden = true)
     private Query query;
 
     private static final String patternLikeStr = "^.*%s.*$";

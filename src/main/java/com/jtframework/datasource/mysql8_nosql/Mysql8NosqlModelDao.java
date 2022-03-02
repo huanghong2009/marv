@@ -309,6 +309,16 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
 
     }
 
+    /**
+     * 根据id批量查询
+     *
+     * @param ids
+     */
+    @Override
+    public List load(Set ids) throws Exception {
+        return null;
+    }
+
     @Override
     @CheckParam()
     public long delete(String id) throws Exception {

@@ -4,7 +4,6 @@ import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
-import com.jtframework.base.query.ParamsDTO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import com.jtframework.utils.BaseUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -194,6 +193,22 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
         }
     }
 
+    /**
+     * 根据id批量查询
+     *
+     * @param ids
+     */
+    @Override
+    public List load(Set ids) throws BusinessException {
+        try {
+            return getDao().findById(cls,ids);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("批量查询" + this.name + "失败");
+        }
+    }
+
     @Override
     @CheckParam
     public long delete(String id) throws BusinessException {
@@ -207,7 +222,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     }
 
     @Override
-    public long delete(Set id) throws Exception {
+    public long delete(Set id) throws BusinessException {
         try {
             return (int) getDao().removeByIds(cls, id);
         } catch (Exception e) {
@@ -218,7 +233,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     }
 
     @Override
-    public long delete(List ids) throws Exception {
+    public long delete(List ids) throws BusinessException {
         try {
             return (int) getDao().removeByIds(cls, ids);
         } catch (Exception e) {
@@ -330,7 +345,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      * @throws SQLException
      */
     @Override
-    public long updateKVById(String id, String key, Object value) throws SQLException {
+    public long updateKVById(String id, String key, Object value) throws BusinessException {
         try {
             Update update = new Update();
             update.set(key, value);
@@ -350,7 +365,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      * @throws SQLException
      */
     @Override
-    public long updateMapByMap(Map whereParmas, Map updateParmas) throws Exception {
+    public long updateMapByMap(Map whereParmas, Map updateParmas) throws BusinessException {
         try {
             Update update = new Update();
             for (Object pk : updateParmas.keySet()) {
@@ -381,7 +396,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      * @throws SQLException
      */
     @Override
-    public long updateMapById(String id, Map updateParmas) throws Exception {
+    public long updateMapById(String id, Map updateParmas) throws BusinessException {
         try {
             Update update = new Update();
             for (Object pk : updateParmas.keySet()) {

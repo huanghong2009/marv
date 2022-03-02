@@ -16,10 +16,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * mongodb curd 工具类
@@ -318,6 +315,17 @@ public class MongodbService {
 
     public <T> T findById(Class<T> resultClass, String id) {
         return this.mongoTemplate.findById(id, resultClass, getCollectionName(resultClass));
+    }
+
+    /**
+     * 根据id查询
+     * @param resultClass
+     * @param ids
+     * @param <T>
+     * @return
+     */
+    public <T> List<T> findById(Class<T> resultClass, Set<String> ids) {
+        return this.mongoTemplate.find(createQuery().addCriteria(Criteria.where("_id").in(ids)), resultClass, getCollectionName(resultClass));
     }
 
     public void insert(Object model) {

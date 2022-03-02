@@ -25,6 +25,12 @@ public interface ModelDaoService<T extends BaseModel> {
 
     public <T> T load(String id) throws Exception;
 
+
+    /**
+     * 根据id批量查询
+     */
+    public List<T> load(Set<String> ids) throws Exception;
+
     public long delete(String id) throws Exception;
 
 

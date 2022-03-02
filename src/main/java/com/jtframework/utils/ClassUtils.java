@@ -159,7 +159,12 @@ public class ClassUtils {
             Object value = ReflectUtil.getFieldValue(obj, field);
             Class type = field.getType();
             if (value == null) {
-                result.put(ReflectUtil.getFieldName(field), value);
+                if (BaseUtils.isBlank(objName)) {
+                    result.put(ReflectUtil.getFieldName(field), value);
+                } else {
+                    result.put(objName + "." +ReflectUtil.getFieldName(field), value);
+                }
+
             } else {
                 /**
                  * 判断是不是常用类型
@@ -183,7 +188,12 @@ public class ClassUtils {
                 } else if (Map.class.isAssignableFrom(type)) {
                     continue;
                 } else {
-                    getObjectFiledValue(ReflectUtil.getFieldName(field), value, result, num + 1);
+                    if (BaseUtils.isBlank(objName)) {
+                        getObjectFiledValue(ReflectUtil.getFieldName(field), value, result, num + 1);
+                    } else {
+                        getObjectFiledValue(objName + "." + ReflectUtil.getFieldName(field), value, result, num + 1);
+                    }
+
                 }
             }
         }
@@ -209,15 +219,13 @@ public class ClassUtils {
                     || args[i] instanceof LocalDate) {
                 argAllFiledsMap.put(argNames[i], args[i]);
             } else {
-                Map<String, Object> objFileddMap = ClassUtils.getObjectFiledValue(args[i]);
-                for (String key : objFileddMap.keySet()) {
-                    argAllFiledsMap.put(argNames[i] + "." + key, objFileddMap.get(key));
-                }
+                return ClassUtils.getObjectFiledValue(args[i], argNames[i]);
             }
         }
 
         return argAllFiledsMap;
     }
+
 
     /**
      * 获取对象的属性，最多递归2层
@@ -225,9 +233,11 @@ public class ClassUtils {
      * @param obj
      * @return
      */
-    public static Map<String, Object> getObjectFiledValue(Object obj) {
-        return getObjectFiledValue(null, obj, new HashMap<String, Object>(), 0);
+    public static Map<String, Object> getObjectFiledValue(Object obj, String name) {
+        return getObjectFiledValue(name, obj, new HashMap<String, Object>(), 0);
     }
+
+
 
     /**
      * 获取利用反射获取类里面的值和名称
@@ -262,7 +272,7 @@ public class ClassUtils {
      * @throws NoSuchFieldException
      */
     public static Object getPrivateProperty(Object object, String propertyName) {
-        return ReflectUtil.getFieldValue(object,propertyName);
+        return ReflectUtil.getFieldValue(object, propertyName);
     }
 
     /**

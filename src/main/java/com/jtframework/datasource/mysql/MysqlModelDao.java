@@ -3,8 +3,6 @@ package com.jtframework.datasource.mysql;
 import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.CheckParam;
-import com.jtframework.base.query.PageVO;
-import com.jtframework.base.query.ParamsDTO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import com.jtframework.utils.BaseUtils;
 import lombok.Data;
@@ -12,7 +10,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Data
 @Slf4j
@@ -124,6 +125,22 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("修改" + this.name + "失败");
+        }
+    }
+
+    /**
+     * 根据id批量查询
+     *
+     * @param ids
+     */
+    @Override
+    public List load(Set ids) throws Exception {
+        try {
+            return getDao().load(cls,ids);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("批量查询" + this.name + "失败");
         }
     }
 
