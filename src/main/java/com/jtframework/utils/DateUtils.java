@@ -310,6 +310,12 @@ public class DateUtils {
         return day + "";
     }
 
+    /**
+     * 获取两个日期相减的秒数
+     * @param dateStartStr
+     * @param dateEndStr
+     * @return
+     */
     public static long getDiffSecond(String dateStartStr, String dateEndStr) {
         SimpleDateFormat myFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         long num = 0L;

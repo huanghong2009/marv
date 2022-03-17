@@ -1,14 +1,20 @@
 package com.jtframework.utils;
 
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IoUtil;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.conn.ConnectionPoolTimeoutException;
+import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.HttpMultipartMode;
@@ -20,7 +26,11 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Map;
@@ -32,17 +42,97 @@ import java.util.Map;
 @Slf4j
 public class HttpClientUtils {
 
-    //封装POST方法
+    /**
+     * post请求
+     * @param url
+     * @param params
+     * @return
+     * @throws Exception
+     */
     public static JSONObject post(String url, JSONObject params) throws Exception{
+        return JSONObject.parseObject(EntityUtils.toString(executePost(url,params), "UTF-8"));
+    }
+
+
+    /**
+     * 获取数据流
+     *
+     * @param url
+     * @param paraMap
+     * @return
+     */
+    public static byte[] doImgPost(String url, JSONObject  paraMap) throws Exception{
+        byte[] result = null;
+        HttpPost httpPost = new HttpPost(url);
+        httpPost.addHeader("Content-Type", "application/json");
+        try {
+            // 设置请求的参数
+            JSONObject postData = new JSONObject();
+            for (Map.Entry<String, Object> entry : paraMap.entrySet()) {
+                postData.put(entry.getKey(), entry.getValue());
+            }
+            httpPost.setEntity(new StringEntity(postData.toString(), "UTF-8"));
+            HttpClient httpClient = HttpClientBuilder.create().build();
+            HttpResponse response = httpClient.execute(httpPost);
+            HttpEntity entity = response.getEntity();
+            entity = new BufferedHttpEntity(entity);
+
+            result = EntityUtils.toByteArray(entity);
+        } catch (ConnectionPoolTimeoutException e) {
+            e.printStackTrace();
+            throw new Exception("请求图片出错");
+        } catch (ConnectTimeoutException e) {
+            e.printStackTrace();
+            throw new Exception("请求图片出错");
+        } catch (SocketTimeoutException e) {
+            e.printStackTrace();
+            throw new Exception("请求图片出错");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("请求图片出错");
+        } finally {
+            httpPost.releaseConnection();
+        }
+        return result;
+    }
+
+
+
+
+    /**
+     * 执行post请求
+     * @param url
+     * @param params
+     * @param
+     * @return
+     * @throws Exception
+     */
+    public static HttpEntity executePost(String url, JSONObject params) throws Exception{
+        return executePost(url,params,false);
+    }
+
+    /**
+     * 执行post请求
+     * @param url
+     * @param params
+     * @param isDownloadFile 是否是文件
+     * @return
+     * @throws Exception
+     */
+    public static HttpEntity executePost(String url, JSONObject params,boolean isDownloadFile) throws Exception{
         String entityStr = null;
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         try {
             //把参数放入请求体中
-            StringEntity se = new StringEntity(params.toJSONString(), "UTF-8");
+            StringEntity entity = new StringEntity(params.toJSONString(), "UTF-8");
+
+            if (isDownloadFile){
+                entity.setContentType("image/png");
+            }
 
             HttpPost httpPost = new HttpPost(url);
 
-            httpPost.setEntity(se);
+            httpPost.setEntity(entity);
             //发起请求
             CloseableHttpResponse response = httpClient.execute(httpPost);
             //获取返回状态，并判断是否连接成功。
@@ -52,13 +142,7 @@ public class HttpClientUtils {
                 log.error("连接异常");
             }
             // 获得响应的实体对象
-            HttpEntity entity = response.getEntity();
-
-            //转换成字符串
-            entityStr = EntityUtils.toString(entity, "UTF-8");
-
-
-            return JSONObject.parseObject(entityStr);
+            return response.getEntity();
         } catch (Exception e) {
             log.error("Http协议异常:{}",e.getMessage());
             e.printStackTrace();
@@ -70,8 +154,11 @@ public class HttpClientUtils {
                 e.printStackTrace();
             }
         }
-
     }
+
+
+
+
     /**
      * 上传文件
      * @param url 路径
@@ -140,7 +227,38 @@ public class HttpClientUtils {
         }
     }
 
+
+    /**
+     * 执行get请求
+     * @return
+     */
+    public static JSONObject get(String url) throws Exception {
+        return get(url,null);
+    }
+
+
+    /**
+     * 执行get请求
+     * @return
+     */
     public static JSONObject get(String url, Map<String, String> params) throws Exception {
+        return JSONObject.parseObject(executeGet(url,params));
+    }
+
+    /**
+     * 执行get请求
+     * @return
+     */
+    public static  String executeGet(String url)throws Exception {
+        return executeGet(url,null);
+    }
+
+
+    /**
+     * 执行get请求
+     * @return
+     */
+    public static String executeGet(String url, Map<String, String> params)throws Exception {
         CloseableHttpResponse response = null;
         String entityStr = null;
         try {
@@ -170,7 +288,7 @@ public class HttpClientUtils {
             //关闭请求
             httpClient.close();
 
-            return JSONObject.parseObject(entityStr);
+            return entityStr;
         } catch (Exception e) {
             log.error("Http协议调用异常:{}",e.getMessage());
             e.printStackTrace();

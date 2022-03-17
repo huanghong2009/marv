@@ -49,13 +49,13 @@ public final class BaseUtils {
      * 将List<String>集合 转化为String
      * 如{"aaa","bbb"} To 'aaa','bbb'
      */
-    public static String convertListToString(List<String> strlist){
+    public static String convertListToString(List<String> strlist) {
         StringBuffer sb = new StringBuffer();
-        if(CollectionUtils.isNotEmpty(strlist)){
-            for (int i=0;i<strlist.size();i++) {
-                if(i==0){
+        if (CollectionUtils.isNotEmpty(strlist)) {
+            for (int i = 0; i < strlist.size(); i++) {
+                if (i == 0) {
                     sb.append("'").append(strlist.get(i)).append("'");
-                }else{
+                } else {
                     sb.append(",").append("'").append(strlist.get(i)).append("'");
                 }
             }
@@ -145,6 +145,51 @@ public final class BaseUtils {
             BigDecimal b2 = new BigDecimal(v2);
             return b1.divide(b2, scale, 4).doubleValue();
         }
+    }
+
+
+    /**
+     * 保存图片
+     *
+     * @param instreams
+     * @param fileName
+     * @return
+     */
+    public static File readInpuStreamToFile(InputStream instreams, String fileName) throws Exception {
+        if (instreams == null || BaseUtils.isBlank(fileName)) {
+            throw new Exception("缺少必要参数");
+        }
+
+        return readInpuStreamToFile(instreams, new File(fileName));
+    }
+
+
+    /**
+     * 保存图片
+     *
+     * @param instreams
+     * @param file
+     * @return
+     */
+    public static File readInpuStreamToFile(InputStream instreams, File file) throws Exception {
+        if (instreams == null || null == file) {
+            throw new Exception("缺少必要参数");
+        }
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            byte[] b = new byte[1024];
+            int nRead = 0;
+            while ((nRead = instreams.read(b)) != -1) {
+                fos.write(b, 0, nRead);
+            }
+            fos.flush();
+            fos.close();
+            return file;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("读取流失败:" + e.getMessage() + "...");
+        }
+
     }
 
 
