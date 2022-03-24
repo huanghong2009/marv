@@ -1,11 +1,10 @@
 package com.jtframework.utils;
 import org.apache.commons.codec.binary.Base32;
 
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -16,9 +15,26 @@ public class OtpAuthUtils {
      * 获取秘钥
      * @return
      */
+    public static String getRandomSecretKey(byte[] bytes) {
+        if (bytes.length < 20){
+            byte[] bytesNew = new byte[20-bytes.length];
+            SecureRandom random = new SecureRandom();
+            random.nextBytes(bytesNew);
+            bytes=BaseUtils.addBytes(bytes,bytesNew);
+        }
+        Base32 base32 = new Base32();
+        String secretKey = base32.encodeToString(bytes);
+        return secretKey.toUpperCase(); // .replaceAll("(.{4})(?=.{4})", "$1 ");
+    }
+
+    /**
+     * 获取秘钥
+     * @return
+     */
     public static String getRandomSecretKey() {
         SecureRandom random = new SecureRandom();
         byte[] bytes = new byte[20];
+
         random.nextBytes(bytes);
         Base32 base32 = new Base32();
         String secretKey = base32.encodeToString(bytes);
