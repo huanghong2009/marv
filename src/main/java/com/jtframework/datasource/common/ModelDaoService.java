@@ -86,6 +86,14 @@ public interface ModelDaoService<T extends BaseModel> {
      */
     long updateKVById(String id, String key, Object value) throws Exception;
 
+
+    /**
+     * 根据key value 修改一个key value
+     *
+     * @throws SQLException
+     */
+    long updateKVByKV(String whereKey,String whereValue, String updateKey, Object updateValue) throws Exception;
+
     /**
      * 根据id 修改一个key value
      *

@@ -585,6 +585,20 @@ public class Mysql8NosqlModelDao<T extends BaseModel> extends ModelDaoServiceImp
     }
 
     /**
+     * 根据key value 修改一个key value
+     *
+     * @param whereKey
+     * @param whereValue
+     * @param updateKey
+     * @param updateValue
+     * @throws SQLException
+     */
+    @Override
+    public long updateKVByKV(String whereKey, String whereValue, String updateKey, Object updateValue) throws Exception {
+        return 0;
+    }
+
+    /**
      * 根据map 修改一个mao
      *
      * @param whereParmas

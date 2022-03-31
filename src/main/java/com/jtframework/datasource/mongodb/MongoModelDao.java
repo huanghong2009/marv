@@ -358,6 +358,33 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     }
 
     /**
+     * 根据key value 修改一个key value
+     *
+     * @param whereKey
+     * @param whereValue
+     * @param updateKey
+     * @param updateValue
+     * @throws SQLException
+     */
+    @Override
+    public long updateKVByKV(String whereKey, String whereValue, String updateKey, Object updateValue) throws Exception {
+        try {
+            Update update = new Update();
+            update.set(updateKey,updateValue);
+
+
+            Query query = new Query();
+            query.addCriteria((new Criteria(whereKey)).is(whereValue));
+
+            return (int) getDao().updateMulti(query, update, this.cls);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("修改" + this.name + "失败");
+        }
+    }
+
+    /**
      * 根据map 修改一个mao
      *
      * @param whereParmas

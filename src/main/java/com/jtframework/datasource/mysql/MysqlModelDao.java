@@ -260,6 +260,30 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
     /**
+     * 根据key value 修改一个key value
+     *
+     * @param whereKey
+     * @param whereValue
+     * @param updateKey
+     * @param updateValue
+     * @throws SQLException
+     */
+    @Override
+    public long updateKVByKV(String whereKey, String whereValue, String updateKey, Object updateValue) throws Exception {
+        try {
+            return getDao().update(this.cls,new HashMap<String, Object>(){{
+                put(whereKey,whereValue);
+            }},new HashMap<String, Object>(){{
+                put(updateKey,updateValue);
+            }});
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("修改" + this.name + "失败");
+        }
+    }
+
+    /**
      * 根据map 修改一个mao
      *
      * @param whereParmas
