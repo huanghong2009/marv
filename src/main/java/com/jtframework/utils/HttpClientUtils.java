@@ -1,7 +1,5 @@
 package com.jtframework.utils;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.IoUtil;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
@@ -26,10 +24,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
