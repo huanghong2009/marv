@@ -22,12 +22,13 @@ import org.springframework.core.io.ClassPathResource;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Enumeration;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Zheng Jie
@@ -218,5 +219,50 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         } catch (Exception e) {
             return "";
         }
+    }
+
+
+    /**
+     * 获取中文变量命名(第一个首字母小写，第二个是首字母大写的)
+     * @return
+     * @throws Exception
+     */
+    public static String[] getZhWordName(String word)throws Exception{
+        word = word.replace("'s","");
+        String[] words=word.split(" ");
+        ArrayList<String> wordList = new ArrayList<>();
+        for (String str : words) {
+            if (!str.toLowerCase(Locale.ROOT).equals("the")){
+                wordList.add(str);
+            }
+        }
+
+        word = String.join("_",wordList);
+        String[] result = new String[2];
+        result[0] = StringUtils.toCamelCase(word);
+        result[1] = StringUtils.toCapitalizeCamelCase(word);
+        return result;
+    }
+
+    /**
+     * 判断是不是数字
+     * @param str
+     * @return
+     */
+    public static boolean isNumeric(String str) {
+    // 该正则表达式可以匹配所有的数字 包括负数
+        Pattern pattern = Pattern.compile("-?[0-9]+(\\.[0-9]+)?");
+        String bigStr;
+        try {
+            bigStr = new BigDecimal(str).toString();
+        } catch (Exception e) {
+            return false;//异常 说明包含非数字。
+        }
+
+        Matcher isNum = pattern.matcher(bigStr); // matcher是全匹配
+        if (!isNum.matches()) {
+            return false;
+        }
+        return true;
     }
 }

@@ -18,21 +18,23 @@ package com.jtframework.utils;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.extra.template.*;
+import cn.hutool.poi.excel.ExcelUtil;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.event.AnalysisEventListener;
+import com.alibaba.excel.exception.ExcelAnalysisStopException;
+import com.alibaba.excel.read.metadata.ReadSheet;
 import com.jtframework.base.dao.BaseModel;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.logging.SimpleFormatter;
 
 /**
  * 代码生成
@@ -85,9 +87,155 @@ public class GenUtil {
             // 生成代码
             genFile(file, template, genMap);
         }
-
-
     }
+
+    /**
+     * 根据excel 模板，生成model代码
+     *
+     * @throws IOException
+     */
+    public static void generatorModelCodeByExcel(File excelFile) throws IOException {
+        generatorModelCodeByExcel(excelFile, 0);
+    }
+
+
+    /**
+     * 根据excel 模板，生成model代码
+     *
+     * @throws IOException
+     */
+    public static void generatorModelCodeByExcel(InputStream inputStream, String packPath) throws Exception {
+        generatorModelCodeByExcel(inputStream, 0, packPath);
+    }
+
+    /**
+     * 根据excel 模板，生成model代码
+     *
+     * @throws IOException
+     */
+    public static void generatorModelCodeByExcel(InputStream inputStream, int sheetIndex, String packPath) throws Exception {
+        ByteArrayOutputStream baos = BaseUtils.cloneInputStream(inputStream);
+        InputStream cpInput1 = new ByteArrayInputStream(baos.toByteArray());
+        InputStream cpInput2 = new ByteArrayInputStream(baos.toByteArray());
+        inputStream.close();
+        ExcelReadListener excelReadListener = new ExcelReadListener();
+
+        ExcelFileUtils.readExcel(cpInput1, null, sheetIndex, excelReadListener);
+        genExcelModelCode(excelReadListener, cpInput2, sheetIndex, packPath);
+    }
+
+
+    /**
+     * 拼装数据(sheet 名称最好是中文)
+     * 1：获取列
+     *
+     * @param excelReadListener
+     * @throws Exception
+     */
+    private static void genExcelModelCode(ExcelReadListener excelReadListener, InputStream inputStream, int sheetIndex, String packPath) throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        /**
+         * 中文描述
+         */
+        String sheetName = ExcelFileUtils.getSheetName(inputStream, sheetIndex);
+        params.put("moduleName", sheetName);
+
+        SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        params.put("date", formater.format(new Date()));
+        params.put("package",packPath);
+        /**
+         * 类名 大小写(翻译之后)
+         */
+        String[] moduleNames = StringUtils.getZhWordName(TranslateUtils.getLanguageTranslate(sheetName));
+        params.put("upClassName", moduleNames[1]);
+        params.put("changeClassName", moduleNames[0]);
+
+        List<FiledType> filedTypes = new ArrayList<>();
+
+        excelReadListener.head.keySet().stream().forEach(index -> {
+            FiledType filedType = new FiledType();
+            filedType.setIndex(index);
+            String zhName = excelReadListener.head.get(index);
+            if (zhName.indexOf("号") > 0) {
+                filedType.setType("String");
+            } else {
+                filedType.setType(getExcelVauleType(excelReadListener.data.get(index)));
+            }
+
+            filedType.setDesc(zhName);
+
+            try {
+                filedType.setName(StringUtils.getZhWordName(TranslateUtils.getLanguageTranslate(zhName))[0]);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                filedType.setName("");
+            }
+            filedTypes.add(filedType);
+        });
+
+        params.put("dataList", filedTypes);
+
+
+        TemplateEngine engine = TemplateUtil.createEngine(new TemplateConfig("codetemp", TemplateConfig.ResourceMode.CLASSPATH));
+        String templateName = "ExcelModel";
+        Template template = engine.getTemplate(templateName + ".ftl");
+        String packagePath = getPackPath(packPath);
+        String filePath = packagePath + "model" + File.separator + moduleNames[1] + "Model.java";
+        assert filePath != null;
+        File file = new File(filePath);
+        genFile(file, template, params);
+    }
+
+    /**
+     * 判断excel字段类型
+     *
+     * @return
+     */
+    private static String getExcelVauleType(String value) {
+        if (BaseUtils.isBlank(value)) {
+            return "String";
+        }
+
+        /**
+         * 判断是不是数字
+         */
+        if (StringUtils.isNumeric(value)) {
+            return "BigDecimal";
+        } else {
+            return "String";
+        }
+    }
+
+    @Data
+    public static class FiledType {
+        private int index;
+        /**
+         * 类型
+         */
+        private String type;
+        /**
+         * 变量名
+         */
+        private String name;
+        /**
+         * 中文描述
+         */
+        private String desc;
+    }
+
+    /**
+     * 根据excel 模板，生成model代码
+     *
+     * @throws IOException
+     */
+    public static void generatorModelCodeByExcel(File excelFile, int sheetIndex) throws IOException {
+        ExcelReadListener excelReadListener = new ExcelReadListener();
+        ExcelFileUtils.readExcel(excelFile, null, sheetIndex, excelReadListener);
+        log.info("标题:{},数据:{}", excelReadListener.head, excelReadListener.data);
+    }
+
+
 
     // 获取模版数据
     private static Map<String, Object> getGenMap(Class<? extends BaseModel> clazz, Type type) {
@@ -165,9 +313,7 @@ public class GenUtil {
      * 定义后端文件路径以及名称
      */
     private static String getAdminFilePath(String templateName, String name, String packPath) {
-        String rootPath = System.getProperty("user.dir");
-
-        String packagePath = rootPath + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + packPath.replace(".", File.separator) + File.separator;
+        String packagePath = getPackPath(packPath);
 
 
         if ("Controller".equals(templateName)) {
@@ -196,6 +342,19 @@ public class GenUtil {
 
 
         return null;
+    }
+
+    /**
+     * 获取包路径
+     *
+     * @param packPath
+     * @return
+     */
+    private static String getPackPath(String packPath) {
+        String rootPath = System.getProperty("user.dir");
+
+        String packagePath = rootPath + File.separator + "src" + File.separator + "main" + File.separator + "java" + File.separator + packPath.replace(".", File.separator) + File.separator;
+        return packagePath;
     }
 
 
@@ -236,6 +395,35 @@ public class GenUtil {
 
         public String getState() {
             return desc;
+        }
+    }
+
+    @Slf4j
+    public static class ExcelReadListener extends AnalysisEventListener<Map<Integer, String>> {
+        /**
+         * 数据
+         */
+        public Map<Integer, String> data = null;
+        /**
+         * 标头
+         */
+        public Map<Integer, String> head = null;
+
+        @Override
+        public void invokeHeadMap(Map headMap, AnalysisContext context) {
+            log.info("解析到的表头数据: {}", headMap);
+            head = headMap;
+        }
+
+        @Override
+        public void invoke(Map<Integer, String> integerStringMap, AnalysisContext analysisContext) {
+            data = integerStringMap;
+            throw new ExcelAnalysisStopException("只读一行");
+        }
+
+        @Override
+        public void doAfterAllAnalysed(AnalysisContext analysisContext) {
+            System.out.println("读取完毕");
         }
     }
 }

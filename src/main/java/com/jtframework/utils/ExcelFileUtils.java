@@ -1,8 +1,11 @@
 package com.jtframework.utils;
 
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelReader;
 import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.event.AnalysisEventListener;
+import com.alibaba.excel.read.builder.ExcelReaderSheetBuilder;
+import com.alibaba.excel.read.metadata.ReadSheet;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -77,6 +81,123 @@ public class ExcelFileUtils {
         EasyExcel.read(file, cls, analysisEventListener).sheet().doRead();
     }
 
+    /**
+     * 读excel
+     *
+     * @param file
+     * @param cls
+     * @param analysisEventListener
+     */
+    public static void readExcel(File file, Class cls,int sheetIndex, AnalysisEventListener analysisEventListener) {
+        EasyExcel.read(file, cls, analysisEventListener).sheet(sheetIndex).doRead();
+    }
+
+    /**
+     * 获取sheet 名称
+     * @param inputStream
+     * @return
+     */
+    public static Map<Integer, String> getAllSheetName(InputStream inputStream) throws Exception {
+        
+        List<ReadSheet> sheets = EasyExcel.read(inputStream).build().excelExecutor().sheetList();
+        Map<Integer, String> result = new HashMap<>();
+        for (ReadSheet sheet : sheets) {
+            result.put(sheet.getSheetNo(),sheet.getSheetName());
+        }
+        return result;
+    }
+
+    /**
+     * 获取第一个sheet 名称
+     * @param inputStream
+     * @return
+     */
+    public static String getFirstSheetName(InputStream inputStream) throws Exception {
+        return getSheetName(inputStream,0);
+    }
+
+
+    /**
+     * 获取第一个sheet 名称
+     * @param inputStream
+     * @return
+     */
+    public static String getSheetName(InputStream inputStream, int index) throws Exception {
+        
+        List<ReadSheet> sheets = EasyExcel.read(inputStream).build().excelExecutor().sheetList();
+        return getSheetName(index, sheets);
+    }
+
+    /**
+     * 获取sheet名称
+     * @param index
+     * @param sheets
+     * @return
+     * @throws Exception
+     */
+    private static String getSheetName(int index, List<ReadSheet> sheets) throws Exception {
+        if (sheets.size()-1 < index){
+            throw new  Exception("sheet 下表越界");
+        }
+        return sheets.get(index).getSheetName();
+    }
+
+    /**
+     * 获取sheet 名称
+     * @param file
+     * @return
+     */
+    public static Map<Integer, String> getAllSheetName(File file){
+        List<ReadSheet> sheets = EasyExcel.read(file).build().excelExecutor().sheetList();
+        Map<Integer, String> result = new HashMap<>();
+        for (ReadSheet sheet : sheets) {
+            result.put(sheet.getSheetNo(),sheet.getSheetName());
+        }
+        return result;
+    }
+
+    /**
+     * 获取第一个sheet 名称
+     * @param file
+     * @return
+     */
+    public static String getFirstSheetName(File file) throws Exception {
+
+        return getSheetName(file,0);
+    }
+
+    /**
+     * 获取第一个sheet 名称
+     * @param file
+     * @return
+     */
+    public static String getSheetName(File file,int index) throws Exception {
+        List<ReadSheet> sheets = EasyExcel.read(file).build().excelExecutor().sheetList();
+        return getSheetName(index, sheets);
+    }
+
+
+    /**
+     * 读excel
+     *
+     * @param inputStream
+     * @param cls
+     * @param analysisEventListener
+     */
+    public static void readExcel(InputStream inputStream, Class cls,int sheetIndex, AnalysisEventListener analysisEventListener) {
+        EasyExcel.read(inputStream, cls, analysisEventListener).sheet(sheetIndex).doRead();
+    }
+
+    /**
+     * 读excel
+     *
+     * @param file
+     * @param cls
+     * @param analysisEventListener
+     */
+    public static void readExcel(File file, Class cls,String sheetName, AnalysisEventListener analysisEventListener) {
+        EasyExcel.read(file, cls, analysisEventListener).sheet(sheetName).doRead();
+    }
 
     /**
      * 导出excel（一个sheet）
@@ -212,5 +333,6 @@ public class ExcelFileUtils {
 //        @ExcelProperty(value = "地点", index = 12)
 //        private String source;              //全球钻/现货
 //    }
+
 
 }

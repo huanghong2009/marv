@@ -24,7 +24,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.SocketTimeoutException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -36,16 +36,19 @@ import java.util.Map;
  */
 @Slf4j
 public class HttpClientUtils {
+    public static final int cache = 10 * 1024;
+
 
     /**
      * post请求
+     *
      * @param url
      * @param params
      * @return
      * @throws Exception
      */
-    public static JSONObject post(String url, JSONObject params) throws Exception{
-        return JSONObject.parseObject(EntityUtils.toString(executePost(url,params), "UTF-8"));
+    public static JSONObject post(String url, JSONObject params) throws Exception {
+        return JSONObject.parseObject(EntityUtils.toString(executePost(url, params), "UTF-8"));
     }
 
 
@@ -56,7 +59,7 @@ public class HttpClientUtils {
      * @param paraMap
      * @return
      */
-    public static byte[] doImgPost(String url, JSONObject  paraMap) throws Exception{
+    public static byte[] doImgPost(String url, JSONObject paraMap) throws Exception {
         byte[] result = null;
         HttpPost httpPost = new HttpPost(url);
         httpPost.addHeader("Content-Type", "application/json");
@@ -92,36 +95,36 @@ public class HttpClientUtils {
     }
 
 
-
-
     /**
      * 执行post请求
+     *
      * @param url
      * @param params
      * @param
      * @return
      * @throws Exception
      */
-    public static HttpEntity executePost(String url, JSONObject params) throws Exception{
-        return executePost(url,params,false);
+    public static HttpEntity executePost(String url, JSONObject params) throws Exception {
+        return executePost(url, params, false);
     }
 
     /**
      * 执行post请求
+     *
      * @param url
      * @param params
      * @param isDownloadFile 是否是文件
      * @return
      * @throws Exception
      */
-    public static HttpEntity executePost(String url, JSONObject params,boolean isDownloadFile) throws Exception{
+    public static HttpEntity executePost(String url, JSONObject params, boolean isDownloadFile) throws Exception {
         String entityStr = null;
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
         try {
             //把参数放入请求体中
             StringEntity entity = new StringEntity(params.toJSONString(), "UTF-8");
 
-            if (isDownloadFile){
+            if (isDownloadFile) {
                 entity.setContentType("image/png");
             }
 
@@ -139,9 +142,9 @@ public class HttpClientUtils {
             // 获得响应的实体对象
             return response.getEntity();
         } catch (Exception e) {
-            log.error("Http协议异常:{}",e.getMessage());
+            log.error("Http协议异常:{}", e.getMessage());
             e.printStackTrace();
-            throw new Exception("Http协议调用异常:"+e.getMessage());
+            throw new Exception("Http协议调用异常:" + e.getMessage());
         } finally {
             try {
                 httpClient.close();
@@ -152,35 +155,35 @@ public class HttpClientUtils {
     }
 
 
-
-
     /**
      * 上传文件
-     * @param url 路径
+     *
+     * @param url  路径
      * @param file 文件
      * @return
      */
-    public static JSONObject httpPostUploadFile(String url ,MultipartFile file) throws Exception{
-        return httpPostUploadFile(url,file,null,null);
+    public static JSONObject httpPostUploadFile(String url, MultipartFile file) throws Exception {
+        return httpPostUploadFile(url, file, null, null);
     }
 
 
     /**
      * 上传文件
-     * @param url 路径
-     * @param file 文件
+     *
+     * @param url          路径
+     * @param file         文件
      * @param headerParams
      * @param otherParams
      * @return
      */
-    public static JSONObject httpPostUploadFile(String url ,MultipartFile file,Map<String,String>headerParams,Map<String,String>otherParams) throws Exception{
+    public static JSONObject httpPostUploadFile(String url, MultipartFile file, Map<String, String> headerParams, Map<String, String> otherParams) throws Exception {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         String result = null;
         try {
             String fileName = file.getOriginalFilename();
             HttpPost httpPost = new HttpPost(url);
 
-            if (headerParams != null){
+            if (headerParams != null) {
                 //添加header
                 for (Map.Entry<String, String> e : headerParams.entrySet()) {
                     httpPost.addHeader(e.getKey(), e.getValue());
@@ -192,7 +195,7 @@ public class HttpClientUtils {
             builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);//加上此行代码解决返回中文乱码问题
             builder.addBinaryBody("file", file.getInputStream(), ContentType.MULTIPART_FORM_DATA, fileName);// 文件流
 
-            if (otherParams!=null){
+            if (otherParams != null) {
                 for (Map.Entry<String, String> e : otherParams.entrySet()) {
                     builder.addTextBody(e.getKey(), e.getValue());// 类似浏览器表单提交，对应input的name和value
                 }
@@ -209,10 +212,10 @@ public class HttpClientUtils {
             }
 
             return JSONObject.parseObject(result);
-        }  catch (Exception e) {
-            log.error("Http上传文件异常:{}",e.getMessage());
+        } catch (Exception e) {
+            log.error("Http上传文件异常:{}", e.getMessage());
             e.printStackTrace();
-            throw new Exception("Http上传文件异常:"+e.getMessage());
+            throw new Exception("Http上传文件异常:" + e.getMessage());
         } finally {
             try {
                 httpClient.close();
@@ -225,35 +228,39 @@ public class HttpClientUtils {
 
     /**
      * 执行get请求
+     *
      * @return
      */
     public static JSONObject get(String url) throws Exception {
-        return get(url,null);
+        return get(url, null);
     }
 
 
     /**
      * 执行get请求
+     *
      * @return
      */
     public static JSONObject get(String url, Map<String, String> params) throws Exception {
-        return JSONObject.parseObject(executeGet(url,params));
+        return JSONObject.parseObject(executeGet(url, params));
     }
 
     /**
      * 执行get请求
+     *
      * @return
      */
-    public static  String executeGet(String url)throws Exception {
-        return executeGet(url,null);
+    public static String executeGet(String url) throws Exception {
+        return executeGet(url, null);
     }
 
 
     /**
      * 执行get请求
+     *
      * @return
      */
-    public static String executeGet(String url, Map<String, String> params)throws Exception {
+    public static String executeGet(String url, Map<String, String> params) throws Exception {
         CloseableHttpResponse response = null;
         String entityStr = null;
         try {
@@ -285,9 +292,74 @@ public class HttpClientUtils {
 
             return entityStr;
         } catch (Exception e) {
-            log.error("Http协议调用异常:{}",e.getMessage());
+            log.error("Http协议调用异常:{}", e.getMessage());
             e.printStackTrace();
-            throw new Exception("Http协议调用异常:"+e.getMessage());
+            throw new Exception("Http协议调用异常:" + e.getMessage());
         }
+    }
+
+    /**
+     * 根据url下载文件
+     *
+     * @param url
+     * @return
+     */
+    public static InputStream downloadInputStream(String url)throws Exception {
+        try {
+            HttpClient client = HttpClients.createDefault();
+            HttpGet httpget = new HttpGet(url);
+            HttpResponse response = client.execute(httpget);
+
+            HttpEntity entity = response.getEntity();
+            InputStream is = entity.getContent();
+            return is;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("文件下载失败");
+        }
+    }
+
+
+
+
+
+    /**
+     * 根据url下载文件
+     *
+     * @param url
+     * @return
+     */
+    public static File downloadFile(String url)throws Exception {
+        File file = null;
+        try {
+            HttpClient client = HttpClients.createDefault();
+            HttpGet httpget = new HttpGet(url);
+            HttpResponse response = client.execute(httpget);
+
+            HttpEntity entity = response.getEntity();
+            InputStream is = entity.getContent();
+            String[] urlSplit = url.split("/");
+            String fileName = urlSplit[urlSplit.length -1];
+
+            file = new File(fileName);
+            FileOutputStream fileout = new FileOutputStream(file);
+            /**
+             * 根据实际运行效果 设置缓冲区大小
+             */
+            byte[] buffer = new byte[cache];
+            int ch = 0;
+            while ((ch = is.read(buffer)) != -1) {
+                fileout.write(buffer, 0, ch);
+            }
+            is.close();
+            fileout.flush();
+            fileout.close();
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("文件下载失败");
+        }
+        return file;
     }
 }

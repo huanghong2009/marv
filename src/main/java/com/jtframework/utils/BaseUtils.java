@@ -22,7 +22,26 @@ import java.util.regex.Pattern;
  * @version 创建时间：2017/12/21
  */
 public final class BaseUtils {
-
+    /**
+     * 克隆流
+     * @param input
+     * @return
+     */
+    public static ByteArrayOutputStream cloneInputStream(InputStream input) {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = input.read(buffer)) > -1) {
+                baos.write(buffer, 0, len);
+            }
+            baos.flush();
+            return baos;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     /**
      * 把下划线加小写转成驼峰格式
