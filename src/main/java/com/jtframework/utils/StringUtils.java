@@ -232,7 +232,7 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         String[] words=word.split(" ");
         ArrayList<String> wordList = new ArrayList<>();
         for (String str : words) {
-            if (!str.toLowerCase(Locale.ROOT).equals("the")){
+            if (!str.toLowerCase(Locale.ROOT).equals("the") && !str.toLowerCase(Locale.ROOT).equals("of")){
                 wordList.add(str);
             }
         }

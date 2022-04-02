@@ -94,8 +94,8 @@ public class GenUtil {
      *
      * @throws IOException
      */
-    public static void generatorModelCodeByExcel(File excelFile) throws IOException {
-        generatorModelCodeByExcel(excelFile, 0);
+    public static void generatorModelCodeByExcel(File excelFile,String packPath) throws Exception {
+        generatorModelCodeByExcel(excelFile, 0,packPath);
     }
 
 
@@ -229,10 +229,12 @@ public class GenUtil {
      *
      * @throws IOException
      */
-    public static void generatorModelCodeByExcel(File excelFile, int sheetIndex) throws IOException {
+    public static void generatorModelCodeByExcel(File excelFile, int sheetIndex,String packPath) throws Exception {
         ExcelReadListener excelReadListener = new ExcelReadListener();
-        ExcelFileUtils.readExcel(excelFile, null, sheetIndex, excelReadListener);
-        log.info("标题:{},数据:{}", excelReadListener.head, excelReadListener.data);
+
+        ExcelFileUtils.readExcel(new FileInputStream(excelFile), null, sheetIndex, excelReadListener);
+        genExcelModelCode(excelReadListener, new FileInputStream(excelFile), sheetIndex, packPath);
+
     }
 
 
