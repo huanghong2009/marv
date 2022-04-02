@@ -115,13 +115,23 @@ public class GenUtil {
      */
     public static void generatorModelCodeByExcel(InputStream inputStream, int sheetIndex, String packPath) throws Exception {
         ByteArrayOutputStream baos = BaseUtils.cloneInputStream(inputStream);
-        InputStream cpInput1 = new ByteArrayInputStream(baos.toByteArray());
-        InputStream cpInput2 = new ByteArrayInputStream(baos.toByteArray());
         inputStream.close();
-        ExcelReadListener excelReadListener = new ExcelReadListener();
+        ByteArrayInputStream cpInput1 = new ByteArrayInputStream(baos.toByteArray());
+        ByteArrayInputStream cpInput2 = new ByteArrayInputStream(baos.toByteArray());
 
-        ExcelFileUtils.readExcel(cpInput1, null, sheetIndex, excelReadListener);
-        genExcelModelCode(excelReadListener, cpInput2, sheetIndex, packPath);
+        ExcelReadListener excelReadListener = new ExcelReadListener();
+        try {
+            ExcelFileUtils.readExcel(cpInput1, null, sheetIndex, excelReadListener);
+        } finally {
+            cpInput1.close();
+        }
+
+        try {
+            GenUtil.genExcelModelCode(excelReadListener, cpInput2, sheetIndex, packPath);
+        } finally {
+            cpInput2.close();
+        }
+
     }
 
 
@@ -132,7 +142,7 @@ public class GenUtil {
      * @param excelReadListener
      * @throws Exception
      */
-    private static void genExcelModelCode(ExcelReadListener excelReadListener, InputStream inputStream, int sheetIndex, String packPath) throws Exception {
+    public static void genExcelModelCode(ExcelReadListener excelReadListener, InputStream inputStream, int sheetIndex, String packPath) throws Exception {
         Map<String, Object> params = new HashMap<>();
         /**
          * 中文描述
@@ -238,6 +248,13 @@ public class GenUtil {
     }
 
 
+    public static void main(String[] args) throws IOException {
+        try {
+            GenUtil.generatorModelCodeByExcel(new FileInputStream(new File("/Users/huanghong/Desktop/code/hds_server/src/main/resources/9ac49da8-0709-4b21-8e76-e19efb2a9fef2022-03-31_HistoryOrderInfo.xlsx")),2,"com.jtframework.utils");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     // 获取模版数据
     private static Map<String, Object> getGenMap(Class<? extends BaseModel> clazz, Type type) {
@@ -400,6 +417,7 @@ public class GenUtil {
         }
     }
 
+    @Data
     @Slf4j
     public static class ExcelReadListener extends AnalysisEventListener<Map<Integer, String>> {
         /**
@@ -410,6 +428,8 @@ public class GenUtil {
          * 标头
          */
         public Map<Integer, String> head = null;
+
+
 
         @Override
         public void invokeHeadMap(Map headMap, AnalysisContext context) {
@@ -426,6 +446,10 @@ public class GenUtil {
         @Override
         public void doAfterAllAnalysed(AnalysisContext analysisContext) {
             System.out.println("读取完毕");
+
         }
+
     }
+
+
 }

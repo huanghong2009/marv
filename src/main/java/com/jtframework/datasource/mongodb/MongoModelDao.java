@@ -6,21 +6,28 @@ import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import com.jtframework.utils.BaseUtils;
+import com.mongodb.MongoNamespace;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 
 @Slf4j
 public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl implements MongoModelDaoService {
+
+    /**
+     * 签名
+     */
+    @Value("${spring.data.mongodb.database}")
+    private String database;
 
     /**
      * 注入默认数据源
@@ -31,7 +38,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     private String collectionName;
 
 
-    public MongoModelDao(){
+    public MongoModelDao() {
         this.collectionName = BaseUtils.getServeModelValue(cls);
     }
 
@@ -74,6 +81,17 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("保存 " + this.name + " 失败");
+        }
+    }
+
+    @Override
+    public void insert(List model) throws Exception {
+        try {
+            getDao().insertList(model);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("批量保存 " + this.name + " 失败");
         }
     }
 
@@ -122,7 +140,6 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     }
 
 
-
     /**
      * 根据query 查询
      *
@@ -133,12 +150,51 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     @Override
     public List findByQuery(Query query) throws BusinessException {
         try {
-            return this.getDao().findByQuery(this.cls,query);
+            return this.getDao().findByQuery(this.cls, query);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("查询" + this.name + " 失败");
         }
+    }
+
+    /**
+     * 清空集合（假）
+     *
+     * @param maxSize 需要备份的最大数量
+     * @throws Exception
+     */
+    @Override
+    public void clean(int maxSize) throws Exception {
+        Set<String> collectionNames = this.getDao().getMongoTemplate().getCollectionNames();
+        List<Long> collectionNameList = new ArrayList<>();
+
+        for (String collectionName : collectionNames) {
+            if (collectionName.startsWith(this.name)) {
+                String[] cnames = collectionName.split("_");
+                if (cnames.length > 1) {
+                    collectionNameList.add(Long.valueOf(cnames[1]));
+                }
+            }
+        }
+
+        /**
+         * 超出15条的全部清理
+         */
+        if (collectionNameList.size() >= maxSize) {
+            /**
+             * 排序
+             */
+            collectionNameList.sort((Long o1, Long o2) -> {
+                return o1.compareTo(o2);
+            });
+            for (int i = maxSize - 1; i < collectionNameList.size(); i++) {
+                this.getDao().getMongoTemplate().dropCollection(this.name + "_" + collectionNameList.get(i));
+            }
+        }
+
+        String newName = this.name + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+        this.getDao().getMongoTemplate().getCollection(this.name).renameCollection(new MongoNamespace(database, newName));
     }
 
     /**
@@ -201,7 +257,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     @Override
     public List load(Set ids) throws BusinessException {
         try {
-            return getDao().findById(cls,ids);
+            return getDao().findById(cls, ids);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -370,7 +426,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     public long updateKVByKV(String whereKey, String whereValue, String updateKey, Object updateValue) throws Exception {
         try {
             Update update = new Update();
-            update.set(updateKey,updateValue);
+            update.set(updateKey, updateValue);
 
 
             Query query = new Query();
@@ -383,6 +439,43 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
             throw new BusinessException("修改" + this.name + "失败");
         }
     }
+
+    /**
+     * 根据kv 删除全部
+     *
+     * @param key
+     * @param value
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public long deleteAllByKV(String key, Object value) throws Exception {
+        return deleteAllByMap(new HashMap<String, Object>(){{put(key,value);}});
+    }
+
+    /**
+     * 根据map 删除全部
+     *
+     * @param map
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public long deleteAllByMap(Map map) throws Exception {
+        try {
+            Map<String, Object> params = map;
+            Query query = new Query();
+            for (String key : params.keySet()) {
+                query.addCriteria((new Criteria(key)).is(params.get(key)));
+            }
+            return getDao().remove(query, this.cls);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("删除" + this.name + "失败");
+        }
+    }
+
 
     /**
      * 根据map 修改一个mao

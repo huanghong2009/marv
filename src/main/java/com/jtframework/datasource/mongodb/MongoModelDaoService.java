@@ -42,4 +42,11 @@ public interface MongoModelDaoService  extends ModelDaoService {
      */
     List findByQuery(Query query) throws BusinessException;
 
+    /**
+     * 清空集合（假）
+     * @param maxSize 需要备份的最大数量
+     * @throws Exception
+     */
+    void clean(int maxSize) throws Exception;
+
 }

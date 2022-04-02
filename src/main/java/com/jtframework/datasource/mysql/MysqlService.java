@@ -495,6 +495,22 @@ public class MysqlService {
         return delete(BaseUtils.getServeModelValue(resultClass), " ID=? ", new Object[]{id});
     }
 
+    public int delete(String table, Map<String, Object> param) throws SQLException {
+        String sql = "DELETE FROM " + table + " WHERE ";
+        Set<String> keys = param.keySet();
+        if (keys.size() == 0) {
+            throw new SQLException("非法请求");
+        }
+        for (String key : keys) {
+            sql += " "+key+" = :"+key +" AND";
+        }
+
+        sql = sql.substring(0,sql.length()-3);
+
+        log.debug("SQL:" + sql);
+        return exec(sql, param);
+    }
+
     public int delete(String table, String where, Object[] param) throws SQLException {
         String sql = "DELETE FROM " + table + " WHERE ?where?";
         if (BaseUtils.isNotBlank(where)) {

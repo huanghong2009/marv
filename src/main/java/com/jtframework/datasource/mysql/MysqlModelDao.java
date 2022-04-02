@@ -70,6 +70,17 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     }
 
     @Override
+    public void insert(List model) throws Exception {
+        try {
+            getDao().insertBatch(model,false);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("保存 " + this.name + " 失败");
+        }
+    }
+
+    @Override
     @CheckParam
     public T load(String id) throws BusinessException {
         try {
@@ -280,6 +291,37 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("修改" + this.name + "失败");
+        }
+    }
+
+    /**
+     * 根据kv 删除全部
+     *
+     * @param key
+     * @param value
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public long deleteAllByKV(String key, Object value) throws Exception {
+        return deleteAllByMap(new HashMap<String, Object>(){{put(key,value);}});
+    }
+
+    /**
+     * 根据map 删除全部
+     *
+     * @param map
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public long deleteAllByMap(Map map) throws Exception {
+        try {
+            return getDao().delete(this.name,map);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("删除" + this.name + "失败");
         }
     }
 

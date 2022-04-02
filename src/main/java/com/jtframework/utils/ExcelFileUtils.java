@@ -3,7 +3,9 @@ package com.jtframework.utils;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelReader;
 import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.analysis.ExcelReadExecutor;
 import com.alibaba.excel.event.AnalysisEventListener;
+import com.alibaba.excel.metadata.Sheet;
 import com.alibaba.excel.read.builder.ExcelReaderSheetBuilder;
 import com.alibaba.excel.read.metadata.ReadSheet;
 import com.alibaba.excel.write.metadata.WriteSheet;
@@ -98,7 +100,7 @@ public class ExcelFileUtils {
      * @return
      */
     public static Map<Integer, String> getAllSheetName(InputStream inputStream) throws Exception {
-        
+
         List<ReadSheet> sheets = EasyExcel.read(inputStream).build().excelExecutor().sheetList();
         Map<Integer, String> result = new HashMap<>();
         for (ReadSheet sheet : sheets) {
@@ -123,8 +125,8 @@ public class ExcelFileUtils {
      * @return
      */
     public static String getSheetName(InputStream inputStream, int index) throws Exception {
-        
-        List<ReadSheet> sheets = EasyExcel.read(inputStream).build().excelExecutor().sheetList();
+        ExcelReader excelReader = EasyExcel.read(inputStream).build();
+        List<Sheet> sheets = excelReader.getSheets();
         return getSheetName(index, sheets);
     }
 
@@ -135,7 +137,7 @@ public class ExcelFileUtils {
      * @return
      * @throws Exception
      */
-    private static String getSheetName(int index, List<ReadSheet> sheets) throws Exception {
+    private static String getSheetName(int index, List<Sheet> sheets) throws Exception {
         if (sheets.size()-1 < index){
             throw new  Exception("sheet 下表越界");
         }
@@ -172,8 +174,7 @@ public class ExcelFileUtils {
      * @return
      */
     public static String getSheetName(File file,int index) throws Exception {
-        List<ReadSheet> sheets = EasyExcel.read(file).build().excelExecutor().sheetList();
-        return getSheetName(index, sheets);
+        return getSheetName(new FileInputStream(file), index);
     }
 
 

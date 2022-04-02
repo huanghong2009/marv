@@ -28,6 +28,7 @@ public final class BaseUtils {
      * @return
      */
     public static ByteArrayOutputStream cloneInputStream(InputStream input) {
+
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];
@@ -41,6 +42,21 @@ public final class BaseUtils {
             e.printStackTrace();
             return null;
         }
+    }
+
+
+    /**
+     * 克隆流
+     * @param input
+     * @return
+     */
+    public static List<InputStream> cloneInputStream(InputStream input,int size) {
+        List<InputStream> inputStreams = new ArrayList<>();
+        ByteArrayOutputStream baos = cloneInputStream(input);
+        for (int i = 0; i < size; i++) {
+            inputStreams.add(new ByteArrayInputStream(baos.toByteArray()));
+        }
+        return inputStreams;
     }
 
     /**

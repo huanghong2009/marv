@@ -15,6 +15,8 @@ public interface ModelDaoService<T extends BaseModel> {
 
     public void insert(T model) throws Exception;
 
+    public void insert(List<T> model) throws Exception;
+
     /**
      * 覆盖性修改
      *
@@ -107,4 +109,23 @@ public interface ModelDaoService<T extends BaseModel> {
      * @throws SQLException
      */
     long updateMapByMap(Map<String,Object> whereParmas,Map<String,Object> updateParmas) throws  Exception;
+
+
+
+    /**
+     * 根据kv 删除全部
+     * @return
+     * @throws Exception
+     */
+    long deleteAllByKV(String key,Object value)throws  Exception;
+
+
+
+    /**
+     * 根据map 删除全部
+     * @return
+     * @throws Exception
+     */
+    long deleteAllByMap(Map<String, Object> map)throws  Exception;
+
 }
