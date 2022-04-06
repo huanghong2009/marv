@@ -14,7 +14,7 @@
     <groupId>com.jtframework</groupId>
     <artifactId>marv</artifactId>
 
-    <version>21.6</version>
+    <version>22.0</version>
 
     <packaging>jar</packaging>
 
@@ -184,7 +184,7 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>easyexcel</artifactId>
-            <version>2.2.10</version>
+            <version>3.0.5</version>
         </dependency>
 
 

@@ -1,15 +1,13 @@
 package com.jtframework.utils;
 
 import com.alibaba.excel.EasyExcel;
-import com.alibaba.excel.ExcelReader;
 import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.analysis.ExcelReadExecutor;
 import com.alibaba.excel.event.AnalysisEventListener;
-import com.alibaba.excel.metadata.Sheet;
-import com.alibaba.excel.read.builder.ExcelReaderSheetBuilder;
 import com.alibaba.excel.read.metadata.ReadSheet;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -125,8 +123,9 @@ public class ExcelFileUtils {
      * @return
      */
     public static String getSheetName(InputStream inputStream, int index) throws Exception {
-        ExcelReader excelReader = EasyExcel.read(inputStream).build();
-        List<Sheet> sheets = excelReader.getSheets();
+//        WorkbookFactory.create(inputStream);
+        ExcelReadExecutor excelReader = EasyExcel.read(inputStream).build().excelExecutor();
+        List<ReadSheet> sheets = excelReader.sheetList();
         return getSheetName(index, sheets);
     }
 
@@ -137,7 +136,7 @@ public class ExcelFileUtils {
      * @return
      * @throws Exception
      */
-    private static String getSheetName(int index, List<Sheet> sheets) throws Exception {
+    private static String getSheetName(int index, List<ReadSheet> sheets) throws Exception {
         if (sheets.size()-1 < index){
             throw new  Exception("sheet 下表越界");
         }

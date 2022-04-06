@@ -49,4 +49,11 @@ public interface MongoModelDaoService  extends ModelDaoService {
      */
     void clean(int maxSize) throws Exception;
 
+    /**
+     * 备份集合
+     * @param maxSize 需要备份的最大数量
+     * @throws Exception
+     */
+    void backups(int maxSize) throws Exception;
+
 }

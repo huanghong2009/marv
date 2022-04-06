@@ -6,11 +6,14 @@ import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import com.jtframework.utils.BaseUtils;
+import com.mongodb.BasicDBObject;
 import com.mongodb.MongoNamespace;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.OutOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -166,6 +169,34 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      */
     @Override
     public void clean(int maxSize) throws Exception {
+        cleanBackups(maxSize);
+        String newName = this.name + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+        this.getDao().getMongoTemplate().getCollection(this.name).renameCollection(new MongoNamespace(database, newName));
+    }
+
+    /**
+     * 备份集合
+     *
+     * @param maxSize 需要备份的最大数量
+     * @throws Exception
+     */
+    @Override
+    public void backups(int maxSize) throws Exception {
+        cleanBackups(maxSize);
+        String newName = this.name + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+        OutOperation outOperation = new OutOperation(newName);
+        this.getDao().getMongoTemplate().aggregate(Aggregation.newAggregation(outOperation), this.name, BasicDBObject.class);
+    }
+
+    /**
+     * 清空多余的备份
+     * @param maxSize
+     * @throws Exception
+     */
+    private void cleanBackups(int maxSize) throws Exception {
+        if (!this.getDao().getMongoTemplate().collectionExists(this.name)) {
+            return;
+        }
         Set<String> collectionNames = this.getDao().getMongoTemplate().getCollectionNames();
         List<Long> collectionNameList = new ArrayList<>();
 
@@ -192,9 +223,6 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
                 this.getDao().getMongoTemplate().dropCollection(this.name + "_" + collectionNameList.get(i));
             }
         }
-
-        String newName = this.name + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
-        this.getDao().getMongoTemplate().getCollection(this.name).renameCollection(new MongoNamespace(database, newName));
     }
 
     /**
@@ -450,7 +478,9 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      */
     @Override
     public long deleteAllByKV(String key, Object value) throws Exception {
-        return deleteAllByMap(new HashMap<String, Object>(){{put(key,value);}});
+        return deleteAllByMap(new HashMap<String, Object>() {{
+            put(key, value);
+        }});
     }
 
     /**

@@ -94,8 +94,8 @@ public class GenUtil {
      *
      * @throws IOException
      */
-    public static void generatorModelCodeByExcel(File excelFile,String packPath) throws Exception {
-        generatorModelCodeByExcel(excelFile, 0,packPath);
+    public static void generatorModelCodeByExcel(File excelFile, String packPath) throws Exception {
+        generatorModelCodeByExcel(excelFile, 0, packPath);
     }
 
 
@@ -117,6 +117,7 @@ public class GenUtil {
         ByteArrayOutputStream baos = BaseUtils.cloneInputStream(inputStream);
         inputStream.close();
         ByteArrayInputStream cpInput1 = new ByteArrayInputStream(baos.toByteArray());
+
         ByteArrayInputStream cpInput2 = new ByteArrayInputStream(baos.toByteArray());
 
         ExcelReadListener excelReadListener = new ExcelReadListener();
@@ -152,7 +153,7 @@ public class GenUtil {
 
         SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         params.put("date", formater.format(new Date()));
-        params.put("package",packPath);
+        params.put("package", packPath);
         /**
          * 类名 大小写(翻译之后)
          */
@@ -166,8 +167,10 @@ public class GenUtil {
             FiledType filedType = new FiledType();
             filedType.setIndex(index);
             String zhName = excelReadListener.head.get(index);
-            if (zhName.indexOf("号") > 0) {
+            if (zhName.endsWith("号")) {
                 filedType.setType("String");
+            } else if (zhName.endsWith("日期") || zhName.endsWith("时间") ) {
+                filedType.setType("Date");
             } else {
                 filedType.setType(getExcelVauleType(excelReadListener.data.get(index)));
             }
@@ -239,7 +242,7 @@ public class GenUtil {
      *
      * @throws IOException
      */
-    public static void generatorModelCodeByExcel(File excelFile, int sheetIndex,String packPath) throws Exception {
+    public static void generatorModelCodeByExcel(File excelFile, int sheetIndex, String packPath) throws Exception {
         ExcelReadListener excelReadListener = new ExcelReadListener();
 
         ExcelFileUtils.readExcel(new FileInputStream(excelFile), null, sheetIndex, excelReadListener);
@@ -250,7 +253,7 @@ public class GenUtil {
 
     public static void main(String[] args) throws IOException {
         try {
-            GenUtil.generatorModelCodeByExcel(new FileInputStream(new File("/Users/huanghong/Desktop/code/hds_server/src/main/resources/9ac49da8-0709-4b21-8e76-e19efb2a9fef2022-03-31_HistoryOrderInfo.xlsx")),2,"com.jtframework.utils");
+            GenUtil.generatorModelCodeByExcel(new FileInputStream(new File("/Users/huanghong/Desktop/code/marv/src/main/resources/bb0fbe3d-2b0e-4c3e-a2d3-54e1dd690b3b2022-04-06_历史订单 (1).xlsx")), 0, "com.jtframework.utils");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -428,7 +431,6 @@ public class GenUtil {
          * 标头
          */
         public Map<Integer, String> head = null;
-
 
 
         @Override
