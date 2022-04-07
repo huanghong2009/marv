@@ -40,14 +40,14 @@ public interface MongoModelDaoService  extends ModelDaoService {
      * @return
      * @throws BusinessException
      */
-    List findByQuery(Query query) throws BusinessException;
+    List findByQuery(MongodbParamsQuery query) throws BusinessException;
 
     /**
-     * 清空集合（假）
+     * 备份清空集合
      * @param maxSize 需要备份的最大数量
      * @throws Exception
      */
-    void clean(int maxSize) throws Exception;
+    void cleanAndBackups(int maxSize) throws Exception;
 
     /**
      * 备份集合
@@ -55,5 +55,8 @@ public interface MongoModelDaoService  extends ModelDaoService {
      * @throws Exception
      */
     void backups(int maxSize) throws Exception;
+
+
+
 
 }

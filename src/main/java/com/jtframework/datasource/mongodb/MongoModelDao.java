@@ -134,7 +134,12 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
                 }
             }
 
-            return this.getDao().pageQuery(this.cls, mongodbParamsDTO.getQuery(), mongodbParamsDTO.getToPage(), mongodbParamsDTO.getPageSize());
+            if (mongodbParamsDTO.query.mongoJoin != null) {
+                return this.getDao().pageJoinQuery(this.cls, mongodbParamsDTO.getQuery(), mongodbParamsDTO.query.getMongoJoin(), mongodbParamsDTO.getToPage(), mongodbParamsDTO.getPageSize());
+            } else {
+                return this.getDao().pageQuery(this.cls, mongodbParamsDTO.getQuery(), mongodbParamsDTO.getToPage(), mongodbParamsDTO.getPageSize());
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -151,9 +156,14 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      * @throws BusinessException
      */
     @Override
-    public List findByQuery(Query query) throws BusinessException {
+    public List findByQuery(MongodbParamsQuery query) throws BusinessException {
         try {
-            return this.getDao().findByQuery(this.cls, query);
+            if (query.mongoJoin == null) {
+                return this.getDao().findByQuery(this.cls, query);
+            } else {
+                return this.getDao().findByJoinQuery(this.cls, query);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -162,16 +172,19 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     }
 
     /**
-     * 清空集合（假）
+     * 备份清空集合
      *
      * @param maxSize 需要备份的最大数量
      * @throws Exception
      */
     @Override
-    public void clean(int maxSize) throws Exception {
+    public void cleanAndBackups(int maxSize) throws Exception {
+        if (!this.getDao().getMongoTemplate().collectionExists(this.collectionName)) {
+            return;
+        }
         cleanBackups(maxSize);
-        String newName = this.name + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
-        this.getDao().getMongoTemplate().getCollection(this.name).renameCollection(new MongoNamespace(database, newName));
+        String newName = this.collectionName + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+        this.getDao().getMongoTemplate().getCollection(this.collectionName).renameCollection(new MongoNamespace(database, newName));
     }
 
     /**
@@ -182,21 +195,23 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      */
     @Override
     public void backups(int maxSize) throws Exception {
+        if (!this.getDao().getMongoTemplate().collectionExists(this.collectionName)) {
+            return;
+        }
         cleanBackups(maxSize);
-        String newName = this.name + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
+        String newName = this.collectionName + "_" + new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date());
         OutOperation outOperation = new OutOperation(newName);
-        this.getDao().getMongoTemplate().aggregate(Aggregation.newAggregation(outOperation), this.name, BasicDBObject.class);
+        this.getDao().getMongoTemplate().aggregate(Aggregation.newAggregation(outOperation), this.collectionName, BasicDBObject.class);
     }
 
     /**
      * 清空多余的备份
+     *
      * @param maxSize
      * @throws Exception
      */
     private void cleanBackups(int maxSize) throws Exception {
-        if (!this.getDao().getMongoTemplate().collectionExists(this.name)) {
-            return;
-        }
+
         Set<String> collectionNames = this.getDao().getMongoTemplate().getCollectionNames();
         List<Long> collectionNameList = new ArrayList<>();
 

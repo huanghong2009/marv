@@ -7,14 +7,17 @@ import com.jtframework.utils.BaseUtils;
 import com.mongodb.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.core.query.BasicQuery;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.LookupOperation;
+import org.springframework.data.mongodb.core.query.*;
 
 import java.util.*;
 
@@ -210,14 +213,120 @@ public class MongodbService {
             }
 
             if (pageSize < 1) {
-                pageSize = total;
+                pageSize = 10;
             }
 
-            query.limit(pageSize).skip((pageNo - 1) * pageSize);
+
             int startIndex = PageVO.getStartOfPage(pageNo, pageSize);
+            query.limit(pageSize).skip((pageNo - 1) * pageSize);
+
             List<T> result = this.mongoTemplate.find(query, resultClass, getCollectionName(resultClass));
+
             return new PageVO(startIndex, total, pageSize, result);
         }
+    }
+
+
+    /**
+     * 从1 开始，默认查询 10条 ，1 ，10
+     *
+     * @param resultClass
+     * @param query
+     * @param pageNo
+     * @param pageSize
+     * @param <T>
+     * @return
+     */
+    public <T> PageVO<T> pageJoinQuery(Class<T> resultClass, MongodbParamsQuery query, MongoJoin mongoJoin, int pageNo, int pageSize) {
+        LookupOperation lookupOperation = Aggregation.lookup(mongoJoin.getJoinCollectionName(),mongoJoin.getLocalField(),mongoJoin.getForeignField(),mongoJoin.getAsName());
+        long total =  aggregationCount(lookupOperation,resultClass,query);
+
+        if (total < 1) {
+            return new PageVO();
+        } else {
+            if (pageNo < 1) {
+                pageNo = 1;
+            }
+
+            if (pageSize < 1) {
+                pageSize = 10;
+            }
+
+
+            int startIndex = PageVO.getStartOfPage(pageNo, pageSize);
+
+            List<AggregationOperation> aggregationOperations = new ArrayList<>();
+            /**
+             * jon连接
+             */
+            aggregationOperations.add(lookupOperation);
+
+            /**
+             * 拼装where 参数
+             */
+            getOperationsMath(aggregationOperations,query);
+
+            /**
+             * 分页处理
+             */
+            aggregationOperations.add(Aggregation.limit(pageSize));
+            aggregationOperations.add(Aggregation.skip((pageNo - 1) * pageSize));
+
+            /**
+             * 排序处理
+             */
+            if (query.getSort() != null){
+                aggregationOperations.add(Aggregation.sort(query.getSort()));
+            }
+
+            Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
+            List<T> result = mongoTemplate.aggregate(aggregation, BaseUtils.getServeModelValue(resultClass),resultClass).getMappedResults();
+
+            return new PageVO(startIndex, total, pageSize, result);
+        }
+    }
+
+    /**
+     * 聚合统计
+     * @param
+     * @return
+     */
+    public long aggregationCount( LookupOperation lookupOperation,Class resultClass, MongodbParamsQuery query){
+        List<AggregationOperation> aggregationOperations = getOperationsMath(query);
+        aggregationOperations.add(Aggregation.count().as("total"));
+        aggregationOperations.add(0,lookupOperation);
+        Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
+        AggregationResults<CountVo> mongoTest = mongoTemplate.aggregate(aggregation, BaseUtils.getServeModelValue(resultClass), CountVo.class);
+
+        List<CountVo> mappedResults = mongoTest.getMappedResults();
+        long total = 0;
+        if (!CollectionUtils.isEmpty(mappedResults)) {
+            total = mappedResults.get(0).getTotal();
+        }
+
+        return total;
+    }
+
+
+
+
+    /**
+     * 获取math管道
+     * @param query
+     * @return
+     */
+    private static List<AggregationOperation> getOperationsMath(MongodbParamsQuery query){
+        return getOperationsMath(new ArrayList<AggregationOperation>(),query);
+    }
+
+    /**
+     * 获取math管道
+     * @param query
+     * @return
+     */
+    private static List<AggregationOperation> getOperationsMath(List<AggregationOperation> aggregationOperations,MongodbParamsQuery query){
+        query.getCriterias().parallelStream().forEach(criteriaDefinition -> aggregationOperations.add(Aggregation.match(criteriaDefinition)));
+        return aggregationOperations;
     }
 
     public void dropCollection(Class<?> resultClass) {
@@ -226,6 +335,38 @@ public class MongodbService {
 
     public <T> List<T> find(Class<T> resultClass, Query query) {
         return this.mongoTemplate.find(query, resultClass, getCollectionName(resultClass));
+    }
+
+    /**
+     * 根据query查询
+     *
+     * @param resultClass
+
+     * @param <T>
+     * @return
+     */
+    public <T> List<T> findByJoinQuery(Class<T> resultClass,MongodbParamsQuery query) {
+        MongoJoin mongoJoin = query.getMongoJoin();
+        List<AggregationOperation> aggregationOperations = new ArrayList<>();
+        /**
+         * jon连接
+         */
+        aggregationOperations.add(Aggregation.lookup(mongoJoin.getJoinCollectionName(),mongoJoin.getLocalField(),mongoJoin.getForeignField(),mongoJoin.getAsName()));
+
+        /**
+         * 拼装where 参数
+         */
+        getOperationsMath(aggregationOperations,query);
+
+        /**
+         * 排序处理
+         */
+        if (query.getSort() != null){
+            aggregationOperations.add(Aggregation.sort(query.getSort()));
+        }
+
+        Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
+        return mongoTemplate.aggregate(aggregation, BaseUtils.getServeModelValue(resultClass),resultClass).getMappedResults();
     }
 
 
