@@ -18,6 +18,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -168,6 +169,24 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("查询" + this.name + " 失败");
+        }
+    }
+
+    /**
+     * 统计
+     *
+     * @param sumDto
+     * @return
+     * @throws BusinessException
+     */
+    @Override
+    public BigDecimal sum(MongodbSumDto sumDto) throws Exception {
+        try {
+            return this.getDao().sum(this.cls,sumDto);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("统计" + this.name + " 失败");
         }
     }
 

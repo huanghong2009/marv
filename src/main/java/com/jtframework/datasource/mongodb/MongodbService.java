@@ -2,6 +2,7 @@ package com.jtframework.datasource.mongodb;
 
 import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.dao.ServerModel;
+import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.utils.BaseUtils;
 import com.mongodb.*;
@@ -19,6 +20,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.LookupOperation;
 import org.springframework.data.mongodb.core.query.*;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -369,6 +371,34 @@ public class MongodbService {
         return mongoTemplate.aggregate(aggregation, BaseUtils.getServeModelValue(resultClass),resultClass).getMappedResults();
     }
 
+
+
+    /**
+     * 统计
+     *
+     * @param sumDto
+     * @return
+     * @throws BusinessException
+     */
+    public BigDecimal sum(Class<T> resultClass, MongodbSumDto sumDto) throws Exception {
+        List<AggregationOperation> aggregationOperations = new ArrayList<>();
+
+        /**
+         * 拼装where 参数
+         */
+        getOperationsMath(aggregationOperations,sumDto.query);
+
+        aggregationOperations.add(Aggregation.group(sumDto.getGroupFiledName()).sum(sumDto.getSumFiledName()).as("amount"));
+
+        Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
+
+        List<MongodbSumVo> countDtos = this.mongoTemplate.aggregate(aggregation, BaseUtils.getServeModelValue(resultClass), MongodbSumVo.class).getMappedResults();
+
+        if (countDtos.size() == 0) {
+            return new BigDecimal(0);
+        }
+        return countDtos.get(0).getAmount();
+    }
 
     /**
      * 根据query查询

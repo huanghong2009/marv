@@ -3,9 +3,9 @@ package com.jtframework.datasource.mongodb;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoService;
-import org.springframework.data.mongodb.core.query.Query;
 
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface MongoModelDaoService  extends ModelDaoService {
@@ -41,6 +41,15 @@ public interface MongoModelDaoService  extends ModelDaoService {
      * @throws BusinessException
      */
     List findByQuery(MongodbParamsQuery query) throws BusinessException;
+
+
+    /**
+     * 统计
+     * @param sumDto
+     * @return
+     * @throws BusinessException
+     */
+    BigDecimal sum(MongodbSumDto sumDto) throws Exception;
 
     /**
      * 备份清空集合

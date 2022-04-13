@@ -1,7 +1,7 @@
 package com.jtframework.base.service;
 
 import com.jtframework.base.exception.BusinessException;
-import com.jtframework.base.system.ApplicationContextProvider;
+import com.jtframework.utils.system.ApplicationContextProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 

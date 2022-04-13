@@ -1,4 +1,4 @@
-package com.jtframework.base.system;
+package com.jtframework.utils.system;
 
 import com.jtframework.datasource.redis.RedisServiceInit;
 import com.jtframework.utils.AnnotationScannerUtils;

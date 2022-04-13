@@ -1,6 +1,6 @@
 package com.jtframework.datasource.redis;
 
-import com.jtframework.base.system.ApplicationContextProvider;
+import com.jtframework.utils.system.ApplicationContextProvider;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;

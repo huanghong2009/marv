@@ -1,8 +1,7 @@
 package com.jtframework.datasource.mongodb;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Data;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
@@ -18,9 +17,8 @@ public  class MongodbParamsQuery extends Query {
     /**
      * join
      */
-    @ApiModelProperty(hidden=true)
+
     @JsonIgnore
-    @Schema(hidden = true)
     public MongoJoin mongoJoin;
 
     private Sort sort;

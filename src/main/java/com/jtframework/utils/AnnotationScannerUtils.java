@@ -1,7 +1,7 @@
 package com.jtframework.utils;
 
 import com.jtframework.base.rest.AnonymousAccess;
-import com.jtframework.base.system.ApplicationContextProvider;
+import com.jtframework.utils.system.ApplicationContextProvider;
 import com.jtframework.enums.RequestMethodEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMethod;

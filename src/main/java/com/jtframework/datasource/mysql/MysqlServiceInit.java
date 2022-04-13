@@ -1,6 +1,6 @@
 package com.jtframework.datasource.mysql;
 
-import com.jtframework.base.system.ApplicationContextProvider;
+import com.jtframework.utils.system.ApplicationContextProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
