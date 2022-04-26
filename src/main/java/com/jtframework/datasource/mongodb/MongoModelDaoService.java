@@ -52,6 +52,14 @@ public interface MongoModelDaoService  extends ModelDaoService {
     BigDecimal sum(MongodbSumDto sumDto) throws Exception;
 
     /**
+     * 统计
+     * @param sumDto
+     * @return
+     * @throws BusinessException
+     */
+    List<MongodbSumVo> sumList(MongodbSumDto sumDto) throws Exception;
+
+    /**
      * 备份清空集合
      * @param maxSize 需要备份的最大数量
      * @throws Exception

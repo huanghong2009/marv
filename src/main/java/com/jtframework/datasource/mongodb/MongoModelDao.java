@@ -7,7 +7,9 @@ import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
 import com.jtframework.utils.BaseUtils;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.MongoNamespace;
+import com.mongodb.client.MongoCollection;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -80,6 +82,10 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     @Override
     public void insert(BaseModel model) throws BusinessException {
         try {
+            MongoCollection collection = getDao().mongoTemplate.getCollection("boundary");
+            while (collection.find().iterator().hasNext()) {
+
+            }
             getDao().insert(model);
         } catch (Exception e) {
             e.printStackTrace();
@@ -183,6 +189,24 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     public BigDecimal sum(MongodbSumDto sumDto) throws Exception {
         try {
             return this.getDao().sum(this.cls,sumDto);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("统计" + this.name + " 失败");
+        }
+    }
+
+    /**
+     * 统计
+     *
+     * @param sumDto
+     * @return
+     * @throws BusinessException
+     */
+    @Override
+    public List<MongodbSumVo> sumList(MongodbSumDto sumDto) throws Exception {
+        try {
+            return this.getDao().sumList(this.cls,sumDto);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());

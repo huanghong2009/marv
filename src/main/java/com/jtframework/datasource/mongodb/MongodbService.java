@@ -317,7 +317,7 @@ public class MongodbService {
      * @param query
      * @return
      */
-    private static List<AggregationOperation> getOperationsMath(MongodbParamsQuery query){
+    public static List<AggregationOperation> getOperationsMath(MongodbParamsQuery query){
         return getOperationsMath(new ArrayList<AggregationOperation>(),query);
     }
 
@@ -326,7 +326,7 @@ public class MongodbService {
      * @param query
      * @return
      */
-    private static List<AggregationOperation> getOperationsMath(List<AggregationOperation> aggregationOperations,MongodbParamsQuery query){
+    public static List<AggregationOperation> getOperationsMath(List<AggregationOperation> aggregationOperations,MongodbParamsQuery query){
         query.getCriterias().parallelStream().forEach(criteriaDefinition -> aggregationOperations.add(Aggregation.match(criteriaDefinition)));
         return aggregationOperations;
     }
@@ -398,6 +398,29 @@ public class MongodbService {
             return new BigDecimal(0);
         }
         return countDtos.get(0).getAmount();
+    }
+
+
+    /**
+     * 统计
+     *
+     * @param sumDto
+     * @return
+     * @throws BusinessException
+     */
+    public List<MongodbSumVo> sumList(Class<T> resultClass, MongodbSumDto sumDto) throws Exception {
+        List<AggregationOperation> aggregationOperations = new ArrayList<>();
+
+        /**
+         * 拼装where 参数
+         */
+        getOperationsMath(aggregationOperations,sumDto.query);
+
+        aggregationOperations.add(Aggregation.group(sumDto.getGroupFiledName()).sum(sumDto.getSumFiledName()).as("amount"));
+
+        Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
+
+        return this.mongoTemplate.aggregate(aggregation, BaseUtils.getServeModelValue(resultClass), MongodbSumVo.class).getMappedResults();
     }
 
     /**

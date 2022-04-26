@@ -14,7 +14,7 @@
     <groupId>com.jtframework</groupId>
     <artifactId>marv</artifactId>
 
-    <version>23.4</version>
+    <version>23.7</version>
 
     <packaging>jar</packaging>
 
@@ -56,6 +56,8 @@
 
 
         </dependency>
+
+
 
         <dependency>
             <groupId>io.springfox</groupId>
