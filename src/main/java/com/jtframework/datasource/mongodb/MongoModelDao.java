@@ -5,9 +5,9 @@ import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoServiceImpl;
+import com.jtframework.utils.AnnotationUtils;
 import com.jtframework.utils.BaseUtils;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
 import com.mongodb.MongoNamespace;
 import com.mongodb.client.MongoCollection;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +45,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
 
 
     public MongoModelDao() {
-        this.collectionName = BaseUtils.getServeModelValue(cls);
+        this.collectionName = AnnotationUtils.getServeModelValue(cls);
     }
 
     public MongodbService getMongoService() {
@@ -188,7 +188,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     @Override
     public BigDecimal sum(MongodbSumDto sumDto) throws Exception {
         try {
-            return this.getDao().sum(this.cls,sumDto);
+            return this.getDao().sum(this.cls, sumDto);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -206,7 +206,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     @Override
     public List<MongodbSumVo> sumList(MongodbSumDto sumDto) throws Exception {
         try {
-            return this.getDao().sumList(this.cls,sumDto);
+            return this.getDao().sumList(this.cls, sumDto);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());

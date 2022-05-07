@@ -1,19 +1,16 @@
 package com.jtframework.datasource.mysql;
 
-import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.dao.ServerField;
 import com.jtframework.base.dao.ServerModel;
 import com.jtframework.base.exception.BusinessException;
-import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.base.query.ParamsDTO;
+import com.jtframework.utils.AnnotationUtils;
 import com.jtframework.utils.BaseUtils;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
@@ -21,7 +18,6 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
-import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
@@ -92,9 +88,8 @@ public class MysqlService {
     }
 
 
-
     public <T> List<T> selectListAll(Class<T> resultClass) throws SQLException {
-        String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass) + "`";
+        String sql = "SELECT * FROM `" + AnnotationUtils.getServeModelValue(resultClass) + "`";
         return selectList(resultClass, sql, new String[]{});
     }
 
@@ -133,7 +128,7 @@ public class MysqlService {
      * @throws SQLException
      */
     public <T> List<T> selectListFromMap(Class<T> resultClass, Map<String, Object> params) throws SQLException {
-        String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass) + "` WHERE  1 =1 ";
+        String sql = "SELECT * FROM `" + AnnotationUtils.getServeModelValue(resultClass) + "` WHERE  1 =1 ";
 
         for (String key : params.keySet()) {
             sql += " AND `" + key + "` = :" + key + " ";
@@ -152,7 +147,7 @@ public class MysqlService {
      */
 
     public int updateKVById(Class<? extends BaseModel> resultClass, String id, String key, Object value) throws SQLException {
-        String sql = "UPDATE `" + BaseUtils.getServeModelValue(resultClass) + "` SET `" + key + "` = :" + key + " WHERE  id = :ID";
+        String sql = "UPDATE `" + AnnotationUtils.getServeModelValue(resultClass) + "` SET `" + key + "` = :" + key + " WHERE  id = :ID";
         Map<String, Object> params = new HashMap<>();
         params.put(key, value);
         params.put("ID", id);
@@ -170,7 +165,7 @@ public class MysqlService {
      * @throws SQLException
      */
     public <T> T selectOneFromMap(Class<T> resultClass, Map<String, Object> params) throws SQLException {
-        String sql = "SELECT * FROM " + BaseUtils.getServeModelValue(resultClass) + " WHERE  1 =1 ";
+        String sql = "SELECT * FROM " + AnnotationUtils.getServeModelValue(resultClass) + " WHERE  1 =1 ";
 
         for (String key : params.keySet()) {
             sql += " AND `" + key + "` = :" + key + " ";
@@ -189,7 +184,7 @@ public class MysqlService {
      * @throws SQLException
      */
     public <T> List<T> selectListFromKV(Class<T> resultClass, String key, Object value) throws SQLException {
-        String sql = "SELECT * FROM `" + BaseUtils.getServeModelValue(resultClass) + "` WHERE  `" + key + "` = ? ";
+        String sql = "SELECT * FROM `" + AnnotationUtils.getServeModelValue(resultClass) + "` WHERE  `" + key + "` = ? ";
         return selectList(resultClass, sql, new Object[]{value});
     }
 
@@ -203,7 +198,7 @@ public class MysqlService {
      * @throws SQLException
      */
     public <T> T selectOneFromKV(Class<T> resultClass, String key, String value) throws SQLException {
-        String sql = "SELECT * FROM " + BaseUtils.getServeModelValue(resultClass) + " WHERE  `" + key + "` = ? ";
+        String sql = "SELECT * FROM " + AnnotationUtils.getServeModelValue(resultClass) + " WHERE  `" + key + "` = ? ";
         return selectOne(resultClass, sql, new String[]{value});
     }
 
@@ -460,7 +455,7 @@ public class MysqlService {
     }
 
     public int update(Class<? extends BaseModel> cls, Map<String, Object> whereParams, Map<String, Object> updateParams) throws SQLException {
-        String table = BaseUtils.getServeModelValue(cls);
+        String table = AnnotationUtils.getServeModelValue(cls);
         MysqlParams mysqlParams = getUpdateWhereParams(table, whereParams, updateParams);
         try {
             return namedParameterJdbcTemplate.update(mysqlParams.getSql(), mysqlParams.getParams());
@@ -483,8 +478,8 @@ public class MysqlService {
     public int delete(Class resultClass, Collection ids) throws SQLException {
         String sql = "DELETE FROM " + table + " WHERE ID IN (:IDS) ";
 
-        Map<String,Object> params = new HashMap<>();
-        params.put("IDS",ids);
+        Map<String, Object> params = new HashMap<>();
+        params.put("IDS", ids);
 
         log.debug("SQL:" + sql);
 
@@ -492,7 +487,7 @@ public class MysqlService {
     }
 
     public int delete(Class resultClass, String id) throws SQLException {
-        return delete(BaseUtils.getServeModelValue(resultClass), " ID=? ", new Object[]{id});
+        return delete(AnnotationUtils.getServeModelValue(resultClass), " ID=? ", new Object[]{id});
     }
 
     public int delete(String table, Map<String, Object> param) throws SQLException {
@@ -502,10 +497,10 @@ public class MysqlService {
             throw new SQLException("非法请求");
         }
         for (String key : keys) {
-            sql += " "+key+" = :"+key +" AND";
+            sql += " " + key + " = :" + key + " AND";
         }
 
-        sql = sql.substring(0,sql.length()-3);
+        sql = sql.substring(0, sql.length() - 3);
 
         log.debug("SQL:" + sql);
         return exec(sql, param);
@@ -646,17 +641,18 @@ public class MysqlService {
 
     /**
      * 批量根据id查询
+     *
      * @param resultClass
      * @param ids
      * @param <T>
      * @return
      * @throws SQLException
      */
-    public <T> List<T>  load(Class<T> resultClass, Set<String> ids) throws SQLException {
+    public <T> List<T> load(Class<T> resultClass, Set<String> ids) throws SQLException {
         ServerModel serverModel = resultClass.getAnnotation(ServerModel.class);
         String sql = "SELECT * FROM " + (serverModel != null ? serverModel.value() : resultClass.getName()) + " WHERE ID IN (:IDS)";
-        return selectList(resultClass,sql,new HashMap<String, Object>(){{
-            put("IDS",ids);
+        return selectList(resultClass, sql, new HashMap<String, Object>() {{
+            put("IDS", ids);
         }});
     }
 

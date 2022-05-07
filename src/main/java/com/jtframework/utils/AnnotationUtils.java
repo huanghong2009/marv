@@ -1,5 +1,6 @@
 package com.jtframework.utils;
 
+import com.jtframework.base.dao.ServerModel;
 import com.jtframework.base.rest.AnonymousAccess;
 import com.jtframework.utils.system.ApplicationContextProvider;
 import com.jtframework.enums.RequestMethodEnum;
@@ -12,7 +13,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import java.util.*;
 
 @Slf4j
-public class AnnotationScannerUtils {
+public class AnnotationUtils {
 
 
     /**
@@ -42,6 +43,29 @@ public class AnnotationScannerUtils {
             }
         }
         return urls;
+    }
+
+
+    /**
+     * 获取类的ServerModel 值
+     *
+     * @param cls
+     * @return
+     */
+    public static String getServeModelValue(Class cls) {
+        ServerModel serverModel = (ServerModel) cls.getAnnotation(ServerModel.class);
+        return serverModel != null ? serverModel.value() : cls.getName();
+    }
+
+    /**
+     * 获取类的ServerModel 描述
+     *
+     * @param cls
+     * @return
+     */
+    public static String getServeModelDesc(Class cls) {
+        ServerModel serverModel = (ServerModel) cls.getAnnotation(ServerModel.class);
+        return serverModel != null ? serverModel.desc() : cls.getName();
     }
 }
 

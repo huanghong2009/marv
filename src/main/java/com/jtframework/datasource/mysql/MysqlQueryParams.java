@@ -3,7 +3,9 @@ package com.jtframework.datasource.mysql;
 import cn.hutool.core.util.ReflectUtil;
 import com.jtframework.base.dao.ServerField;
 import com.jtframework.base.query.PageVO;
+import com.jtframework.utils.AnnotationUtils;
 import com.jtframework.utils.BaseUtils;
+import com.jtframework.utils.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,7 +68,7 @@ public class MysqlQueryParams {
 
     public MysqlQueryParams(Class cls) {
         this.modelCls = cls;
-        this.table = BaseUtils.getServeModelValue(cls);
+        this.table = AnnotationUtils.getServeModelValue(cls);
     }
 
     public MysqlQueryParams(String sql) {
@@ -94,7 +96,7 @@ public class MysqlQueryParams {
      * @return
      */
     public MysqlQueryParam addParam(String column) {
-        String key = BaseUtils.changeUpperToUnderLetter(column);
+        String key = StringUtils.changeUpperToUnderLetter(column);
         MysqlQueryParam mysqlQuery = new MysqlQueryParam(key);
         params.add(mysqlQuery);
         return mysqlQuery;
@@ -143,7 +145,7 @@ public class MysqlQueryParams {
             this.orderColumn = serverField.value();
 
         } else {
-            this.orderColumn = BaseUtils.changeUpperToUnderLetter(column);
+            this.orderColumn = StringUtils.changeUpperToUnderLetter(column);
         }
 
         this.mysqlSort = mysqlSort;
@@ -200,8 +202,8 @@ public class MysqlQueryParams {
     private String getParamsSql(MysqlQuery param) {
         String result = " ";
 
-        if (BaseUtils.isNotBlank(param.getSql())){
-            return  param.getSql();
+        if (BaseUtils.isNotBlank(param.getSql())) {
+            return param.getSql();
         }
         String filed = param.column;
 

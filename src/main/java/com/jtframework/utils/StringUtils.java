@@ -22,13 +22,15 @@ import org.springframework.core.io.ClassPathResource;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.UnknownHostException;
+import java.math.BigInteger;
+import java.net.*;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * @author Zheng Jie
@@ -42,7 +44,6 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
 
     private static final char SEPARATOR = '_';
     private static final String UNKNOWN = "unknown";
-
 
 
     /**
@@ -131,113 +132,138 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     }
 
     /**
-     * 获取ip地址
-     */
-    public static String getIp(HttpServletRequest request) {
-        String ip = request.getHeader("x-forwarded-for");
-        if (ip == null || ip.length() == 0 || UNKNOWN.equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || UNKNOWN.equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || UNKNOWN.equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        String comma = ",";
-        String localhost = "127.0.0.1";
-        if (ip.contains(comma)) {
-            ip = ip.split(",")[0];
-        }
-        if (localhost.equals(ip)) {
-            // 获取本机真正的ip地址
-            try {
-                ip = InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException e) {
-                log.error(e.getMessage(), e);
-            }
-        }
-        return ip;
-    }
-
-
-
-
-
-
-
-    /**
-     * 获得当天是周几
-     */
-    public static String getWeekDay() {
-        String[] weekDays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(new Date());
-
-        int w = cal.get(Calendar.DAY_OF_WEEK) - 1;
-        if (w < 0) {
-            w = 0;
-        }
-        return weekDays[w];
-    }
-
-    /**
-     * 获取当前机器的IP
+     * 把下划线加小写转成驼峰格式
      *
-     * @return /
+     * @param str
+     * @return
      */
-    public static String getLocalIp() {
-        try {
-            InetAddress candidateAddress = null;
-            // 遍历所有的网络接口
-            for (Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces(); interfaces.hasMoreElements();) {
-                NetworkInterface anInterface = interfaces.nextElement();
-                // 在所有的接口下再遍历IP
-                for (Enumeration<InetAddress> inetAddresses = anInterface.getInetAddresses(); inetAddresses.hasMoreElements();) {
-                    InetAddress inetAddr = inetAddresses.nextElement();
-                    // 排除loopback类型地址
-                    if (!inetAddr.isLoopbackAddress()) {
-                        if (inetAddr.isSiteLocalAddress()) {
-                            // 如果是site-local地址，就是它了
-                            return inetAddr.getHostAddress();
-                        } else if (candidateAddress == null) {
-                            // site-local类型的地址未被发现，先记录候选地址
-                            candidateAddress = inetAddr;
-                        }
-                    }
+    public static String changeUnderToUpperLetter(String str) {
+        String regExp = "(_)([a-z]{1})";
+        Pattern pattern = Pattern.compile(regExp);
+        Matcher matcher = pattern.matcher(str);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            // 把_小写 格式 改成大写，即驼峰命名，匹配后进行把下划线替换成空，然后转换成大写的
+            matcher.appendReplacement(sb, matcher.group().replaceAll("_", "").toUpperCase());
+        }
+        matcher.appendTail(sb);
+        System.out.println("changeUnderToUpper: " + sb.toString());
+        return sb.toString();
+    }
+
+
+
+    /**
+     * 驼峰格式转换为下划线小写格式
+     *
+     * @param str
+     * @return
+     */
+    public static String changeUpperToUnderLetter(String str) {
+        String regExp = "([A-Z]{1})"; // 匹配单个字符
+        Pattern pattern = Pattern.compile(regExp);
+        Matcher matcher = pattern.matcher(str);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            // 把大写的 改成 _小写的内容。匹配大写后改成小写的，前面加一个下划线
+            matcher.appendReplacement(sb, "_" + matcher.group().toLowerCase());
+        }
+        matcher.appendTail(sb);
+        System.out.println("changeUpperLetter: " + sb.toString());
+        return sb.toString();
+    }
+
+
+    /**
+     * 字符串批量替换
+     *
+     * @param source 源字符串
+     * @param keywords 需要匹配的 挂念次
+     * @param target 替换的 词
+     * @return
+     */
+    public static String replace(String source, String[] keywords, String target) {
+        if (!BaseUtils.isBlank(source) && !BaseUtils.isBlank(target) && keywords != null && keywords.length != 0) {
+            String result = source;
+            for (String keyword : keywords) {
+                if (!BaseUtils.isBlank(keyword)) {
+                    result = org.springframework.util.StringUtils.replace(result, keyword, target);
                 }
             }
-            if (candidateAddress != null) {
-                return candidateAddress.getHostAddress();
-            }
-            // 如果没有发现 non-loopback地址.只能用最次选的方案
-            InetAddress jdkSuppliedAddress = InetAddress.getLocalHost();
-            if (jdkSuppliedAddress == null) {
-                return "";
-            }
-            return jdkSuppliedAddress.getHostAddress();
-        } catch (Exception e) {
-            return "";
+            return result;
+        } else {
+            return null;
         }
     }
 
+    /**
+     * 判断是不是手机号
+     * 正则表达
+     * 手机号码由11位数字组成，
+     * 匹配格式：前三位固定格式+后8位任意数
+     * 此方法中前三位格式有：
+     * 13+任意数
+     * 15+除4的任意数
+     * 18+除1和4的任意数
+     * 17+除9的任意数
+     * 147
+     */
+    public static boolean isMobile(String str) {
+        String regExp = "^((13[0-9])|(15[^4])|(18[0,2,3,5-9])|(17[0-8])|(147))\\d{8}$";
+        Pattern p = Pattern.compile(regExp);
+        Matcher m = p.matcher(str);
+        return m.matches();
+    }
+
+
+
+
+
+    /**
+     * 字符串url encode
+     *
+     * @param input
+     * @return
+     */
+    public static String urlEncode(String input) {
+        try {
+            return URLEncoder.encode(input, "UTF-8");
+        } catch (UnsupportedEncodingException var2) {
+            throw new IllegalArgumentException("Unsupported Encoding Exception", var2);
+        }
+    }
+
+    /**
+     * 字符串url decode
+     *
+     * @param input
+     * @return
+     */
+    public static String urlDecode(String input) {
+        try {
+            return URLDecoder.decode(input, "UTF-8");
+        } catch (UnsupportedEncodingException var2) {
+            throw new IllegalArgumentException("Unsupported Encoding Exception", var2);
+        }
+    }
 
     /**
      * 获取中文变量命名(第一个首字母小写，第二个是首字母大写的)
+     *
      * @return
      * @throws Exception
      */
-    public static String[] getZhWordName(String word)throws Exception{
-        word = word.replace("'s","");
-        String[] words=word.split(" ");
+    public static String[] getZhWordName(String word) throws Exception {
+        word = word.replace("'s", "");
+        String[] words = word.split(" ");
         ArrayList<String> wordList = new ArrayList<>();
         for (String str : words) {
-            if (!str.toLowerCase(Locale.ROOT).equals("the") && !str.toLowerCase(Locale.ROOT).equals("of") && !str.toLowerCase(Locale.ROOT).equals("table")){
+            if (!str.toLowerCase(Locale.ROOT).equals("the") && !str.toLowerCase(Locale.ROOT).equals("of") && !str.toLowerCase(Locale.ROOT).equals("table")) {
                 wordList.add(str);
             }
         }
 
-        word = String.join("_",wordList);
+        word = String.join("_", wordList);
         String[] result = new String[2];
         result[0] = StringUtils.toCamelCase(word);
         result[1] = StringUtils.toCapitalizeCamelCase(word);
@@ -246,11 +272,12 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
 
     /**
      * 判断是不是数字
+     *
      * @param str
      * @return
      */
     public static boolean isNumeric(String str) {
-    // 该正则表达式可以匹配所有的数字 包括负数
+        // 该正则表达式可以匹配所有的数字 包括负数
         Pattern pattern = Pattern.compile("-?[0-9]+(\\.[0-9]+)?");
         String bigStr;
         try {
@@ -265,4 +292,61 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         }
         return true;
     }
+
+
+    /**
+     * 生成盐值
+     *
+     * @return String salt 盐值
+     * @throws null 26
+     */
+    public static String creatSalt() {
+        SecureRandom random = new SecureRandom();
+        String salt = new BigInteger(130, random).toString(32);
+        return salt;
+    }
+
+
+    /**
+     * 创建指定数量的随机字符串
+     *
+     * @param length
+     * @return
+     */
+    public static String getRandCode(int length) {
+        return getRandCode(true, length);
+    }
+
+    /**
+     * 创建指定数量的随机字符串
+     *
+     * @param numberFlag 是否是数字
+     * @param length
+     * @return
+     */
+    public static String getRandCode(boolean numberFlag, int length) {
+        String retStr = "";
+        String strTable = numberFlag ? "1234567890" : "1234567890abcdefghijkmnpqrstuvwxyz";
+        int len = strTable.length();
+        boolean bDone = true;
+        do {
+            retStr = "";
+            int count = 0;
+            for (int i = 0; i < length; i++) {
+                double dblR = Math.random() * len;
+                int intR = (int) Math.floor(dblR);
+                char c = strTable.charAt(intR);
+                if (('0' <= c) && (c <= '9')) {
+                    count++;
+                }
+                retStr += strTable.charAt(intR);
+            }
+            if (count >= 2) {
+                bDone = false;
+            }
+        } while (bDone);
+        return retStr;
+    }
+
+
 }

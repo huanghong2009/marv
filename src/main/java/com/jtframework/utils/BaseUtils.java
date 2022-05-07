@@ -1,27 +1,63 @@
 package com.jtframework.utils;
 
 import com.jtframework.base.dao.ServerModel;
+import com.jtframework.utils.tools.SHA256;
 import org.apache.commons.collections4.CollectionUtils;
 import org.eclipse.jetty.util.StringUtil;
-import org.springframework.util.StringUtils;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.security.SecureRandom;
+import java.net.*;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author huanghong E-mail:767980702@qq.com
  * @version 创建时间：2017/12/21
  */
 public final class BaseUtils {
+
+
+
+    /**
+     * 获取当前机器的IP
+     *
+     * @return /
+     */
+    public static String getLocalIp() {
+        try {
+            InetAddress candidateAddress = null;
+            // 遍历所有的网络接口
+            for (Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces(); interfaces.hasMoreElements(); ) {
+                NetworkInterface anInterface = interfaces.nextElement();
+                // 在所有的接口下再遍历IP
+                for (Enumeration<InetAddress> inetAddresses = anInterface.getInetAddresses(); inetAddresses.hasMoreElements(); ) {
+                    InetAddress inetAddr = inetAddresses.nextElement();
+                    // 排除loopback类型地址
+                    if (!inetAddr.isLoopbackAddress()) {
+                        if (inetAddr.isSiteLocalAddress()) {
+                            // 如果是site-local地址，就是它了
+                            return inetAddr.getHostAddress();
+                        } else if (candidateAddress == null) {
+                            // site-local类型的地址未被发现，先记录候选地址
+                            candidateAddress = inetAddr;
+                        }
+                    }
+                }
+            }
+            if (candidateAddress != null) {
+                return candidateAddress.getHostAddress();
+            }
+            // 如果没有发现 non-loopback地址.只能用最次选的方案
+            InetAddress jdkSuppliedAddress = InetAddress.getLocalHost();
+            if (jdkSuppliedAddress == null) {
+                return "";
+            }
+            return jdkSuppliedAddress.getHostAddress();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+
     /**
      * 克隆流
      * @param input
@@ -59,25 +95,6 @@ public final class BaseUtils {
         return inputStreams;
     }
 
-    /**
-     * 把下划线加小写转成驼峰格式
-     *
-     * @param str
-     * @return
-     */
-    public static String changeUnderToUpperLetter(String str) {
-        String regExp = "(_)([a-z]{1})";
-        Pattern pattern = Pattern.compile(regExp);
-        Matcher matcher = pattern.matcher(str);
-        StringBuffer sb = new StringBuffer();
-        while (matcher.find()) {
-            // 把_小写 格式 改成大写，即驼峰命名，匹配后进行把下划线替换成空，然后转换成大写的
-            matcher.appendReplacement(sb, matcher.group().replaceAll("_", "").toUpperCase());
-        }
-        matcher.appendTail(sb);
-        System.out.println("changeUnderToUpper: " + sb.toString());
-        return sb.toString();
-    }
 
 
     /**
@@ -97,89 +114,6 @@ public final class BaseUtils {
         }
         return sb.toString();
 
-    }
-
-    /**
-     * 驼峰格式转换为下划线小写格式
-     *
-     * @param str
-     * @return
-     */
-    public static String changeUpperToUnderLetter(String str) {
-        String regExp = "([A-Z]{1})"; // 匹配单个字符
-        Pattern pattern = Pattern.compile(regExp);
-        Matcher matcher = pattern.matcher(str);
-        StringBuffer sb = new StringBuffer();
-        while (matcher.find()) {
-            // 把大写的 改成 _小写的内容。匹配大写后改成小写的，前面加一个下划线
-            matcher.appendReplacement(sb, "_" + matcher.group().toLowerCase());
-        }
-        matcher.appendTail(sb);
-        System.out.println("changeUpperLetter: " + sb.toString());
-        return sb.toString();
-    }
-
-    /**
-     * BigDecimal 计算
-     *
-     * @param v1
-     * @param v2
-     * @return
-     */
-    public static double mathAdd(double v1, double v2) {
-        BigDecimal b1 = new BigDecimal(Double.toString(v1));
-        BigDecimal b2 = new BigDecimal(Double.toString(v2));
-        return b1.add(b2).doubleValue();
-    }
-
-    public static double mathAdd(String v1, String v2) {
-        BigDecimal b1 = new BigDecimal(v1);
-        BigDecimal b2 = new BigDecimal(v2);
-        return b1.add(b2).doubleValue();
-    }
-
-    public static double mathSub(double v1, double v2) {
-        BigDecimal b1 = new BigDecimal(Double.toString(v1));
-        BigDecimal b2 = new BigDecimal(Double.toString(v2));
-        return b1.subtract(b2).doubleValue();
-    }
-
-    public static double mathSub(String v1, String v2) {
-        BigDecimal b1 = new BigDecimal(v1);
-        BigDecimal b2 = new BigDecimal(v2);
-        return b1.subtract(b2).doubleValue();
-    }
-
-    public static double mathMul(double v1, double v2) {
-        BigDecimal b1 = new BigDecimal(Double.toString(v1));
-        BigDecimal b2 = new BigDecimal(Double.toString(v2));
-        return b1.multiply(b2).doubleValue();
-    }
-
-    public static double mathMul(String v1, String v2) {
-        BigDecimal b1 = new BigDecimal(v1);
-        BigDecimal b2 = new BigDecimal(v2);
-        return b1.multiply(b2).doubleValue();
-    }
-
-    public static double mathDiv(double v1, double v2, int scale) {
-        if (scale < 0) {
-            throw new IllegalArgumentException("The scale must be a positive integer or zero");
-        } else {
-            BigDecimal b1 = new BigDecimal(Double.toString(v1));
-            BigDecimal b2 = new BigDecimal(Double.toString(v2));
-            return b1.divide(b2, scale, 4).doubleValue();
-        }
-    }
-
-    public static double mathDiv(String v1, String v2, int scale) {
-        if (scale < 0) {
-            throw new IllegalArgumentException("The scale must be a positive integer or zero");
-        } else {
-            BigDecimal b1 = new BigDecimal(v1);
-            BigDecimal b2 = new BigDecimal(v2);
-            return b1.divide(b2, scale, 4).doubleValue();
-        }
     }
 
 
@@ -247,27 +181,7 @@ public final class BaseUtils {
         return false;
     }
 
-    /**
-     * 批量替换
-     *
-     * @param source
-     * @param keywords
-     * @param target
-     * @return
-     */
-    public static String replace(String source, String[] keywords, String target) {
-        if (!BaseUtils.isBlank(source) && !BaseUtils.isBlank(target) && keywords != null && keywords.length != 0) {
-            String result = source;
-            for (String keyword : keywords) {
-                if (!BaseUtils.isBlank(keyword)) {
-                    result = StringUtils.replace(result, keyword, target);
-                }
-            }
-            return result;
-        } else {
-            return null;
-        }
-    }
+
 
     public static boolean isNotBlank(String str) {
         return StringUtil.isNotBlank(str);
@@ -277,46 +191,7 @@ public final class BaseUtils {
         return StringUtil.isBlank(str);
     }
 
-    /***
-     * 判断是不是手机号
-     * @param mobileNo
-     * @return
-     */
-    public static boolean isMobileNo(String mobileNo) {
-        String reg = "(^13[0-9]\\d{8}$)|(^17[0,1,6,7,8]\\d{8}$)|(^15[0,1,2，5，6,7,8,9]\\d{8}$)|(^18[0-9]\\d{8}$)|(^14[5,7]\\d{8}$)|(^[1-9]{2}\\d{6}$)";
-        Pattern p = Pattern.compile(reg);
-        Matcher m = p.matcher(mobileNo);
-        return m.find();
-    }
 
-
-    /**
-     * 字符串url encode
-     *
-     * @param input
-     * @return
-     */
-    public static String urlEncode(String input) {
-        try {
-            return URLEncoder.encode(input, "UTF-8");
-        } catch (UnsupportedEncodingException var2) {
-            throw new IllegalArgumentException("Unsupported Encoding Exception", var2);
-        }
-    }
-
-    /**
-     * 字符串url decode
-     *
-     * @param input
-     * @return
-     */
-    public static String urlDecode(String input) {
-        try {
-            return URLDecoder.decode(input, "UTF-8");
-        } catch (UnsupportedEncodingException var2) {
-            throw new IllegalArgumentException("Unsupported Encoding Exception", var2);
-        }
-    }
 
     /**
      * 获取异常栈字符串
@@ -382,41 +257,7 @@ public final class BaseUtils {
         return ip;
     }
 
-    /**
-     * 获取ip地址
-     *
-     * @param request
-     * @return
-     */
-    public static String getIpAddr(HttpServletRequest request) {
-        String ip = request.getHeader("x-forwarded-for");
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-            if (ip.equals("127.0.0.1")) {
-                //根据网卡取本机配置的IP
-                InetAddress inet = null;
-                try {
-                    inet = InetAddress.getLocalHost();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                ip = inet.getHostAddress();
-            }
-        }
-        // 多个代理的情况，第一个IP为客户端真实IP,多个IP按照','分割
-        if (ip != null && ip.length() > 15) {
-            if (ip.indexOf(",") > 0) {
-                ip = ip.substring(0, ip.indexOf(","));
-            }
-        }
-        return ip;
-    }
+
 
 
     /**
@@ -475,71 +316,6 @@ public final class BaseUtils {
         return passwordBuf.toString();
     }
 
-    /**
-     * 生成盐值
-     *
-     * @return String salt 盐值
-     * @throws null 26
-     */
-    public static String creatSalt() {
-        SecureRandom random = new SecureRandom();
-        String salt = new BigInteger(130, random).toString(32);
-        return salt;
-    }
-
-
-    /**
-     * 创建指定数量的随机字符串
-     *
-     * @param length
-     * @return
-     */
-    public static String getRandCode(int length) {
-        return getRandCode(true, length);
-    }
-
-    /**
-     * 创建指定数量的随机字符串
-     *
-     * @param numberFlag 是否是数字
-     * @param length
-     * @return
-     */
-    public static String getRandCode(boolean numberFlag, int length) {
-        String retStr = "";
-        String strTable = numberFlag ? "1234567890" : "1234567890abcdefghijkmnpqrstuvwxyz";
-        int len = strTable.length();
-        boolean bDone = true;
-        do {
-            retStr = "";
-            int count = 0;
-            for (int i = 0; i < length; i++) {
-                double dblR = Math.random() * len;
-                int intR = (int) Math.floor(dblR);
-                char c = strTable.charAt(intR);
-                if (('0' <= c) && (c <= '9')) {
-                    count++;
-                }
-                retStr += strTable.charAt(intR);
-            }
-            if (count >= 2) {
-                bDone = false;
-            }
-        } while (bDone);
-        return retStr;
-    }
-
-    /**
-     * 校验是不是手机号
-     *
-     * @param mobiles
-     * @return
-     */
-    public static boolean isMobileNO(String mobiles) {
-        Pattern p = Pattern.compile("^1(3|5|7|8|4)\\d{9}");
-        Matcher m = p.matcher(mobiles);
-        return m.matches();
-    }
 
 
     /**
@@ -593,25 +369,5 @@ public final class BaseUtils {
     }
 
 
-    /**
-     * 获取类的ServerModel 值
-     *
-     * @param cls
-     * @return
-     */
-    public static String getServeModelValue(Class cls) {
-        ServerModel serverModel = (ServerModel) cls.getAnnotation(ServerModel.class);
-        return serverModel != null ? serverModel.value() : cls.getName();
-    }
 
-    /**
-     * 获取类的ServerModel 描述
-     *
-     * @param cls
-     * @return
-     */
-    public static String getServeModelDesc(Class cls) {
-        ServerModel serverModel = (ServerModel) cls.getAnnotation(ServerModel.class);
-        return serverModel != null ? serverModel.desc() : cls.getName();
-    }
 }

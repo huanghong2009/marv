@@ -1,5 +1,7 @@
 package com.jtframework.utils;
 
+import com.jtframework.utils.tools.MD5;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.UUID;

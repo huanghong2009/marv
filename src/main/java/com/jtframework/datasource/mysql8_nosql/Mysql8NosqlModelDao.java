@@ -45,7 +45,7 @@
 //     * @return
 //     */
 //    public Collection getCollection(Session session) {
-//        return session.getDefaultSchema().createCollection(BaseUtils.getServeModelValue(this.cls), true);
+//        return session.getDefaultSchema().createCollection(AnnotationUtils.getServeModelValue(this.cls), true);
 //    }
 //
 //

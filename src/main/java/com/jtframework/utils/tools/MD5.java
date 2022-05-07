@@ -1,4 +1,4 @@
-package com.jtframework.utils;
+package com.jtframework.utils.tools;
 
 /**
  * @author huanghong E-mail:767980702@qq.com

@@ -1,12 +1,10 @@
 package com.jtframework.datasource.common;
 
-import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.service.BaseServiceImpl;
-import com.jtframework.utils.BaseUtils;
+import com.jtframework.utils.AnnotationUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
-import java.util.Collections;
 
 public abstract class ModelDaoServiceImpl<T> extends BaseServiceImpl implements ModelDaoService, Serializable {
     public String name;
@@ -16,7 +14,7 @@ public abstract class ModelDaoServiceImpl<T> extends BaseServiceImpl implements 
     public ModelDaoServiceImpl() {
         Class cls = getTClass();
         this.cls = cls;
-        this.name = BaseUtils.getServeModelDesc(cls);
+        this.name = AnnotationUtils.getServeModelDesc(cls);
     }
 
     public Class<T> getTClass() {

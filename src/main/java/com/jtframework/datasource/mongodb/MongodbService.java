@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.dao.ServerModel;
 import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.PageVO;
+import com.jtframework.utils.AnnotationUtils;
 import com.jtframework.utils.BaseUtils;
 import com.mongodb.*;
 import lombok.Data;
@@ -18,7 +19,10 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.LookupOperation;
-import org.springframework.data.mongodb.core.query.*;
+import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -282,7 +286,7 @@ public class MongodbService {
             }
 
             Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
-            List<T> result = mongoTemplate.aggregate(aggregation, BaseUtils.getServeModelValue(resultClass),resultClass).getMappedResults();
+            List<T> result = mongoTemplate.aggregate(aggregation, AnnotationUtils.getServeModelValue(resultClass),resultClass).getMappedResults();
 
             return new PageVO(startIndex, total, pageSize, result);
         }
@@ -298,7 +302,7 @@ public class MongodbService {
         aggregationOperations.add(Aggregation.count().as("total"));
         aggregationOperations.add(0,lookupOperation);
         Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
-        AggregationResults<CountVo> mongoTest = mongoTemplate.aggregate(aggregation, BaseUtils.getServeModelValue(resultClass), CountVo.class);
+        AggregationResults<CountVo> mongoTest = mongoTemplate.aggregate(aggregation, AnnotationUtils.getServeModelValue(resultClass), CountVo.class);
 
         List<CountVo> mappedResults = mongoTest.getMappedResults();
         long total = 0;
@@ -368,7 +372,7 @@ public class MongodbService {
         }
 
         Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
-        return mongoTemplate.aggregate(aggregation, BaseUtils.getServeModelValue(resultClass),resultClass).getMappedResults();
+        return mongoTemplate.aggregate(aggregation, AnnotationUtils.getServeModelValue(resultClass),resultClass).getMappedResults();
     }
 
 
@@ -392,7 +396,7 @@ public class MongodbService {
 
         Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
 
-        List<MongodbSumVo> countDtos = this.mongoTemplate.aggregate(aggregation, BaseUtils.getServeModelValue(resultClass), MongodbSumVo.class).getMappedResults();
+        List<MongodbSumVo> countDtos = this.mongoTemplate.aggregate(aggregation, AnnotationUtils.getServeModelValue(resultClass), MongodbSumVo.class).getMappedResults();
 
         if (countDtos.size() == 0) {
             return new BigDecimal(0);
@@ -420,7 +424,7 @@ public class MongodbService {
 
         Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
 
-        return this.mongoTemplate.aggregate(aggregation, BaseUtils.getServeModelValue(resultClass), MongodbSumVo.class).getMappedResults();
+        return this.mongoTemplate.aggregate(aggregation, AnnotationUtils.getServeModelValue(resultClass), MongodbSumVo.class).getMappedResults();
     }
 
     /**

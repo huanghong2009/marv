@@ -266,7 +266,7 @@ public class GenUtil {
 
         String classPackPath = clazz.getPackage().getName();
         String upperStoryPackPath = classPackPath.substring(0, classPackPath.lastIndexOf("."));
-        genMap.put("moduleName", BaseUtils.getServeModelDesc(clazz));
+        genMap.put("moduleName", AnnotationUtils.getServeModelDesc(clazz));
 
         // 包名称
         genMap.put("package", upperStoryPackPath);

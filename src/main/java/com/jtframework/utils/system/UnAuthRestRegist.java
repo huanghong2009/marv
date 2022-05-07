@@ -1,7 +1,7 @@
 package com.jtframework.utils.system;
 
 import com.jtframework.datasource.redis.RedisServiceInit;
-import com.jtframework.utils.AnnotationScannerUtils;
+import com.jtframework.utils.AnnotationUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -23,7 +23,7 @@ public class UnAuthRestRegist implements InitializingBean {
 
 
     public Set<String> getUnAuthUrls() throws Exception {
-        return AnnotationScannerUtils.getAnnotationUrl(applicationContextProvider);
+        return AnnotationUtils.getAnnotationUrl(applicationContextProvider);
     }
 
     @Override

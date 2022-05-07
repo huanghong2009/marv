@@ -3,7 +3,7 @@ package com.jtframework.datasource.mongodb;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.query.ParamsDTO;
-import com.jtframework.utils.BaseUtils;
+import com.jtframework.utils.AnnotationUtils;
 import lombok.Data;
 
 import java.util.regex.Pattern;
@@ -83,7 +83,7 @@ public class MongodbParamsDTO extends ParamsDTO {
      */
     public void join(Class<? extends BaseModel> modelClass, String localField, String foreignField, String asName){
         this.query.mongoJoin = new MongoJoin();
-        this.query.mongoJoin.setJoinCollectionName(BaseUtils.getServeModelValue(modelClass));
+        this.query.mongoJoin.setJoinCollectionName(AnnotationUtils.getServeModelValue(modelClass));
         this.query.mongoJoin.setAsName(asName);
         this.query.mongoJoin.setForeignField(foreignField);
         this.query.mongoJoin.setLocalField(localField);

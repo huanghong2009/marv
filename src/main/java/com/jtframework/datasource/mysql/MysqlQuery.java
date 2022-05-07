@@ -1,6 +1,7 @@
 package com.jtframework.datasource.mysql;
 
 import com.jtframework.utils.BaseUtils;
+import com.jtframework.utils.StringUtils;
 import lombok.Data;
 
 import java.util.List;
@@ -19,13 +20,13 @@ public class MysqlQuery {
     }
 
     public MysqlQuery(String column) {
-        String key = BaseUtils.changeUpperToUnderLetter(column);
+        String key = StringUtils.changeUpperToUnderLetter(column);
         this.column = key;
         this.symbol = MysqlSymbol.IS;
     }
 
     public MysqlQuery(String column, String value) {
-        String key = BaseUtils.changeUpperToUnderLetter(column);
+        String key = StringUtils.changeUpperToUnderLetter(column);
         this.column = key;
         this.symbol = MysqlSymbol.IS;
         this.value = value;
