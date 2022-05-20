@@ -23,7 +23,7 @@ public class UnAuthRestRegist implements InitializingBean {
 
 
     public Set<String> getUnAuthUrls() throws Exception {
-        return AnnotationUtils.getAnnotationUrl(applicationContextProvider);
+        return AnnotationUtils.getAnonymousAccessUrl(applicationContextProvider);
     }
 
     @Override

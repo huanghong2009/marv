@@ -1,5 +1,6 @@
 package com.jtframework.utils;
 
+import com.jtframework.base.auth.SysAuth;
 import com.jtframework.base.dao.ServerModel;
 import com.jtframework.base.rest.AnonymousAccess;
 import com.jtframework.utils.system.ApplicationContextProvider;
@@ -17,12 +18,12 @@ public class AnnotationUtils {
 
 
     /**
-     * 根据注解获取 service url
+     * 根据注解获取 AnonymousAccess url
      * @param applicationContextProvider
      * @return
      * @throws Exception
      */
-    public static Set<String> getAnnotationUrl(ApplicationContextProvider applicationContextProvider) throws Exception {
+    public static Set<String> getAnonymousAccessUrl(ApplicationContextProvider applicationContextProvider) throws Exception {
         // 搜寻匿名标记 url： @AnonymousAccess
         RequestMappingHandlerMapping requestMappingHandlerMapping = applicationContextProvider.getBean("requestMappingHandlerMapping", RequestMappingHandlerMapping.class);
 
@@ -44,6 +45,34 @@ public class AnnotationUtils {
         }
         return urls;
     }
+
+    /**
+     * 根据注解获取 SysAuth 值
+     * @param applicationContextProvider
+     * @return
+     * @throws Exception
+     */
+    public static Map<String,String> getSysAuth(ApplicationContextProvider applicationContextProvider) throws Exception {
+        // 搜寻匿名标记 url： @AnonymousAccess
+        RequestMappingHandlerMapping requestMappingHandlerMapping = applicationContextProvider.getBean("requestMappingHandlerMapping", RequestMappingHandlerMapping.class);
+
+        if (requestMappingHandlerMapping == null) {
+            throw new Exception("未找到该bean");
+        }
+
+        Map<String,String> result = new HashMap<>();
+        for (Map.Entry<RequestMappingInfo, HandlerMethod> infoEntry : requestMappingHandlerMapping.getHandlerMethods().entrySet()) {
+            HandlerMethod handlerMethod = infoEntry.getValue();
+
+            SysAuth sysAuth = handlerMethod.getMethodAnnotation(SysAuth.class);
+            if (null != sysAuth) {
+                result.put(sysAuth.name(),sysAuth.type().name()+"&&"+sysAuth.url());
+            }
+        }
+
+        return result;
+    }
+
 
 
     /**
@@ -67,5 +96,29 @@ public class AnnotationUtils {
         ServerModel serverModel = (ServerModel) cls.getAnnotation(ServerModel.class);
         return serverModel != null ? serverModel.desc() : cls.getName();
     }
+
+    /**
+     * 获取类的ServerModel 描述
+     *
+     * @param cls
+     * @return
+     */
+    public static String getSysAuthType(Class cls) {
+        SysAuth sysAuth = (SysAuth) cls.getAnnotation(SysAuth.class);
+        return sysAuth != null ? sysAuth.type().getDesc() : null;
+    }
+
+
+    /**
+     * 获取类的ServerModel 描述
+     *
+     * @param cls
+     * @return
+     */
+    public static String getSysAuthName(Class cls) {
+        SysAuth sysAuth = (SysAuth) cls.getAnnotation(SysAuth.class);
+        return sysAuth != null ? sysAuth.name() : null;
+    }
+
 }
 
