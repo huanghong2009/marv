@@ -1,8 +1,9 @@
 package com.jtframework.utils;
 
+import com.jtframework.base.auth.AuthAccess;
 import com.jtframework.base.auth.SysAuth;
 import com.jtframework.base.dao.ServerModel;
-import com.jtframework.base.rest.AnonymousAccess;
+import com.jtframework.base.auth.AnonymousAccess;
 import com.jtframework.utils.system.ApplicationContextProvider;
 import com.jtframework.enums.RequestMethodEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -19,11 +20,12 @@ public class AnnotationUtils {
 
     /**
      * 根据注解获取 AnonymousAccess url
+     *
      * @param applicationContextProvider
      * @return
      * @throws Exception
      */
-    public static Set<String> getAnonymousAccessUrl(ApplicationContextProvider applicationContextProvider) throws Exception {
+    public static Map<String,String> getAnonymousAccessUrl(ApplicationContextProvider applicationContextProvider) throws Exception {
         // 搜寻匿名标记 url： @AnonymousAccess
         RequestMappingHandlerMapping requestMappingHandlerMapping = applicationContextProvider.getBean("requestMappingHandlerMapping", RequestMappingHandlerMapping.class);
 
@@ -31,7 +33,7 @@ public class AnnotationUtils {
             throw new Exception("未找到该bean");
         }
 
-        Set<String> urls = new HashSet<>();
+        Map<String,String> urls = new HashMap<>();
         for (Map.Entry<RequestMappingInfo, HandlerMethod> infoEntry : requestMappingHandlerMapping.getHandlerMethods().entrySet()) {
             HandlerMethod handlerMethod = infoEntry.getValue();
             AnonymousAccess anonymousAccess = handlerMethod.getMethodAnnotation(AnonymousAccess.class);
@@ -39,7 +41,10 @@ public class AnnotationUtils {
                 List<RequestMethod> requestMethods = new ArrayList<>(infoEntry.getKey().getMethodsCondition().getMethods());
                 RequestMethodEnum request = RequestMethodEnum.find(requestMethods.size() == 0 ? RequestMethodEnum.ALL.getType() : requestMethods.get(0).name());
                 if (request != null) {
-                    urls.addAll(infoEntry.getKey().getPatternsCondition().getPatterns());
+
+                    infoEntry.getKey().getPatternsCondition().getPatterns().stream().forEach(url ->{
+                        urls.put(url,anonymousAccess.serviceName());
+                    });
                 }
             }
         }
@@ -48,11 +53,12 @@ public class AnnotationUtils {
 
     /**
      * 根据注解获取 SysAuth 值
+     *
      * @param applicationContextProvider
      * @return
      * @throws Exception
      */
-    public static Map<String,String> getSysAuth(ApplicationContextProvider applicationContextProvider) throws Exception {
+    public static Map<String, String> getSysAuth(ApplicationContextProvider applicationContextProvider) throws Exception {
         // 搜寻匿名标记 url： @AnonymousAccess
         RequestMappingHandlerMapping requestMappingHandlerMapping = applicationContextProvider.getBean("requestMappingHandlerMapping", RequestMappingHandlerMapping.class);
 
@@ -60,13 +66,13 @@ public class AnnotationUtils {
             throw new Exception("未找到该bean");
         }
 
-        Map<String,String> result = new HashMap<>();
+        Map<String, String> result = new HashMap<>();
         for (Map.Entry<RequestMappingInfo, HandlerMethod> infoEntry : requestMappingHandlerMapping.getHandlerMethods().entrySet()) {
             HandlerMethod handlerMethod = infoEntry.getValue();
 
             SysAuth sysAuth = handlerMethod.getMethodAnnotation(SysAuth.class);
             if (null != sysAuth) {
-                result.put(sysAuth.name(),sysAuth.type().name()+"&&"+sysAuth.url());
+                result.put(sysAuth.name(), sysAuth.type().name() + "&&" + sysAuth.urlpath());
             }
         }
 
@@ -74,6 +80,41 @@ public class AnnotationUtils {
     }
 
 
+
+    /**
+     * 根据注解获取 SysAuth 值
+     *
+     * @param applicationContextProvider
+     * @return
+     * @throws Exception
+     */
+    public static Map<String, String> getSysAuthAccess(ApplicationContextProvider applicationContextProvider) throws Exception {
+        // 搜寻匿名标记 url： @AnonymousAccess
+        RequestMappingHandlerMapping requestMappingHandlerMapping = applicationContextProvider.getBean("requestMappingHandlerMapping", RequestMappingHandlerMapping.class);
+
+        if (requestMappingHandlerMapping == null) {
+            throw new Exception("未找到该bean");
+        }
+
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<RequestMappingInfo, HandlerMethod> infoEntry : requestMappingHandlerMapping.getHandlerMethods().entrySet()) {
+            HandlerMethod handlerMethod = infoEntry.getValue();
+
+            AuthAccess authAccess = handlerMethod.getMethodAnnotation(AuthAccess.class);
+            if (null != authAccess) {
+                List<RequestMethod> requestMethods = new ArrayList<>(infoEntry.getKey().getMethodsCondition().getMethods());
+                RequestMethodEnum request = RequestMethodEnum.find(requestMethods.size() == 0 ? RequestMethodEnum.ALL.getType() : requestMethods.get(0).name());
+                if (request != null) {
+
+                    infoEntry.getKey().getPatternsCondition().getPatterns().stream().forEach(url ->{
+                        result.put(url,authAccess.serviceName());
+                    });
+                }
+            }
+        }
+
+        return result;
+    }
 
     /**
      * 获取类的ServerModel 值

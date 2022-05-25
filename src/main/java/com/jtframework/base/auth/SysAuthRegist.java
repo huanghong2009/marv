@@ -15,11 +15,10 @@ import java.util.Map;
 @Component
 public class SysAuthRegist implements InitializingBean {
 
-    public static final String SYS_AUTH_URL_KEY = "sys_auth";
 
     public static final String SYS_AUTH_KEY = "sys_auth_key_";
 
-
+    public static final String UNAUTH_SERVICE_KEY = "sys_auth_service";
     /**
      * 当前环境
      */
@@ -57,10 +56,13 @@ public class SysAuthRegist implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         if (redisServiceInit.getRedisService() != null) {
+            String hkey = SysAuthRegist.SYS_AUTH_KEY + serverName;
+            redisServiceInit.getRedisService().del(hkey);
+            redisServiceInit.getRedisService().sSet(UNAUTH_SERVICE_KEY,serverName);
             Map<String, String> datas = getUnAuthUrls();
 
             datas.keySet().stream().forEach(key -> {
-                redisServiceInit.getRedisService().hset(SysAuthRegist.SYS_AUTH_KEY + serverName, key, datas.get(key));
+                redisServiceInit.getRedisService().hset(hkey, key, datas.get(key));
             });
         }
     }

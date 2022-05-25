@@ -20,7 +20,7 @@ public @interface SysAuth {
      */
     Type type() default Type.GET_USER_INFO_BY_USER;
 
-    String url() default "";
+    String urlpath() default "";
 
     public enum Type {
         GET_USER_INFO_BY_USER("根据用户名查询用户信息"),
