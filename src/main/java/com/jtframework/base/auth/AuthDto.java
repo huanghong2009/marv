@@ -8,6 +8,7 @@ import java.io.Serializable;
 @Data
 public class AuthDto implements Serializable {
 
+
     @ApiModelProperty(value = "用户名")
     private String userName;
 

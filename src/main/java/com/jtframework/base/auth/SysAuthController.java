@@ -39,7 +39,7 @@ public abstract class SysAuthController {
 
     @RabbitListener(queues = LOGIN_QUEUE_NAME)
     public void loginMesage(String data, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
-        log.info("收到socket消息队列:{},消息:{}，正在执行消息队列逻辑", LOGIN_QUEUE_NAME, data);
+
         JSONObject json = JSONObject.parseObject(data);
         AuthDto authDto = JSONObject.toJavaObject(json, AuthDto.class);
         /**
@@ -47,8 +47,9 @@ public abstract class SysAuthController {
          */
         if (env.equals("local") && !localRead){
             channel.basicReject(tag, true);
+            return;
         }
-
+        log.info("收到socket消息队列:{},消息:{}，正在执行消息队列逻辑", LOGIN_QUEUE_NAME, data);
         try {
 
             /**
@@ -71,7 +72,7 @@ public abstract class SysAuthController {
 
     @RabbitListener(queues = LOGOUT_QUEUE_NAME)
     public void logoutMesage(String data, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
-        log.info("收到socket消息队列:{},消息:{}，正在执行消息队列逻辑", LOGOUT_QUEUE_NAME, data);
+
         JSONObject json = JSONObject.parseObject(data);
         AuthDto authDto = JSONObject.toJavaObject(json, AuthDto.class);
         /**
@@ -79,7 +80,9 @@ public abstract class SysAuthController {
          */
         if (env.equals("local") && !localRead){
             channel.basicReject(tag, true);
+            return;
         }
+
 
         try {
 
@@ -89,7 +92,7 @@ public abstract class SysAuthController {
             if (!serviceName.equals(authDto.getServiceName())){
                 channel.basicReject(tag, true);
             }
-
+            log.info("收到socket消息队列:{},消息:{}，正在执行消息队列逻辑", LOGOUT_QUEUE_NAME, data);
             logoutCallback(authDto);
 
             channel.basicAck(tag, false);

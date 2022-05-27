@@ -18,7 +18,7 @@ public class SysAuthRegist implements InitializingBean {
 
     public static final String SYS_AUTH_KEY = "sys_auth_key_";
 
-    public static final String UNAUTH_SERVICE_KEY = "sys_auth_service";
+    public static final String SYS_AUTH_SERVICE_KEY = "sys_auth_service";
     /**
      * 当前环境
      */
@@ -58,7 +58,7 @@ public class SysAuthRegist implements InitializingBean {
         if (redisServiceInit.getRedisService() != null) {
             String hkey = SysAuthRegist.SYS_AUTH_KEY + serverName;
             redisServiceInit.getRedisService().del(hkey);
-            redisServiceInit.getRedisService().sSet(UNAUTH_SERVICE_KEY,serverName);
+            redisServiceInit.getRedisService().sSet(SYS_AUTH_SERVICE_KEY,serverName);
             Map<String, String> datas = getUnAuthUrls();
 
             datas.keySet().stream().forEach(key -> {

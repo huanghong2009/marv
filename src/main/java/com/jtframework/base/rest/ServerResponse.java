@@ -21,14 +21,21 @@ public class ServerResponse<T> {
         this.data = data;
     }
 
+
+    public static ServerResponse succeed(String msg) {
+        return new ServerResponse(State.SUCCEED.name(), msg, null);
+    }
     public static ServerResponse succeed(String msg, Object data) {
         return new ServerResponse(State.SUCCEED.name(), msg, data);
     }
 
     public static ServerResponse error(String msg, Object data) {
-        return new ServerResponse(State.ERROR.name(), msg + ":" + data, null);
+        return new ServerResponse(State.ERROR.name(), msg, data);
     }
 
+    public static ServerResponse error(String msg) {
+        return new ServerResponse(State.ERROR.name(), msg, null);
+    }
     public enum State {
         SUCCEED,
         ERROR
