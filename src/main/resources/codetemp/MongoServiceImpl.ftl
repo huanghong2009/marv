@@ -59,7 +59,7 @@ public class ${name}ServiceImpl extends MongoModelDao<${name}Model>  implements 
 
         if (BaseUtils.isBlank(${changeClassName}Dto.getSortFiled())) {
             ${changeClassName}Dto.setSortFiled("createTime");
-            ${changeClassName}Dto.setDesc(true);
+            ${changeClassName}Dto.setIsDesc(true);
         }
 
 

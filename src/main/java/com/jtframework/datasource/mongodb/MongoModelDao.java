@@ -134,7 +134,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     public PageVO<T> pageQuery(MongodbParamsDTO mongodbParamsDTO) throws BusinessException {
         try {
             if (BaseUtils.isNotBlank(mongodbParamsDTO.getSortFiled())) {
-                if (mongodbParamsDTO.isDesc()) {
+                if (mongodbParamsDTO.getIsDesc()) {
                     mongodbParamsDTO.getQuery().with(Sort.by(Sort.Order.desc(mongodbParamsDTO.getSortFiled())));
                 } else {
                     mongodbParamsDTO.getQuery().with(Sort.by(Sort.Order.asc(mongodbParamsDTO.getSortFiled())));
@@ -211,6 +211,24 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
             e.printStackTrace();
             log.error(e.getMessage());
             throw new BusinessException("统计" + this.name + " 失败");
+        }
+    }
+
+    /**
+     * 分组查询
+     *
+     * @param mongodbGroupDto
+     * @return
+     * @throws BusinessException
+     */
+    @Override
+    public List<MongodbGroupVo> selectAllByGroup(MongodbGroupDto mongodbGroupDto) throws Exception {
+        try {
+            return this.getDao().selectAllByGroup(this.cls, mongodbGroupDto);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("分组查询" + this.name + " 失败");
         }
     }
 
@@ -293,7 +311,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     @Override
     public List<T> findByDto(MongodbParamsDTO mongodbParamsDTO) throws BusinessException {
         if (BaseUtils.isNotBlank(mongodbParamsDTO.getSortFiled())) {
-            if (mongodbParamsDTO.isDesc()) {
+            if (mongodbParamsDTO.getIsDesc()) {
                 mongodbParamsDTO.getQuery().with(Sort.by(Sort.Order.desc(mongodbParamsDTO.getSortFiled())));
             } else {
                 mongodbParamsDTO.getQuery().with(Sort.by(Sort.Order.asc(mongodbParamsDTO.getSortFiled())));

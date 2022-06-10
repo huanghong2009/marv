@@ -5,18 +5,17 @@ import com.jtframework.utils.BaseUtils;
 import com.jtframework.utils.ClassUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 @Aspect
@@ -74,13 +73,12 @@ public class RedisCleanCacheAspect {
 
             if (keyParames == null || keyParames.length == 0) {
                 log.error("{} 方法注解key为空,redis 去缓存不生效...", signature.getName());
-
             }
 
-            if (args.length == 0) {
-                log.error("{} 方法参数列表为空,redis 去缓存不生效...", signature.getName());
-                return;
-            }
+//            if (args.length == 0) {
+//                log.error("{} 方法参数列表为空,redis 去缓存不生效...", signature.getName());
+//                return;
+//            }
 
             if (redisServiceInit.getRedisService() == null) {
                 log.error("{} redis 未配置，缓存不生效...", signature.getName());
@@ -89,45 +87,52 @@ public class RedisCleanCacheAspect {
 
             List<String> redisKeys = new ArrayList<>();
 
-            Map<String, Object> argAllFiledsMap = ClassUtils.getObjectFiledValue(args, argNames);
+            if (BaseUtils.isBlank(keyParames[0])) {
+                redisKeys.add(group);
+            } else {
+                Map<String, Object> argAllFiledsMap = ClassUtils.getObjectFiledValue(args, argNames);
 
-            for (String keyParame : keyParames) {
-                String[] keys = keyParame.split(",");
+                for (String keyParame : keyParames) {
+                    String[] keys = keyParame.split(",");
 
-                String redisKey = "";
+                    String redisKey = "";
 
-                for (String key : keys) {
-                    if (BaseUtils.isBlank(key) || !argAllFiledsMap.containsKey(key)) {
-                        log.error("{} key标注的参数为空,获取该值未找到参数配置， 去缓存不生效...", signature.getName());
-                        return;
+                    for (String key : keys) {
+                        if (BaseUtils.isBlank(key) || !argAllFiledsMap.containsKey(key)) {
+                            log.error("{} key标注的参数为空,获取该值未找到参数配置， 去缓存不生效...", signature.getName());
+                            return;
+                        }
+
+                        Object paramData = argAllFiledsMap.get(key);
+
+                        /**
+                         * 空值参数不处理
+                         */
+                        if (paramData == null || BaseUtils.isBlank(paramData.toString())) {
+                            log.error("{} key标注的参数为空, 去缓存不生效...", signature.getName());
+                            return;
+                        }
+                        redisKey = redisKey + paramData.toString() + ",";
                     }
 
-                    Object paramData = argAllFiledsMap.get(key);
-
-                    /**
-                     * 空值参数不处理
-                     */
-                    if (paramData == null || BaseUtils.isBlank(paramData.toString())) {
-                        log.error("{} key标注的参数为空, 去缓存不生效...", signature.getName());
+                    if (BaseUtils.isNotBlank(redisKey)) {
+                        redisKey = redisKey.substring(0, redisKey.length() - 1);
+                        redisKeys.add(redisKey);
+                    } else {
+                        log.error("{} key标注的参数为空,redis 缓存不生效...", signature.getName());
                         return;
                     }
-                    redisKey = redisKey + paramData.toString() + ",";
-                }
-
-                if (BaseUtils.isNotBlank(redisKey)) {
-                    redisKey = redisKey.substring(0, redisKey.length() - 1);
-                    redisKeys.add(redisKey);
-                } else {
-                    log.error("{} key标注的参数为空,redis 缓存不生效...", signature.getName());
-                    return;
                 }
             }
 
+
+            String groupVision = group + "_version";
 
             for (String redisKey : redisKeys) {
                 if (redisServiceInit.getRedisService().hHasKey(group, redisKey)) {
                     try {
                         redisServiceInit.getRedisService().hdel(group, redisKey);
+                        redisServiceInit.getRedisService().hset(groupVision, redisKey, String.valueOf(System.currentTimeMillis()));
                     } catch (Exception e) {
                         e.printStackTrace();
                         log.error("清理缓存出错：{}-{}:{}", group, redisKey, e.getMessage());
@@ -140,8 +145,6 @@ public class RedisCleanCacheAspect {
             throw throwable;
         }
     }
-
-
 
 
 }

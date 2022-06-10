@@ -140,16 +140,17 @@ public class ClassUtils {
         return map;
     }
 
+
     /**
-     * 获取对象的属性，最多递归2层
+     * 获取对象的属性，最多递归max层
      *
      * @param obj
      * @param result
      * @param num
      * @return
      */
-    private static Map<String, Object> getObjectFiledValue(String objName, Object obj, Map<String, Object> result, int num) {
-        if (num >= 2 || obj == null) {
+    public static Map<String, Object> getObjectFiledValue(String objName, Object obj, Map<String, Object> result, int num,int max) {
+        if (num >= max || obj == null) {
             return result;
         }
 
@@ -189,9 +190,9 @@ public class ClassUtils {
                     continue;
                 } else {
                     if (BaseUtils.isBlank(objName)) {
-                        getObjectFiledValue(ReflectUtil.getFieldName(field), value, result, num + 1);
+                        getObjectFiledValue(ReflectUtil.getFieldName(field), value, result, num + 1,max);
                     } else {
-                        getObjectFiledValue(objName + "." + ReflectUtil.getFieldName(field), value, result, num + 1);
+                        getObjectFiledValue(objName + "." + ReflectUtil.getFieldName(field), value, result, num + 1,max);
                     }
 
                 }
@@ -228,15 +229,23 @@ public class ClassUtils {
 
 
     /**
-     * 获取对象的属性，最多递归2层
+     * 获取对象的属性，最多递归3层
      *
      * @param obj
      * @return
      */
     public static Map<String, Object> getObjectFiledValue(Object obj, String name) {
-        return getObjectFiledValue(name, obj, new HashMap<String, Object>(), 0);
+        return getObjectFiledValue(name, obj, new HashMap<String, Object>(), 0,3);
     }
-
+    /**
+     * 获取对象的属性，最多递归max层
+     *
+     * @param obj
+     * @return
+     */
+    public static Map<String, Object> getObjectFiledValue(Object obj, String name,int max) {
+        return getObjectFiledValue(name, obj, new HashMap<String, Object>(), 0,max);
+    }
 
 
     /**

@@ -60,6 +60,14 @@ public interface MongoModelDaoService  extends ModelDaoService {
     List<MongodbSumVo> sumList(MongodbSumDto sumDto) throws Exception;
 
     /**
+     * 分组查询
+     * @param mongodbGroupDto
+     * @return
+     * @throws BusinessException
+     */
+    List<MongodbGroupVo> selectAllByGroup(MongodbGroupDto mongodbGroupDto) throws Exception;
+
+    /**
      * 备份清空集合
      * @param maxSize 需要备份的最大数量
      * @throws Exception

@@ -20,5 +20,5 @@ public @interface RedisClean {
      * 例3 多级联合key ：'userId,obj.type'
      * @return
      */
-    String[] key();
+    String[] key() default  "";
 }

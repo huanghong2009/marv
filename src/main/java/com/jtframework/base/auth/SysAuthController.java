@@ -2,6 +2,7 @@ package com.jtframework.base.auth;
 
 import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.rest.ServerResponse;
+import com.jtframework.utils.BaseUtils;
 import com.rabbitmq.client.Channel;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -53,10 +54,19 @@ public abstract class SysAuthController {
         try {
 
             /**
+             * 错误的消息，直接消费掉
+             */
+            if (authDto == null || BaseUtils.isBlank(authDto.getServiceName())){
+                channel.basicAck(tag, false);
+                return;
+            }
+
+            /**
              * 不是自己服务的不读消息
              */
            if (!serviceName.equals(authDto.getServiceName())){
                channel.basicReject(tag, true);
+               return;
            }
 
             loginCallback(authDto);
@@ -87,11 +97,18 @@ public abstract class SysAuthController {
         try {
 
             /**
-             * 不是自己服务的不读消息
+             * 错误的消息，直接消费掉
              */
+            if (authDto == null || BaseUtils.isBlank(authDto.getServiceName())){
+                channel.basicAck(tag, false);
+                return;
+            }
+
             if (!serviceName.equals(authDto.getServiceName())){
                 channel.basicReject(tag, true);
+                return;
             }
+
             log.info("收到socket消息队列:{},消息:{}，正在执行消息队列逻辑", LOGOUT_QUEUE_NAME, data);
             logoutCallback(authDto);
 

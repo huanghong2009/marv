@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.poi.ss.formula.functions.T;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -377,6 +378,35 @@ public class MongodbService {
 
 
 
+
+
+
+
+
+
+    /**
+     * 统计
+     *
+     * @param sumDto
+     * @return
+     * @throws BusinessException
+     */
+    public List<MongodbSumVo> sumList(Class<T> resultClass, MongodbSumDto sumDto) throws Exception {
+        List<AggregationOperation> aggregationOperations = new ArrayList<>();
+
+        /**
+         * 拼装where 参数
+         */
+        getOperationsMath(aggregationOperations,sumDto.query);
+
+        aggregationOperations.add(Aggregation.group(sumDto.getGroupFiledName()).sum(sumDto.getSumFiledName()).as("amount"));
+
+        Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
+
+        return this.mongoTemplate.aggregate(aggregation, AnnotationUtils.getServeModelValue(resultClass), MongodbSumVo.class).getMappedResults();
+    }
+
+
     /**
      * 统计
      *
@@ -406,25 +436,33 @@ public class MongodbService {
 
 
     /**
-     * 统计
+     * 分组统计
      *
-     * @param sumDto
+     * @param groupDto
      * @return
      * @throws BusinessException
      */
-    public List<MongodbSumVo> sumList(Class<T> resultClass, MongodbSumDto sumDto) throws Exception {
+    public List<MongodbGroupVo> selectAllByGroup(Class<T> resultClass, MongodbGroupDto groupDto) throws Exception {
         List<AggregationOperation> aggregationOperations = new ArrayList<>();
 
         /**
          * 拼装where 参数
          */
-        getOperationsMath(aggregationOperations,sumDto.query);
+        getOperationsMath(aggregationOperations,groupDto.query);
 
-        aggregationOperations.add(Aggregation.group(sumDto.getGroupFiledName()).sum(sumDto.getSumFiledName()).as("amount"));
+        aggregationOperations.add(Aggregation.group(groupDto.getGroupFiledName()).first(groupDto.getReturnFiledName()).as("result"));
+
+        if (BaseUtils.isNotBlank(groupDto.getSortFiledName()) && null != groupDto.getAsc()){
+            aggregationOperations.add(Aggregation.sort(groupDto.getAsc()? Sort.Direction.ASC:Sort.Direction.DESC));
+        }
+
 
         Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
 
-        return this.mongoTemplate.aggregate(aggregation, AnnotationUtils.getServeModelValue(resultClass), MongodbSumVo.class).getMappedResults();
+
+        List<MongodbGroupVo> countDtos = this.mongoTemplate.aggregate(aggregation, AnnotationUtils.getServeModelValue(resultClass), MongodbGroupVo.class).getMappedResults();
+
+        return countDtos;
     }
 
     /**

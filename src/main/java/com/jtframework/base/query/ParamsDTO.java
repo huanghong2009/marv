@@ -31,7 +31,7 @@ public class ParamsDTO<T extends BaseModel> implements Serializable {
      * 是否倒序
      */
     @ApiModelProperty("是否要倒序")
-    private boolean isDesc;
+    private Boolean isDesc;
 
 
 
@@ -42,5 +42,6 @@ public class ParamsDTO<T extends BaseModel> implements Serializable {
     private void initPage() {
         this.toPage = 1;
         this.pageSize = 10;
+        this.isDesc = true;
     }
 }
