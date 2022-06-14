@@ -11,6 +11,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.MongoNamespace;
 import com.mongodb.client.MongoCollection;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
@@ -188,7 +190,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     @Override
     public BigDecimal sum(MongodbSumDto sumDto) throws Exception {
         try {
-            return this.getDao().sum(this.cls, sumDto);
+            return this.getDao().sum(this.collectionName, sumDto);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -206,7 +208,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     @Override
     public List<MongodbSumVo> sumList(MongodbSumDto sumDto) throws Exception {
         try {
-            return this.getDao().sumList(this.cls, sumDto);
+            return this.getDao().sumList(this.collectionName, sumDto);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -222,9 +224,27 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      * @throws BusinessException
      */
     @Override
-    public List<MongodbGroupVo> selectAllByGroup(MongodbGroupDto mongodbGroupDto) throws Exception {
+    public List<MongodbGroupVo> selectWithOneFieldByGroup(MongodbGroupDto mongodbGroupDto) throws Exception {
         try {
-            return this.getDao().selectAllByGroup(this.cls, mongodbGroupDto);
+            return this.getDao().selectWithOneFieldByGroup(this.collectionName, mongodbGroupDto);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("分组查询" + this.name + " 失败");
+        }
+    }
+
+    /**
+     * 分组查询返回多个字段
+     *
+     * @param mongodbGroupDto
+     * @return
+     * @throws BusinessException
+     */
+    @Override
+    public <T> List<T> selectWithFieldsByGroup(MongodbGroupDto<T> mongodbGroupDto) throws Exception {
+        try {
+            return this.getDao().selectAllWithFieldsByGroup(this.collectionName, mongodbGroupDto);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -277,10 +297,10 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
         List<Long> collectionNameList = new ArrayList<>();
 
         for (String collectionName : collectionNames) {
-            if (collectionName.startsWith(this.name)) {
+            if (collectionName.startsWith(this.collectionName)) {
                 String[] cnames = collectionName.split("_");
                 if (cnames.length > 1) {
-                    collectionNameList.add(Long.valueOf(cnames[1]));
+                    collectionNameList.add(Long.valueOf(cnames[cnames.length - 1]));
                 }
             }
         }
@@ -296,7 +316,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
                 return o1.compareTo(o2);
             });
             for (int i = maxSize - 1; i < collectionNameList.size(); i++) {
-                this.getDao().getMongoTemplate().dropCollection(this.name + "_" + collectionNameList.get(i));
+                this.getDao().getMongoTemplate().dropCollection(this.collectionName + "_" + collectionNameList.get(i));
             }
         }
     }

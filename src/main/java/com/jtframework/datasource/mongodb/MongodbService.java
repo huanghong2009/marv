@@ -3,23 +3,21 @@ package com.jtframework.datasource.mongodb;
 import com.alibaba.fastjson.JSONObject;
 import com.jtframework.base.dao.ServerModel;
 import com.jtframework.base.exception.BusinessException;
+import com.jtframework.base.query.CheckParam;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.utils.AnnotationUtils;
 import com.jtframework.utils.BaseUtils;
+import com.jtframework.utils.ClassUtils;
 import com.mongodb.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.LookupOperation;
+import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -379,11 +377,6 @@ public class MongodbService {
 
 
 
-
-
-
-
-
     /**
      * 统计
      *
@@ -391,7 +384,7 @@ public class MongodbService {
      * @return
      * @throws BusinessException
      */
-    public List<MongodbSumVo> sumList(Class<T> resultClass, MongodbSumDto sumDto) throws Exception {
+    public List<MongodbSumVo> sumList(String collectionName, MongodbSumDto sumDto) throws Exception {
         List<AggregationOperation> aggregationOperations = new ArrayList<>();
 
         /**
@@ -403,7 +396,7 @@ public class MongodbService {
 
         Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
 
-        return this.mongoTemplate.aggregate(aggregation, AnnotationUtils.getServeModelValue(resultClass), MongodbSumVo.class).getMappedResults();
+        return this.mongoTemplate.aggregate(aggregation, collectionName, MongodbSumVo.class).getMappedResults();
     }
 
 
@@ -414,7 +407,7 @@ public class MongodbService {
      * @return
      * @throws BusinessException
      */
-    public BigDecimal sum(Class<T> resultClass, MongodbSumDto sumDto) throws Exception {
+    public BigDecimal sum(String collectionName, MongodbSumDto sumDto) throws Exception {
         List<AggregationOperation> aggregationOperations = new ArrayList<>();
 
         /**
@@ -426,7 +419,7 @@ public class MongodbService {
 
         Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
 
-        List<MongodbSumVo> countDtos = this.mongoTemplate.aggregate(aggregation, AnnotationUtils.getServeModelValue(resultClass), MongodbSumVo.class).getMappedResults();
+        List<MongodbSumVo> countDtos = this.mongoTemplate.aggregate(aggregation, collectionName, MongodbSumVo.class).getMappedResults();
 
         if (countDtos.size() == 0) {
             return new BigDecimal(0);
@@ -436,31 +429,82 @@ public class MongodbService {
 
 
     /**
-     * 分组统计
+     * 分组统计(返回单个字段) 取  returnFiledName
      *
      * @param groupDto
      * @return
      * @throws BusinessException
      */
-    public List<MongodbGroupVo> selectAllByGroup(Class<T> resultClass, MongodbGroupDto groupDto) throws Exception {
+    @CheckParam(value = "collectionName,groupDto.groupFiledName,groupDto.returnFiledName")
+    public List<MongodbGroupVo> selectWithOneFieldByGroup(String collectionName, MongodbGroupDto groupDto) throws Exception {
         List<AggregationOperation> aggregationOperations = new ArrayList<>();
 
         /**
          * 拼装where 参数
          */
         getOperationsMath(aggregationOperations,groupDto.query);
-
-        aggregationOperations.add(Aggregation.group(groupDto.getGroupFiledName()).first(groupDto.getReturnFiledName()).as("result"));
-
+        /**
+         * sort
+         */
         if (BaseUtils.isNotBlank(groupDto.getSortFiledName()) && null != groupDto.getAsc()){
-            aggregationOperations.add(Aggregation.sort(groupDto.getAsc()? Sort.Direction.ASC:Sort.Direction.DESC));
+            aggregationOperations.add(Aggregation.sort(groupDto.getAsc()? Sort.Direction.ASC : Sort.Direction.DESC,groupDto.getSortFiledName()));
         }
+
+        /**
+         * group
+         */
+
+        aggregationOperations.add(Aggregation.group((String[])groupDto.getGroupFiledNames().toArray(new String[groupDto.getGroupFiledNames().size()])).first(groupDto.getReturnFiledName()).as("result"));
 
 
         Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
+        List<MongodbGroupVo> countDtos = this.mongoTemplate.aggregate(aggregation, collectionName, MongodbGroupVo.class).getMappedResults();
+        return countDtos;
+    }
 
+    /**
+     * 分组统计(返回多个字段) 取  returnFiledNames
+     *
+     * @param groupDto
+     * @return
+     * @throws BusinessException
+     */
+    @CheckParam(value = "groupDto.groupFiledName")
+    public <T>List<T> selectAllWithFieldsByGroup(String collectionName, MongodbGroupDto<T> groupDto) throws Exception {
+        List<AggregationOperation> aggregationOperations = new ArrayList<>();
 
-        List<MongodbGroupVo> countDtos = this.mongoTemplate.aggregate(aggregation, AnnotationUtils.getServeModelValue(resultClass), MongodbGroupVo.class).getMappedResults();
+        if (groupDto.getReturnFiledNames().size() == 0){
+            throw new Exception("returnFiledNames must not empty！");
+        }
+
+        /**
+         * 拼装where 参数
+         */
+        getOperationsMath(aggregationOperations,groupDto.query);
+
+        /**
+         * sort
+         */
+        if (BaseUtils.isNotBlank(groupDto.getSortFiledName()) && null != groupDto.getAsc()){
+            aggregationOperations.add(Aggregation.sort(groupDto.getAsc()? Sort.Direction.ASC : Sort.Direction.DESC,groupDto.getSortFiledName()));
+        }
+
+        /**
+         * group
+         */
+        GroupOperation groupOperation = Aggregation.group((String[])groupDto.getGroupFiledNames().toArray(new String[groupDto.getGroupFiledNames().size()]));
+
+        /**
+         * first 每次 都会new 新的对象，所以每次需要用 groupOperation 再次接收一下
+         */
+        for (String returnFiledName : groupDto.getReturnFiledNames()) {
+            groupOperation = groupOperation.first(returnFiledName).as(returnFiledName);
+        }
+
+        aggregationOperations.add(groupOperation);
+
+        Aggregation aggregation = Aggregation.newAggregation(aggregationOperations);
+        List<T> countDtos = this.mongoTemplate.aggregate(aggregation, collectionName, groupDto.getResultClass()).getMappedResults();
 
         return countDtos;
     }

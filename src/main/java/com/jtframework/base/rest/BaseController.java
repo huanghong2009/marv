@@ -5,6 +5,7 @@ import com.jtframework.base.exception.BusinessException;
 import com.jtframework.base.query.CheckParam;
 import com.jtframework.datasource.common.ModelDaoService;
 import com.jtframework.utils.AnnotationUtils;
+import com.jtframework.utils.ClassUtils;
 import io.swagger.annotations.ApiOperation;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,7 @@ public class BaseController<T extends BaseModel> {
     public Class cls;
 
     public BaseController() {
-        Class cls = getTClass();
+        Class cls = ClassUtils.getTClass(this);
         this.cls = cls;
         this.name = AnnotationUtils.getServeModelDesc(cls);
     }
@@ -45,10 +46,6 @@ public class BaseController<T extends BaseModel> {
         throw new BusinessException("未注入实现类，需要重写 getModelDaoService 方法...");
     }
 
-    public Class<T> getTClass() {
-        Class<T> tClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        return tClass;
-    }
 
 
     @ApiOperation("加载对象")

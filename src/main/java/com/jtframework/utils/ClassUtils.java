@@ -1,10 +1,9 @@
 package com.jtframework.utils;
 
 import cn.hutool.core.util.ReflectUtil;
+import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -15,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class ClassUtils {
 
 
@@ -386,6 +386,27 @@ public class ClassUtils {
 
         return null;
     }
+    /**
+     * 获取泛型类型
+     *
+     * @param obj
+     * @return
+     */
+    public static Class getTClass(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        Type genericSuperClass = obj.getClass().getGenericSuperclass();
+        ParameterizedType parametrizedType = null;
+        while (parametrizedType == null) {
+            if ((genericSuperClass instanceof ParameterizedType)) {
+                parametrizedType = (ParameterizedType) genericSuperClass;
+            } else {
+                genericSuperClass = ((Class<?>) genericSuperClass).getGenericSuperclass();
+            }
+        }
 
+        return (Class<?>)parametrizedType.getActualTypeArguments()[0];
+    }
 
 }

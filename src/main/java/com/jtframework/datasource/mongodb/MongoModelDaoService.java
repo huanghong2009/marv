@@ -5,6 +5,7 @@ import com.jtframework.base.query.PageVO;
 import com.jtframework.datasource.common.ModelDaoService;
 
 
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -60,12 +61,20 @@ public interface MongoModelDaoService  extends ModelDaoService {
     List<MongodbSumVo> sumList(MongodbSumDto sumDto) throws Exception;
 
     /**
-     * 分组查询
+     * 分组查询(返回单个字段)
      * @param mongodbGroupDto
      * @return
      * @throws BusinessException
      */
-    List<MongodbGroupVo> selectAllByGroup(MongodbGroupDto mongodbGroupDto) throws Exception;
+    List<MongodbGroupVo> selectWithOneFieldByGroup(MongodbGroupDto mongodbGroupDto) throws Exception;
+
+    /**
+     * 分组查询返回多个字段
+     * @param mongodbGroupDto
+     * @return
+     * @throws BusinessException
+     */
+    <T>List<T>  selectWithFieldsByGroup(MongodbGroupDto<T> mongodbGroupDto) throws Exception;
 
     /**
      * 备份清空集合

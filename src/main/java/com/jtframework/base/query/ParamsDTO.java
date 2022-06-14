@@ -10,7 +10,7 @@ import java.util.List;
 
 
 @Data
-public class ParamsDTO<T extends BaseModel> implements Serializable {
+public class ParamsDTO implements Serializable {
 
     /**
      * 第几页
