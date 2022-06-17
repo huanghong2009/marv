@@ -16,10 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class ExcelFileUtils {
@@ -265,6 +262,27 @@ public class ExcelFileUtils {
                 .doWrite(data);
     }
 
+    /**
+     * 自定义列导出
+     * @param response
+     * @param headers 自定义表头
+     * @param dataList
+     * @throws IOException
+     */
+    public static void export(HttpServletResponse response, List<String> headers,List<List<String>> dataList)  throws IOException {
+        response.setContentType("application/vnd.ms-excel");
+        response.setCharacterEncoding("utf-8");
+        // 这里URLEncoder.encode可以防止中文乱码 当然和easyexcel没有关系
+        String fileName = URLEncoder.encode("导出", "UTF-8");
+        response.setHeader("Content-disposition", "attachment;filename=" + fileName + ".xlsx");
+        List<List<String>> headerList = new ArrayList<>();
+        for (String header : headers) {
+            List<String> headerslist = new ArrayList<>();
+            headerslist.add(header);
+            headerList.add(headerslist);
+        }
+        EasyExcel.write(response.getOutputStream()).head(headerList).sheet("sheet0").registerWriteHandler(new LongestMatchColumnWidthStyleStrategy()).doWrite(dataList);
+    }
 
     /**
      * 导出excel（一个sheet）

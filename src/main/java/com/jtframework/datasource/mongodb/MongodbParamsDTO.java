@@ -67,11 +67,7 @@ public class MongodbParamsDTO extends ParamsDTO {
      * @param asName as 的名称
      */
     public void join(String joinCollectionName,String localField,String foreignField,String asName){
-        this.query.mongoJoin = new MongoJoin();
-        this.query.mongoJoin.setJoinCollectionName(joinCollectionName);
-        this.query.mongoJoin.setAsName(asName);
-        this.query.mongoJoin.setForeignField(foreignField);
-        this.query.mongoJoin.setLocalField(localField);
+        this.query.join(joinCollectionName,localField,foreignField,asName);
     }
 
     /**
@@ -82,11 +78,7 @@ public class MongodbParamsDTO extends ParamsDTO {
      * @param asName as 的名称
      */
     public void join(Class<? extends BaseModel> modelClass, String localField, String foreignField, String asName){
-        this.query.mongoJoin = new MongoJoin();
-        this.query.mongoJoin.setJoinCollectionName(AnnotationUtils.getServeModelValue(modelClass));
-        this.query.mongoJoin.setAsName(asName);
-        this.query.mongoJoin.setForeignField(foreignField);
-        this.query.mongoJoin.setLocalField(localField);
+       this.query.join(modelClass,localField,foreignField,asName);
     }
 
 

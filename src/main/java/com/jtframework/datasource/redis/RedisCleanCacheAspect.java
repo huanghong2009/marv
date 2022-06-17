@@ -75,10 +75,6 @@ public class RedisCleanCacheAspect {
                 log.error("{} 方法注解key为空,redis 去缓存不生效...", signature.getName());
             }
 
-//            if (args.length == 0) {
-//                log.error("{} 方法参数列表为空,redis 去缓存不生效...", signature.getName());
-//                return;
-//            }
 
             if (redisServiceInit.getRedisService() == null) {
                 log.error("{} redis 未配置，缓存不生效...", signature.getName());

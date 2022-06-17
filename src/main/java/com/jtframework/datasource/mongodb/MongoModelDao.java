@@ -43,7 +43,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
     @Autowired
     MongoServiceInit mongoServiceInit;
 
-    private String collectionName;
+    public String collectionName;
 
 
     public MongoModelDao() {
@@ -188,7 +188,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      * @throws BusinessException
      */
     @Override
-    public BigDecimal sum(MongodbSumDto sumDto) throws Exception {
+    public BigDecimal sum(MongodbGroupDto sumDto) throws Exception {
         try {
             return this.getDao().sum(this.collectionName, sumDto);
         } catch (Exception e) {
@@ -206,9 +206,27 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
      * @throws BusinessException
      */
     @Override
-    public List<MongodbSumVo> sumList(MongodbSumDto sumDto) throws Exception {
+    public List<MongodbSumVo> sumList(MongodbGroupDto sumDto) throws Exception {
         try {
             return this.getDao().sumList(this.collectionName, sumDto);
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+            throw new BusinessException("统计" + this.name + " 失败");
+        }
+    }
+
+    /**
+     * 统计
+     *
+     * @param sumDto
+     * @return
+     * @throws BusinessException
+     */
+    @Override
+    public <T> List<T> sumListWithResultClass(MongodbGroupDto<T> sumDto) throws Exception {
+        try {
+            return this.getDao().sumListWithResultClass(this.collectionName, sumDto);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
@@ -297,7 +315,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
         List<Long> collectionNameList = new ArrayList<>();
 
         for (String collectionName : collectionNames) {
-            if (collectionName.startsWith(this.collectionName)) {
+            if (collectionName.startsWith(this.collectionName) && collectionName.length() != this.collectionName.length()) {
                 String[] cnames = collectionName.split("_");
                 if (cnames.length > 1) {
                     collectionNameList.add(Long.valueOf(cnames[cnames.length - 1]));

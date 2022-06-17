@@ -50,7 +50,7 @@ public interface MongoModelDaoService  extends ModelDaoService {
      * @return
      * @throws BusinessException
      */
-    BigDecimal sum(MongodbSumDto sumDto) throws Exception;
+    BigDecimal sum(MongodbGroupDto sumDto) throws Exception;
 
     /**
      * 统计
@@ -58,7 +58,16 @@ public interface MongoModelDaoService  extends ModelDaoService {
      * @return
      * @throws BusinessException
      */
-    List<MongodbSumVo> sumList(MongodbSumDto sumDto) throws Exception;
+    List<MongodbSumVo> sumList(MongodbGroupDto sumDto) throws Exception;
+
+
+    /**
+     * 统计
+     * @param sumDto
+     * @return
+     * @throws BusinessException
+     */
+    <T>List<T> sumListWithResultClass(MongodbGroupDto<T> sumDto) throws Exception;
 
     /**
      * 分组查询(返回单个字段)

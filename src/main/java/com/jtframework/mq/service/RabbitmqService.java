@@ -2,6 +2,8 @@ package com.jtframework.mq.service;
 
 
 import com.jtframework.mq.service.impl.RabbitmqServiceImpl;
+import org.springframework.amqp.core.AbstractExchange;
+import org.springframework.amqp.core.Queue;
 
 public interface RabbitmqService {
 
@@ -9,36 +11,33 @@ public interface RabbitmqService {
      * 创建队列
      * @param queueName
      */
-    void createQueue(String queueName) throws Exception;
+    Queue createQueue(String queueName) throws Exception;
 
-    /**
-     * 创建交换机
-     * @param exchangeName
-     * @throws Exception
-     */
-    void cretaeExchange(String exchangeName) throws Exception;
 
-    /**
-     * 创建交换机
-     * @param exchangeName
-     * @throws Exception
-     */
-    void cretaeExchange(String exchangeName, RabbitmqServiceImpl.ExchangeType exchangeType) throws Exception;
 
 
     /**
-     * 绑定交换机
+     * 创建并绑定 fanout 交换机
      * @param queueName
      * @param exchangeName
      * @throws Exception
      */
-    void bindingExchange(String queueName,String exchangeName) throws Exception;
+    void createQueueWithBindingFanoutExchange(String queueName, String exchangeName) throws Exception;
 
     /**
-     * 绑定默认交换机
+     * 创建并绑定 direct 交换机
      * @param queueName
+     * @param exchangeName
      * @throws Exception
      */
-    void bindingDefaultExchange(String queueName) throws Exception;
+    void createQueueWithBindingDirectExchange(String queueName, String exchangeName,String routingKey) throws Exception;
+
+    /**
+     * 创建并绑定 topic 交换机
+     * @param queueName
+     * @param exchangeName
+     * @throws Exception
+     */
+    void createQueueWithBindingTopicExchange(String queueName, String exchangeName,String routingKey) throws Exception;
 
 }
