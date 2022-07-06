@@ -13,6 +13,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author huanghong E-mail:767980702@qq.com
@@ -21,9 +23,36 @@ import java.util.Date;
 public class ModelPropertyRowMapper<T> implements RowMapper<T> {
     private Class<T> mappedClass;
 
+    private Field[] fields = null;
+
+    private Set<String> excludeField = null;
+
     public ModelPropertyRowMapper(Class<T> mappedClass) {
         this.mappedClass = mappedClass;
+        fields = mappedClass.getDeclaredFields();
+        this.excludeField = new HashSet<>();
     }
+
+    /**
+     * 判断查询结果集中是否存在某列
+     *
+     * @param rs         查询结果集
+     * @param columnName 列名
+     * @return true 存在; false 不存咋
+     */
+    public boolean isExistColumn(ResultSet rs, String columnName) {
+        try {
+            if (rs.findColumn(columnName) > 0) {
+                return true;
+            }
+        } catch (SQLException e) {
+            excludeField.add(columnName);
+            return false;
+        }
+        excludeField.add(columnName);
+        return false;
+    }
+
 
     public T mapRow(ResultSet rs, int rowNum) throws SQLException {
         Object result = null;
@@ -33,7 +62,6 @@ public class ModelPropertyRowMapper<T> implements RowMapper<T> {
                 return (T) rs.getObject(1);
             } else {
                 result = this.mappedClass.newInstance();
-                Field[] fields = this.mappedClass.getDeclaredFields();
 
                 for (Field field : fields) {
                     ServerField serverField = (ServerField) field.getAnnotation(ServerField.class);
@@ -46,6 +74,13 @@ public class ModelPropertyRowMapper<T> implements RowMapper<T> {
                         } catch (Exception e) {
                             continue;
                         }
+                    }
+
+                    /**
+                     * 不存在就过滤
+                     */
+                    if (excludeField.contains(filedName) || !isExistColumn(rs, filedName)) {
+                        continue;
                     }
 
                     if (!"class".equals(name) && !field.isSynthetic()) {
@@ -85,11 +120,15 @@ public class ModelPropertyRowMapper<T> implements RowMapper<T> {
                         ReflectUtil.setFieldValue(result, field, value);
                     }
                 }
-                ((BaseModel) result).setId(rs.getString("ID"));
+
+                if (!excludeField.contains("ID") && isExistColumn(rs, "ID")) {
+                    ((BaseModel) result).setId(rs.getString("ID"));
+                }
+
                 return (T) result;
             }
-        } catch (Exception var15) {
-            throw new SQLException(var15.getMessage());
+        } catch (Exception e) {
+            throw new SQLException(e.getMessage());
         }
     }
 }

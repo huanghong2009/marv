@@ -27,6 +27,7 @@ public class RabbitmqServiceImpl extends BaseServiceImpl implements RabbitmqServ
         if (amqpAdmin == null) {
             throw new Exception("未开启mq配置");
         }
+        amqpAdmin.deleteQueue(queueName);
         Queue queue = new Queue(queueName);
         amqpAdmin.declareQueue(queue);
         return queue;
@@ -42,6 +43,7 @@ public class RabbitmqServiceImpl extends BaseServiceImpl implements RabbitmqServ
     @Override
     public void createQueueWithBindingFanoutExchange(String queueName, String exchangeName) throws Exception {
         Queue queue = createQueue(queueName);
+
         FanoutExchange fanoutExchange = new FanoutExchange(exchangeName);
         amqpAdmin.declareExchange(fanoutExchange);
         amqpAdmin.declareBinding(BindingBuilder.bind(queue).to(fanoutExchange));
@@ -65,6 +67,7 @@ public class RabbitmqServiceImpl extends BaseServiceImpl implements RabbitmqServ
 
     /**
      * 创建并绑定 topic 交换机
+     *
      * 队列：绑定exchange需要 设置一个 模糊的路由条件 routingKey：
      * 是一个特定的规则:"."号分割的 routingKey 例："quick.orange.rabbit":
      *  routingKey 是 “.” 字符做为分割符，有个特殊匹配符号
@@ -85,6 +88,7 @@ public class RabbitmqServiceImpl extends BaseServiceImpl implements RabbitmqServ
      */
     @Override
     public void createQueueWithBindingTopicExchange(String queueName, String exchangeName, String routingKey) throws Exception {
+
         Queue queue = createQueue(queueName);
         TopicExchange topicExchange = new TopicExchange(exchangeName);
         amqpAdmin.declareExchange(topicExchange);

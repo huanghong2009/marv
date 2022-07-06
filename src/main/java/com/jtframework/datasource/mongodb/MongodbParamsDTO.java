@@ -3,17 +3,17 @@ package com.jtframework.datasource.mongodb;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.query.ParamsDTO;
-import com.jtframework.utils.AnnotationUtils;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 @Data
 public class MongodbParamsDTO extends ParamsDTO {
 
-    /**
-     * 查询sql
-     */
+
+
 
     @JsonIgnore
     public MongodbParamsQuery query;
@@ -29,7 +29,9 @@ public class MongodbParamsDTO extends ParamsDTO {
     public MongodbParamsDTO(){
         super();
         this.query = new MongodbParamsQuery();
+
     }
+
 
 
     /**

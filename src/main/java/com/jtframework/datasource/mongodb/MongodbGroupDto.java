@@ -1,5 +1,6 @@
 package com.jtframework.datasource.mongodb;
 
+import com.jtframework.utils.BaseUtils;
 import lombok.Data;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.Field;
@@ -11,8 +12,7 @@ import java.util.List;
 
 
 @Data
-public class MongodbGroupDto<T> extends MongodbParamsDTO{
-
+public class MongodbGroupDto<T> extends MongodbParamsDTO {
 
 
     /**
@@ -20,52 +20,61 @@ public class MongodbGroupDto<T> extends MongodbParamsDTO{
      */
     private List<GroupFields> groupFieldNames;
 
+
+
     /**
-     * sum字段
+     * count字段
+     */
+    private String countFieldName;
+
+    /**
+     * unwind字段
+     */
+    private String unwindFieldName;
+
+    /**
+     * sort字段
      */
     private String sortFieldName;
 
-    public List<GroupFields> getReturnFieldNames() {
-        return returnFieldNames;
-    }
 
     /**
      * 是否正序
      */
     private Boolean asc;
 
-
-
-
     /**
      * 返回字段
      */
     private List<GroupFields> returnFieldNames;
 
-
-
-
     /**
      * sum字段
      */
-    private List<GroupFields>  sumFields;
+    private List<GroupFields> sumFields;
+
+
 
     /**
      * 返回class
      */
     private Class<T> resultClass;
 
+    public List<GroupFields> getReturnFieldNames() {
+        return returnFieldNames;
+    }
 
-    public MongodbGroupDto(){
+
+    public MongodbGroupDto() {
         init();
     }
 
     private void init() {
-        this.groupFieldNames = new ArrayList<GroupFields>();
-        this.returnFieldNames = new ArrayList<GroupFields>();
-        this.sumFields = new ArrayList<GroupFields>();
-    }
+        this.groupFieldNames = new ArrayList<>();
+        this.returnFieldNames = new ArrayList<>();
 
+        this.sumFields = new ArrayList<>();
+    }
 
 
     public MongodbGroupDto(String groupFieldName, String sortFieldName, Boolean asc, List<GroupFields> returnFieldNames, Class<T> resultClass) {
@@ -117,69 +126,105 @@ public class MongodbGroupDto<T> extends MongodbParamsDTO{
     }
 
     public void setGroupFieldName(String groupFieldName) {
-        if (this.groupFieldNames.size() > 0){
+        if (this.groupFieldNames.size() > 0) {
             throw new RuntimeException("设置单个字段就不能有多个group field");
         }
-        this.groupFieldNames.add(new GroupFields(groupFieldName,groupFieldName));
+        this.groupFieldNames.add(new GroupFields(groupFieldName, groupFieldName));
+    }
+
+    /**
+     * set count字段
+     *
+     * @param countAsName
+     */
+    public void setCountFieldName(String countAsName) {
+        this.countFieldName = countFieldName;
+    }
+
+    /**
+     * set count字段
+     *
+     * @param
+     */
+    public void setCountFieldName() {
+        this.countFieldName = "result";
+    }
+
+
+    /**
+     * set unwind 字段
+     *
+     * @param unwindFieldName
+     */
+    public void setUnwindFieldName(String unwindFieldName) {
+        this.unwindFieldName = unwindFieldName;
     }
 
     /**
      * 添加分组字段
+     *
      * @param groupFieldName
      * @param asName
      * @return
      */
-    public MongodbGroupDto addGroupFieldName(String groupFieldName,String asName) {
-        this.groupFieldNames.add(new GroupFields(groupFieldName,asName));
+    public MongodbGroupDto addGroupFieldName(String groupFieldName, String asName) {
+        this.groupFieldNames.add(new GroupFields(groupFieldName, asName));
         return this;
     }
 
     /**
      * set sum field
+     *
      * @return
      */
-    public MongodbGroupDto addSumField(String fieldName,String asName){
-        this.sumFields.add(new GroupFields(fieldName,asName));
+    public MongodbGroupDto addSumField(String fieldName, String asName) {
+        this.sumFields.add(new GroupFields(fieldName, asName));
         return this;
     }
 
     /**
      * set sum field
+     *
      * @return
      */
-    public MongodbGroupDto setSumField(String fieldName){
-        if (this.returnFieldNames.size() > 0){
+    public MongodbGroupDto setSumField(String fieldName) {
+        if (this.returnFieldNames.size() > 0) {
             throw new RuntimeException("设置单个字段就不能有多个sum field");
         }
-        this.sumFields.add(new GroupFields(fieldName,"amount"));
+        this.sumFields.add(new GroupFields(fieldName, "amount"));
         return this;
     }
 
+
+
     /**
      * set return field
+     *
      * @return
      */
-    public MongodbGroupDto setReturnField(String fieldName){
-        if (this.returnFieldNames.size() > 0){
+    public MongodbGroupDto setReturnField(String fieldName) {
+        if (this.returnFieldNames.size() > 0) {
             throw new RuntimeException("设置单个字段就不能有多个result field");
         }
-        this.returnFieldNames.add(new GroupFields(fieldName,"result"));
+        this.returnFieldNames.add(new GroupFields(fieldName, "result"));
 
         return this;
     }
 
     /**
      * set return field
+     *
      * @return
      */
-    public MongodbGroupDto addReturnField(String fieldName,String asName){
-        this.returnFieldNames.add(new GroupFields(fieldName,asName));
+    public MongodbGroupDto addReturnField(String fieldName, String asName) {
+        this.returnFieldNames.add(new GroupFields(fieldName, asName));
 
         return this;
     }
 
     /**
      * 获取group
+     *
      * @param
      * @return
      */
@@ -190,7 +235,7 @@ public class MongodbGroupDto<T> extends MongodbParamsDTO{
         List<Field> fields = new ArrayList<Field>();
 
         this.getGroupFieldNames().stream().forEach(groupFields -> {
-            fields.add(Fields.field(groupFields.getAsName(),groupFields.getFieldName()));
+            fields.add(Fields.field(groupFields.getAsName(), groupFields.getFieldName()));
         });
 
 
@@ -203,8 +248,14 @@ public class MongodbGroupDto<T> extends MongodbParamsDTO{
             groupOperation = groupOperation.first(groupField.getFieldName()).as(groupField.getAsName());
         }
 
+
         for (GroupFields groupField : this.getSumFields()) {
             groupOperation = groupOperation.sum(groupField.getFieldName()).as(groupField.getAsName());
+        }
+
+        if (BaseUtils.isNotBlank(countFieldName)) {
+
+            groupOperation = groupOperation.count().as(countFieldName);
         }
 
         return groupOperation;

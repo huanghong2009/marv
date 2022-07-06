@@ -10,6 +10,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -26,6 +27,9 @@ public class RedisQueryCacheAspect {
 
     @Autowired
     private RedisCacheListener redisCacheListener;
+
+    @Autowired
+    private ThreadPoolTaskExecutor taskExecutor;
 
     /**
      * 二级缓存
@@ -148,8 +152,12 @@ public class RedisQueryCacheAspect {
                  * 检查一下 reids 还有没有，没有的话 就去 去掉缓存,每3次请求校验一次
                  */
                 String mqData = group + "," + redisKey;
-
-                redisCacheListener.sendWithTopic(mqData);
+                taskExecutor.execute(()->{
+                    if (!redisServiceInit.getRedisService().sHasKey("cache_limiting", mqData)) {
+                        redisCacheListener.sendMessage(mqData);
+                        redisServiceInit.getRedisService().sSet("cache_limiting", 10, mqData);
+                    }
+                });
 
                 return localData;
             }
@@ -166,7 +174,6 @@ public class RedisQueryCacheAspect {
 
                 return result;
             }
-
 
 
             /**

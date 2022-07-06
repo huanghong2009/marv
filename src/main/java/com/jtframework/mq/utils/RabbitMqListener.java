@@ -49,20 +49,41 @@ public abstract class RabbitMqListener implements ChannelAwareMessageListener, C
 
     public RabbitMqListener() {
         this.rabbitMqConfig = getRabbitMqConfig();
-
     }
+
+
+
 
 
     public String getEnvQueueName() {
         return this.rabbitMqConfig.getQueueName() + "_" + env + "_" + BaseUtils.getLocalIp();
     }
 
-    public String getEnvRoutingKey() {
-        return rabbitMqConfig.getRoutingKey() + "." + env + "_" + BaseUtils.getLocalIp();
+    public String getSnedMessageRoutingKey() {
+        return this.rabbitMqConfig.getExchangeName() + "." + this.rabbitMqConfig.getQueueName() + "." + env + "." + BaseUtils.getLocalIp();
     }
 
-    public String getAllRoutingKey() {
-        return rabbitMqConfig.getRoutingKey() + ".#";
+    public String getBindRoutingKey() {
+        if (this.getRabbitMqConfig().getExchangeType().equals(ExchangeType.FanoutExchange)) {
+            if (isReceiveMessageAll) {
+                return this.rabbitMqConfig.getExchangeName() + ".#";
+            } else {
+                /**
+                 * 第一个*代表全部队列
+                 *
+                 */
+                return this.rabbitMqConfig.getExchangeName() + ".*." + env + "." + BaseUtils.getLocalIp();
+            }
+        } else {
+            /**
+             * 代表接收这个队列的全部环境消息
+             */
+            if (isReceiveMessageAll) {
+                return this.rabbitMqConfig.getExchangeName() + "." + this.rabbitMqConfig.getQueueName() + ".#";
+            } else {
+                return this.rabbitMqConfig.getExchangeName() + "." + this.rabbitMqConfig.getQueueName() + "." + env + "." + BaseUtils.getLocalIp();
+            }
+        }
     }
 
     /**
@@ -70,10 +91,8 @@ public abstract class RabbitMqListener implements ChannelAwareMessageListener, C
      *
      * @param object
      */
-    public void sendWithTopic(final Object object) {
-
-        rabbitTemplate.convertAndSend(this.getRabbitMqConfig().getExchangeName(), getEnvRoutingKey(), object);
-
+    public void sendMessage(final Object object) {
+        rabbitTemplate.convertAndSend(this.getRabbitMqConfig().getExchangeName(), getSnedMessageRoutingKey(), object);
     }
 
     /**
@@ -96,32 +115,13 @@ public abstract class RabbitMqListener implements ChannelAwareMessageListener, C
      */
     public abstract void receiveMessage(String message, Channel channel, long tag);
 
-    /**
-     * Fanout 类型发送，不关心 routing key
-     *
-     * @param object
-     */
-    public void sendWithFanout(final Object object) {
-        rabbitTemplate.convertAndSend(getEnvQueueName(), object);
-    }
-
 
     /**
      * 初始化 mq
      */
     private void initMq() {
         try {
-            if (rabbitMqConfig.getExchangeType().equals(ExchangeType.FanoutExchange)) {
-                rabbitmqService.createQueueWithBindingFanoutExchange(getEnvQueueName(), rabbitMqConfig.getExchangeName());
-            } else {
-                if (isReceiveMessageAll) {
-                    rabbitmqService.createQueueWithBindingTopicExchange(getEnvQueueName(), rabbitMqConfig.getExchangeName(), getAllRoutingKey());
-                } else {
-                    rabbitmqService.createQueueWithBindingTopicExchange(getEnvQueueName(), rabbitMqConfig.getExchangeName(), getEnvRoutingKey());
-                }
-
-            }
-
+            rabbitmqService.createQueueWithBindingTopicExchange(getEnvQueueName(), rabbitMqConfig.getExchangeName(), getBindRoutingKey());
             SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
             container.setDefaultRequeueRejected(false);
             container.setAcknowledgeMode(AcknowledgeMode.AUTO);

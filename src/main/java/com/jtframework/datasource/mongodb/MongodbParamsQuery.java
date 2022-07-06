@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,7 +24,40 @@ public  class MongodbParamsQuery extends Query {
     @JsonIgnore
     public MongoJoin mongoJoin;
 
+
+    /**
+     * peoject operations
+     */
+    private List<List<ProjectExpressionOperation>>  projectExpressionOperations;
+
+
+
     private Sort sort;
+
+
+    public MongodbParamsQuery(){
+        this.projectExpressionOperations = new ArrayList<>();
+    }
+
+    /**
+     * 添加project 管道
+     * @param projectExpressionOperation
+     * @return
+     */
+    public MongodbParamsQuery addProjectExpression(ProjectExpressionOperation projectExpressionOperation){
+        this.projectExpressionOperations.add(new ArrayList<ProjectExpressionOperation>(){{add(projectExpressionOperation);}});
+        return this;
+    }
+
+    /**
+     * 添加project 管道
+     * @param projectExpressionOperationArrayList
+     * @return
+     */
+    public MongodbParamsQuery addProjectExpression(List<ProjectExpressionOperation> projectExpressionOperationArrayList){
+        this.projectExpressionOperations.add(projectExpressionOperationArrayList);
+        return this;
+    }
 
     public List<CriteriaDefinition> getCriterias(){
         return super.getCriteria();
@@ -34,6 +68,7 @@ public  class MongodbParamsQuery extends Query {
     public Query with(Sort sort) {
         this.sort = sort;
         return super.with(sort);
+
     }
 
     /**

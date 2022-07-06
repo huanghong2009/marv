@@ -1,14 +1,21 @@
 package com.jtframework.datasource.mongodb;
 
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
 public class GroupFields {
+    public GroupFields(String asName, AggregationExpression aggregationExpression) {
+        this.asName = asName;
+        this.aggregationExpression = aggregationExpression;
+    }
+
+    public GroupFields(String fieldName, String asName) {
+        this.fieldName = fieldName;
+        this.asName = asName;
+    }
+
     /**
      * 字段名字
      */
@@ -18,4 +25,9 @@ public class GroupFields {
      * 别名
      */
     private String asName;
+
+    /**
+     * 是
+     */
+    private AggregationExpression aggregationExpression;
 }

@@ -1,6 +1,7 @@
 package com.jtframework.datasource.mysql;
 
 import cn.hutool.core.util.ReflectUtil;
+import com.jtframework.base.dao.BaseModel;
 import com.jtframework.base.dao.ServerField;
 import com.jtframework.base.query.PageVO;
 import com.jtframework.utils.AnnotationUtils;
@@ -10,10 +11,8 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.SQLException;
+import java.util.*;
 
 @Data
 @Slf4j
@@ -51,6 +50,11 @@ public class MysqlQueryParams {
      * or查询参数（需要单独处理）
      */
     private List<MysqlQueryParam> orParams = new ArrayList<MysqlQueryParam>();
+
+    /**
+     * select 排除的字段
+     */
+    public Set<String> excludeFields = new HashSet<>();
 
     /**
      * orderby 两个字段
@@ -171,7 +175,11 @@ public class MysqlQueryParams {
         if (this.sqlQuery) {
             sql.append(this.table + " WHERE 1=1 ");
         } else {
-            sql.append("SELECT * FROM " + this.table + " WHERE 1=1 ");
+            if (this.excludeFields.size() > 0) {
+                sql.append("SELECT " + getFieldsSql(this.modelCls, this.excludeFields) + " FROM " + this.table + " WHERE 1=1 ");
+            } else {
+                sql.append("SELECT * FROM " + this.table + " WHERE 1=1 ");
+            }
         }
 
         for (MysqlQueryParam param : params) {
@@ -249,5 +257,44 @@ public class MysqlQueryParams {
     public enum MysqlSort {
         ASC,
         DESC
+    }
+
+    /**
+     * exclude
+     * 获取字段sql
+     *
+     * @param baseModelClass
+     * @return
+     */
+    public static String getFieldsSql(Class<? extends BaseModel> baseModelClass, Set<String> excludeSets) {
+        String sql = "";
+        boolean isFirst = true;
+        if (excludeSets.contains("ID") || excludeSets.contains("id")) {
+            sql = "";
+        } else {
+            sql = " `ID` ";
+            isFirst = false;
+        }
+
+        Field[] fileds = baseModelClass.getDeclaredFields();
+
+        for (Field filed : fileds) {
+            ServerField serverField = filed.getAnnotation(ServerField.class);
+            if (!serverField.isColumn().equals("true")) {
+                continue;
+            }
+
+            if (excludeSets.contains(serverField.value()) || excludeSets.contains(filed.getName())) {
+                continue;
+            }
+            if (isFirst) {
+                sql = sql + " `" + serverField.value() + "` ";
+                isFirst = false;
+            } else {
+                sql = sql + " ,`" + serverField.value() + "` ";
+            }
+        }
+
+        return sql;
     }
 }

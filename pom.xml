@@ -14,7 +14,7 @@
     <groupId>com.jtframework</groupId>
     <artifactId>marv</artifactId>
 
-    <version>32.2</version>
+    <version>34.6</version>
 
     <packaging>jar</packaging>
 
@@ -32,6 +32,7 @@
         <myspingboot.version>2.2.10.RELEASE</myspingboot.version>
         <jedis.version>3.1.0</jedis.version>
     </properties>
+
 
 
     <dependencies>
@@ -120,6 +121,29 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
             <version>${myspingboot.version}</version>
+
+            <exclusions>
+                <exclusion>
+                    <groupId>org.mongodb</groupId>
+                    <artifactId>mongodb-driver</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mongodb</groupId>
+                    <artifactId>mongodb-driver-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mongodb</groupId>
+                    <artifactId>bson</artifactId>
+                </exclusion>
+
+            </exclusions>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver</artifactId>
+            <version>3.12.11</version>
         </dependency>
 
         <dependency>
@@ -168,7 +192,6 @@
             <version>4.5.12</version>
         </dependency>
 
-
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
@@ -198,12 +221,12 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.27</version>
         </dependency>
+
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
             <version>4.0.0-rc-2</version>
         </dependency>
-
 
         <!--模板引擎-->
         <dependency>

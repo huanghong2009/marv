@@ -23,10 +23,6 @@ public class RabbitMqConfig {
      */
     private ExchangeType exchangeType;
 
-    /**
-     * 路由
-     */
-    private String routingKey;
 
 
 

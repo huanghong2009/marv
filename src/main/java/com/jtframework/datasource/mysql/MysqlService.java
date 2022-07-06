@@ -115,6 +115,8 @@ public class MysqlService {
     }
 
 
+
+
     public <T> List<T> selectList(Class<T> resultClass, String sql) throws SQLException {
         return selectList(resultClass, sql, (Object[]) null);
     }
@@ -246,6 +248,19 @@ public class MysqlService {
             return namedParameterJdbcTemplate.queryForList(sql, param, resultClass);
         }
     }
+
+    /**
+     * 根据  mysqlQueryParams count
+     * @param mysqlQueryParams
+     * @return
+     * @throws SQLException
+     */
+    public int count(MysqlQueryParams mysqlQueryParams) throws SQLException {
+        mysqlQueryParams.generateSql();
+        Map<String, Object> param = mysqlQueryParams.getParamsMap();
+        return countExec(mysqlQueryParams.getSql(), param);
+    }
+
 
     public int count(String csql, Object[] param) throws SQLException {
         return countExec(csql, param);

@@ -170,7 +170,7 @@ public class MongoModelDao<T extends BaseModel> extends ModelDaoServiceImpl impl
             if (query.mongoJoin == null) {
                 return this.getDao().findByQuery(this.cls, query);
             } else {
-                return this.getDao().findByJoinQuery(this.cls, query);
+                return this.getDao().findByAggregationWithModel(this.cls, query);
             }
 
         } catch (Exception e) {

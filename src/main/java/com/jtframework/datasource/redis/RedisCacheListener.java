@@ -40,7 +40,6 @@ public class RedisCacheListener extends RabbitMqListener {
                         && RedisQueryCacheAspect.CACHE.get(keys[0]).containsKey(keys[1])){
                     RedisQueryCacheAspect.CACHE.get(keys[0]).remove(keys[1]);
                 }
-
             } else {
                 String version = (String) visonObj;
                 if (RedisQueryCacheAspect.CACHE_VISON.containsKey(keys[0])
@@ -51,8 +50,7 @@ public class RedisCacheListener extends RabbitMqListener {
                     RedisQueryCacheAspect.CACHE.get(keys[0]).remove(keys[1]);
                 }
             }
-
-
+            
         } catch (Exception e) {
             e.printStackTrace();
             log.error("检查缓存队列出错:{}", e.getMessage());
@@ -66,7 +64,7 @@ public class RedisCacheListener extends RabbitMqListener {
      */
     @Override
     public RabbitMqConfig getRabbitMqConfig() {
-        return new RabbitMqConfig("data_cache_queue", "data_cache_exchange", ExchangeType.TopicExchange, "redis");
+        return new RabbitMqConfig("data_cache_queue", "data_cache_exchange", ExchangeType.TopicExchange);
     }
 
 
