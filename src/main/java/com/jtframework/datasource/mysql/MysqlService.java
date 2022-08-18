@@ -36,7 +36,6 @@ public class MysqlService {
     public JdbcTemplate jdbcTemplate;
 
     public NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private String table;
     private Map<String, Object> whereParams;
     private Map<String, Object> updateParams;
 
@@ -115,8 +114,6 @@ public class MysqlService {
     }
 
 
-
-
     public <T> List<T> selectList(Class<T> resultClass, String sql) throws SQLException {
         return selectList(resultClass, sql, (Object[]) null);
     }
@@ -133,7 +130,14 @@ public class MysqlService {
         String sql = "SELECT * FROM `" + AnnotationUtils.getServeModelValue(resultClass) + "` WHERE  1 =1 ";
 
         for (String key : params.keySet()) {
-            sql += " AND `" + key + "` = :" + key + " ";
+
+            if (params.get(key) instanceof Collection) {
+                sql += " AND `" + key + "` IN(:" + key + ") ";
+
+            } else {
+                sql += " AND `" + key + "` = :" + key + " ";
+            }
+
         }
         return selectList(resultClass, sql, params);
     }
@@ -170,7 +174,12 @@ public class MysqlService {
         String sql = "SELECT * FROM " + AnnotationUtils.getServeModelValue(resultClass) + " WHERE  1 =1 ";
 
         for (String key : params.keySet()) {
-            sql += " AND `" + key + "` = :" + key + " ";
+            if (params.get(key) instanceof Collection) {
+                sql += " AND `" + key + "` IN(:" + key + ") ";
+            } else {
+                sql += " AND `" + key + "` = :" + key + " ";
+            }
+
         }
         return selectOne(resultClass, sql, params);
     }
@@ -199,9 +208,9 @@ public class MysqlService {
      * @return
      * @throws SQLException
      */
-    public <T> T selectOneFromKV(Class<T> resultClass, String key, String value) throws SQLException {
+    public <T> T selectOneFromKV(Class<T> resultClass, String key, Object value) throws SQLException {
         String sql = "SELECT * FROM " + AnnotationUtils.getServeModelValue(resultClass) + " WHERE  `" + key + "` = ? ";
-        return selectOne(resultClass, sql, new String[]{value});
+        return selectOne(resultClass, sql, new Object[]{value});
     }
 
     /**
@@ -251,6 +260,7 @@ public class MysqlService {
 
     /**
      * 根据  mysqlQueryParams count
+     *
      * @param mysqlQueryParams
      * @return
      * @throws SQLException
@@ -453,8 +463,12 @@ public class MysqlService {
                 log.error("错误的wp参数");
                 throw new SQLException("bean is null");
             }
+            if (whereParams.get(key) instanceof Collection) {
+                whereSql = whereSql + " AND `" + key + "` IN (:" + key + "2) ";
+            } else {
+                whereSql = whereSql + " AND `" + key + "`=:" + key + "2 ";
+            }
 
-            whereSql = whereSql + " AND `" + key + "`=:" + key + "2 ";
 
             params.addValue(key + "2", whereParams.get(key));
         }
@@ -491,7 +505,7 @@ public class MysqlService {
 
 
     public int delete(Class resultClass, Collection ids) throws SQLException {
-        String sql = "DELETE FROM " + table + " WHERE ID IN (:IDS) ";
+        String sql = "DELETE FROM " + AnnotationUtils.getServeModelValue(resultClass) + " WHERE ID IN (:IDS) ";
 
         Map<String, Object> params = new HashMap<>();
         params.put("IDS", ids);
@@ -506,16 +520,19 @@ public class MysqlService {
     }
 
     public int delete(String table, Map<String, Object> param) throws SQLException {
-        String sql = "DELETE FROM " + table + " WHERE ";
+        String sql = "DELETE FROM " + table + " WHERE 1=1 ";
         Set<String> keys = param.keySet();
         if (keys.size() == 0) {
             throw new SQLException("非法请求");
         }
         for (String key : keys) {
-            sql += " " + key + " = :" + key + " AND";
-        }
+            if (param.get(key) instanceof Collection) {
+                sql += " AND `" + key + "` IN(:" + key + ") ";
+            } else {
+                sql += " AND " + key + " = :" + key + " ";
+            }
 
-        sql = sql.substring(0, sql.length() - 3);
+        }
 
         log.debug("SQL:" + sql);
         return exec(sql, param);

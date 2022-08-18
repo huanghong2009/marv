@@ -65,7 +65,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("保存 " + this.name + " 失败");
+            throw new BusinessException("保存 " + this.desc + " 失败");
         }
     }
 
@@ -76,7 +76,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("保存 " + this.name + " 失败");
+            throw new BusinessException("保存 " + this.desc + " 失败");
         }
     }
 
@@ -88,7 +88,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("获取" + this.name + "失败");
+            throw new BusinessException("获取" + this.desc + "失败");
         }
     }
 
@@ -100,7 +100,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("删除" + this.name + "失败");
+            throw new BusinessException("删除" + this.desc + "失败");
         }
     }
 
@@ -111,7 +111,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("删除" + this.name + "失败");
+            throw new BusinessException("删除" + this.desc + "失败");
         }
     }
 
@@ -122,7 +122,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("删除" + this.name + "失败");
+            throw new BusinessException("删除" + this.desc + "失败");
         }
     }
 
@@ -135,7 +135,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("修改" + this.name + "失败");
+            throw new BusinessException("修改" + this.desc + "失败");
         }
     }
 
@@ -151,7 +151,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("批量查询" + this.name + "失败");
+            throw new BusinessException("批量查询" + this.desc + "失败");
         }
     }
 
@@ -168,7 +168,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("查询全部" + this.name + "失败");
+            throw new BusinessException("查询全部" + this.desc + "失败");
         }
     }
 
@@ -188,7 +188,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("查询全部" + this.name + "失败");
+            throw new BusinessException("查询全部" + this.desc + "失败");
         }
     }
 
@@ -206,7 +206,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("查询全部" + this.name + "失败");
+            throw new BusinessException("查询全部" + this.desc + "失败");
         }
     }
 
@@ -220,13 +220,13 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
      */
     @Override
     @CheckParam
-    public T selectOneByKV(String key, String value) throws BusinessException {
+    public T selectOneByKV(String key, Object value) throws BusinessException {
         try {
             return (T) getDao().selectOneFromKV(this.cls, key, value);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("查询全部" + this.name + "失败");
+            throw new BusinessException("查询全部" + this.desc + "失败");
         }
     }
 
@@ -244,7 +244,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("查询全部" + this.name + "失败");
+            throw new BusinessException("查询全部" + this.desc + "失败");
         }
     }
 
@@ -266,7 +266,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("修改" + this.name + "失败");
+            throw new BusinessException("修改" + this.desc + "失败");
         }
     }
 
@@ -290,7 +290,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("修改" + this.name + "失败");
+            throw new BusinessException("修改" + this.desc + "失败");
         }
     }
 
@@ -317,11 +317,11 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
     @Override
     public long deleteAllByMap(Map map) throws Exception {
         try {
-            return getDao().delete(this.name,map);
+            return getDao().delete(this.tableName,map);
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("删除" + this.name + "失败");
+            throw new BusinessException("删除" + this.desc + "失败");
         }
     }
 
@@ -339,7 +339,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("修改" + this.name + "失败");
+            throw new BusinessException("修改" + this.desc + "失败");
         }
     }
 
@@ -359,7 +359,7 @@ public class MysqlModelDao<T> extends ModelDaoServiceImpl {
         } catch (Exception e) {
             e.printStackTrace();
             log.error(e.getMessage());
-            throw new BusinessException("修改" + this.name + "失败");
+            throw new BusinessException("修改" + this.desc + "失败");
         }
     }
 

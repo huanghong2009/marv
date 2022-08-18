@@ -60,7 +60,7 @@ public interface ModelDaoService<T extends BaseModel> {
      * @return
      * @throws BusinessException
      */
-    public <T> T selectOneByKV(String key, String value) throws Exception;
+    public <T> T selectOneByKV(String key, Object value) throws Exception;
 
     /**
      * 根据 map kv查询多条数据

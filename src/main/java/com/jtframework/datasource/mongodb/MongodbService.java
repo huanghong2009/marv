@@ -747,7 +747,7 @@ public class MongodbService {
      * @param <T>
      * @return
      */
-    public <T> T findOneByKV(Class<T> resultClass, String key, String value) {
+    public <T> T findOneByKV(Class<T> resultClass, String key, Object value) {
         return this.mongoTemplate.findOne(createQuery().addCriteria(Criteria.where(key).is(value)), resultClass, getCollectionName(resultClass));
     }
 
